@@ -16,7 +16,16 @@ struct SettingsView: View {
                 if let site = auth.site {
                     Section("Site") {
                         Text(site.title)
-                        Text("\(site.subdomain).shareblog.app").foregroundStyle(.secondary)
+                        if let domain = ServerConfig.domain {
+                            Text("\(site.subdomain).\(domain)").foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                Section("Server") {
+                    Text(ServerConfig.domain ?? "—")
+                    Button("Change server") {
+                        auth.changeServer()
+                        dismiss()
                     }
                 }
                 Section {

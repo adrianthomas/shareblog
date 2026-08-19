@@ -5,7 +5,9 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if auth.isLoading {
+            if !auth.serverConfigured {
+                ServerSetupView()
+            } else if auth.isLoading {
                 ProgressView()
             } else if !auth.isSignedIn {
                 OnboardingView()

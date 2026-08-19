@@ -24,18 +24,19 @@ private struct ServerErrorEnvelope: Decodable {
 public final class APIClient: @unchecked Sendable {
     public static let shared = APIClient()
 
-    /// Configurable so dev/simulator/device builds can point at a local
-    /// server. "api.localhost" only resolves to the Mac itself — it doesn't
-    /// work from a physical device on the same Wi-Fi, so this points at the
-    /// Mac's LAN IP instead, which works from the Simulator too. Update this
-    /// if the Mac's IP changes (check with `ipconfig getifaddr en0`).
+    /// Mutable so ServerConfig can repoint it once the user enters their
+    /// server's domain (see ServerSetupView) — every self-hosted server has
+    /// a different address, unlike a single hosted product with one fixed
+    /// API host. Falls back to a placeholder until configured; nothing calls
+    /// the API before ServerConfig.isConfigured is true (RootView gates on
+    /// it), so the placeholder is never actually dialed.
     public var baseURL: URL
 
     private let session: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
 
-    public init(baseURL: URL = URL(string: "http://192.168.30.230:3000/api/v1")!) {
+    public init(baseURL: URL = ServerConfig.apiBaseURL ?? URL(string: "http://localhost:3000/api/v1")!) {
         self.baseURL = baseURL
         self.session = .shared
 
@@ -186,7 +187,12 @@ public final class APIClient: @unchecked Sendable {
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         request.httpBody = body
 
-        let (responseData, response) = try await session.data(for: request)
+        let (responseData, response): (Data, URLResponse)
+        do {
+            (responseData, response) = try await session.data(for: request)
+        } catch {
+            throw APIError.network(error)
+        }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             if let envelope = try? decoder.decode(ServerErrorEnvelope.self, from: responseData) {
                 throw APIError.server(code: envelope.error.code, message: envelope.error.message)

@@ -20,6 +20,9 @@ Local dev hits the server as `api.localhost:3000` (API) and
 `<subdomain>.localhost:3000` (public sites) — both resolve automatically, no
 `/etc/hosts` changes needed.
 
+To run this in production on your own server, see
+[SELF_HOSTING.md](SELF_HOSTING.md).
+
 Note: the original music resolver used Odesli/Songlink to turn one link into
 every platform's link at once — that service has been sunset (confirmed).
 `server/src/resolvers/music.ts` now resolves metadata per-platform instead,
@@ -50,9 +53,13 @@ sharing to work — this can't be set from the command line. Bundle IDs
 `project.yml` and `ShareblogKit/Sources/ShareblogKit/AppGroup.swift` are
 placeholders; change both together if you use a different identifier.
 
-The app points at `http://api.localhost:3000/api/v1` by default
-(`ShareblogKit/Sources/ShareblogKit/APIClient.swift`) — matches the local
-dev server above.
+On first launch the app asks for a server domain and stores it in the shared
+App Group (`ShareblogKit/Sources/ShareblogKit/ServerConfig.swift`); it's
+changeable later from Settings. For local dev against the server above, use
+your Mac's LAN IP (e.g. `http://192.168.1.5:3000`, not `api.localhost:3000`
+— that only resolves on the Mac itself, not from the Simulator/device) —
+that field accepts a full `http(s)://` URL for exactly this case. For a real
+deployment, see [SELF_HOSTING.md](SELF_HOSTING.md).
 
 **Not yet verified in a running Simulator**: this machine's CoreSimulator
 framework is out of date relative to the installed Xcode build, which

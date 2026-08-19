@@ -16,8 +16,8 @@ struct SiteSetupView: View {
                     TextField("subdomain", text: $subdomain)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                    if !subdomain.isEmpty {
-                        Text("\(normalizedSubdomain).shareblog.app")
+                    if !subdomain.isEmpty, let domain = ServerConfig.domain {
+                        Text("\(normalizedSubdomain).\(domain)")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }

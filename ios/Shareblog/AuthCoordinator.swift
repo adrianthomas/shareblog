@@ -6,12 +6,31 @@ final class AuthCoordinator: ObservableObject {
     @Published var user: User?
     @Published var site: Site?
     @Published var isLoading = true
+    @Published var serverConfigured = ServerConfig.isConfigured
 
     init() {
-        Task { await refresh() }
+        if serverConfigured {
+            Task { await refresh() }
+        } else {
+            isLoading = false
+        }
     }
 
     var isSignedIn: Bool { user != nil }
+
+    func didConfigureServer() {
+        serverConfigured = true
+        Task { await refresh() }
+    }
+
+    /// Signs out of the current server and forgets it, sending the user back
+    /// to server setup — the auth token and site are meaningless once the
+    /// server address changes, since they're specific to that server.
+    func changeServer() {
+        signOut()
+        ServerConfig.clear()
+        serverConfigured = false
+    }
 
     func refresh() async {
         isLoading = true
