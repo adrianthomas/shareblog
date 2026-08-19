@@ -1,0 +1,48 @@
+{
+  "name": "shareblog-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@fastify/compress": "^9.2.0",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.0.2",
+    "@fastify/etag": "^6.2.0",
+    "@fastify/multipart": "^9.0.3",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.38.3",
+    "fastify": "^5.2.0",
+    "got": "^14.4.5",
+    "metascraper": "^5.45.21",
+    "metascraper-author": "^5.45.21",
+    "metascraper-description": "^5.45.21",
+    "metascraper-image": "^5.45.21",
+    "metascraper-publisher": "^5.45.21",
+    "metascraper-title": "^5.45.21",
+    "metascraper-url": "^5.45.21",
+    "nodemailer": "^6.9.16",
+    "pg": "^8.13.1",
+    "pino-pretty": "^13.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sharp": "^0.33.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "drizzle-kit": "^0.30.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

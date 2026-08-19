@@ -1,0 +1,54 @@
+import React from "react";
+import type { ContentObject, BookMetadata } from "./types.js";
+import { formatDate } from "./ThoughtPost.js";
+import { t } from "../i18n.js";
+
+export function BookCard({
+  object,
+  variant = "card",
+  locale = "en",
+}: {
+  object: ContentObject;
+  variant?: "card" | "page";
+  locale?: string;
+}) {
+  const metadata = object.metadata as BookMetadata;
+  const stars = metadata.rating ? "★".repeat(metadata.rating) + "☆".repeat(5 - metadata.rating) : null;
+
+  return (
+    <article className={variant === "card" ? "card book" : "book"}>
+      {metadata.coverUrl ? <img src={metadata.coverUrl} alt={object.title ?? ""} /> : null}
+      <div>
+        <h2>
+          {variant === "card" ? (
+            <a className="title-link" href={`/books/${object.slug}`}>
+              {object.title}
+            </a>
+          ) : (
+            object.title
+          )}
+        </h2>
+        <p className="meta">{metadata.author}</p>
+        {stars ? (
+          <p>
+            <span aria-hidden="true">{stars}</span>
+            <span className="sr-only">{t(locale, "ratingLabel", { rating: metadata.rating! })}</span>
+          </p>
+        ) : null}
+        {object.body ? <p>{object.body}</p> : null}
+        {variant === "page" && metadata.links && Object.values(metadata.links).some(Boolean) ? (
+          <p className="meta">
+            {Object.entries(metadata.links)
+              .filter(([, url]) => url)
+              .map(([label, url]) => (
+                <a key={label} href={url} style={{ marginRight: "0.75rem" }}>
+                  {label}
+                </a>
+              ))}
+          </p>
+        ) : null}
+        <p className="meta">{formatDate(object.publishedAt)}</p>
+      </div>
+    </article>
+  );
+}

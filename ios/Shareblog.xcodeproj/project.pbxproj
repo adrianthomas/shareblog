@@ -1,0 +1,553 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		042FDA89416CF551CCCC2B1F /* ShareblogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95F9D497C85E41A31746280 /* ShareblogApp.swift */; };
+		0EED2F373403B33F7E554CFD /* EditObjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E861506DB4A02175CA3716F /* EditObjectView.swift */; };
+		1B3A73C84011044DE6243811 /* MusicComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015CDB080795DFCF98DFE5FD /* MusicComposeView.swift */; };
+		1DBB49A315C221EABC8395BD /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE91C38F0A4F341515EE1533 /* FeedView.swift */; };
+		3445A8869C91F93951D3F722 /* ThoughtComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C55C92C78D3766EB7925F8E /* ThoughtComposeView.swift */; };
+		4B4E5E55C11A3AF0CDF599FB /* AuthCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */; };
+		54AA8EFC9D32C5DA963325F2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92435F7BD00E74ACE366B7F /* SettingsView.swift */; };
+		5D39D2EA25235C23A066C753 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D891961FAB1E4107FC215E /* RootView.swift */; };
+		5FF18EED222EB12CE091852F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5FD7DD88ECF74FFFCCFD1B /* OnboardingView.swift */; };
+		63A55AB62ADEE2369C8F2674 /* ShareblogKit in Frameworks */ = {isa = PBXBuildFile; productRef = 82CA87C1F02569495C8E0C11 /* ShareblogKit */; };
+		727A4E52C229218BCB12AD1B /* ShareblogShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7ECF73FB42E718BE58F46A50 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */; };
+		91B433E6C69D53D5E3E44873 /* SiteSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C245BE1ABED539CA58802EE /* SiteSetupView.swift */; };
+		950BEA98F11EA5D853CAC209 /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDFF5B36B472F2A160196623 /* ComposeView.swift */; };
+		99A1E88FF4E23E27D4DCA566 /* TypePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF90155CBFDE2BB1359EF919 /* TypePickerView.swift */; };
+		A1E36C5370FC05907848380D /* BookComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */; };
+		A39F600FEB2AEEFC83EE8037 /* ShareCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424F4BAEDC1ACA41920C8304 /* ShareCoordinator.swift */; };
+		B0BE2A19ED8E24E5D35C7E13 /* ArticleComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */; };
+		CFA2FA0F230D732E4BBB3D1D /* ShareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D0C571AD4C4B46860B242F /* ShareRootView.swift */; };
+		E40B8A3BFEDBC0F73BBBCBE9 /* ShareblogKit in Frameworks */ = {isa = PBXBuildFile; productRef = E6EEA65B19FA3908CF53E69E /* ShareblogKit */; };
+		F064FAF1322ADDE27D4438D1 /* PhotoComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F129CBDA0B6CD83C52F50A0A /* PhotoComposeView.swift */; };
+		F545FDCB7D1833F7808B2B3B /* VerifyCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD351AAC9596074785F6095B /* VerifyCodeView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E30FF1600DBBFA2F546CB065 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1C72EBDD93DD81987085DCB7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 464BAC28BD1F01EDC71BA81A;
+			remoteInfo = ShareblogShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		236BAE5B9179A6F1F5356FE7 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				727A4E52C229218BCB12AD1B /* ShareblogShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		015CDB080795DFCF98DFE5FD /* MusicComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicComposeView.swift; sourceTree = "<group>"; };
+		0E861506DB4A02175CA3716F /* EditObjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditObjectView.swift; sourceTree = "<group>"; };
+		2C245BE1ABED539CA58802EE /* SiteSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteSetupView.swift; sourceTree = "<group>"; };
+		2C55C92C78D3766EB7925F8E /* ThoughtComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtComposeView.swift; sourceTree = "<group>"; };
+		424F4BAEDC1ACA41920C8304 /* ShareCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCoordinator.swift; sourceTree = "<group>"; };
+		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleComposeView.swift; sourceTree = "<group>"; };
+		5DF6E49CBBDC05D970A3D45A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		742B693BF8392EE8E21EA5A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookComposeView.swift; sourceTree = "<group>"; };
+		B1D891961FAB1E4107FC215E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		BE91C38F0A4F341515EE1533 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
+		C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
+		CD351AAC9596074785F6095B /* VerifyCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyCodeView.swift; sourceTree = "<group>"; };
+		CF90155CBFDE2BB1359EF919 /* TypePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypePickerView.swift; sourceTree = "<group>"; };
+		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
+		E92435F7BD00E74ACE366B7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EDADFFC2E407C6F09849D393 /* Shareblog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Shareblog.entitlements; sourceTree = "<group>"; };
+		F0D0C571AD4C4B46860B242F /* ShareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRootView.swift; sourceTree = "<group>"; };
+		F0F40EBEFC741DEFA480CFA0 /* ShareblogShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareblogShareExtension.entitlements; sourceTree = "<group>"; };
+		F129CBDA0B6CD83C52F50A0A /* PhotoComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoComposeView.swift; sourceTree = "<group>"; };
+		F95F9D497C85E41A31746280 /* ShareblogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareblogApp.swift; sourceTree = "<group>"; };
+		FA5FD7DD88ECF74FFFCCFD1B /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		FDFF5B36B472F2A160196623 /* ComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		14116F49A2796C96156A2584 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63A55AB62ADEE2369C8F2674 /* ShareblogKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C44DA211AAA3FE19D1D7E0E5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E40B8A3BFEDBC0F73BBBCBE9 /* ShareblogKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1A7478B3B4C3508BC2A9A9D5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4B8D4323366CE7A3CA498897 /* Shareblog.app */,
+				7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		665181714D8A6BE3522D1BE1 = {
+			isa = PBXGroup;
+			children = (
+				7A73B28BAB97B8DB64DF2ECE /* Packages */,
+				73F8C363E25789407B4524AE /* Shareblog */,
+				C5DFD4AC31A85DC386A6A392 /* ShareblogShareExtension */,
+				1A7478B3B4C3508BC2A9A9D5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		73F8C363E25789407B4524AE /* Shareblog */ = {
+			isa = PBXGroup;
+			children = (
+				C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */,
+				0E861506DB4A02175CA3716F /* EditObjectView.swift */,
+				BE91C38F0A4F341515EE1533 /* FeedView.swift */,
+				5DF6E49CBBDC05D970A3D45A /* Info.plist */,
+				FA5FD7DD88ECF74FFFCCFD1B /* OnboardingView.swift */,
+				B1D891961FAB1E4107FC215E /* RootView.swift */,
+				E92435F7BD00E74ACE366B7F /* SettingsView.swift */,
+				EDADFFC2E407C6F09849D393 /* Shareblog.entitlements */,
+				F95F9D497C85E41A31746280 /* ShareblogApp.swift */,
+				2C245BE1ABED539CA58802EE /* SiteSetupView.swift */,
+				CD351AAC9596074785F6095B /* VerifyCodeView.swift */,
+			);
+			path = Shareblog;
+			sourceTree = "<group>";
+		};
+		7A73B28BAB97B8DB64DF2ECE /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				D5107989966107929ACBBCE4 /* ShareblogKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		C5DFD4AC31A85DC386A6A392 /* ShareblogShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */,
+				9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */,
+				FDFF5B36B472F2A160196623 /* ComposeView.swift */,
+				742B693BF8392EE8E21EA5A4 /* Info.plist */,
+				015CDB080795DFCF98DFE5FD /* MusicComposeView.swift */,
+				F129CBDA0B6CD83C52F50A0A /* PhotoComposeView.swift */,
+				F0F40EBEFC741DEFA480CFA0 /* ShareblogShareExtension.entitlements */,
+				424F4BAEDC1ACA41920C8304 /* ShareCoordinator.swift */,
+				F0D0C571AD4C4B46860B242F /* ShareRootView.swift */,
+				6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */,
+				2C55C92C78D3766EB7925F8E /* ThoughtComposeView.swift */,
+				CF90155CBFDE2BB1359EF919 /* TypePickerView.swift */,
+			);
+			path = ShareblogShareExtension;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		40BF3D11F5F0E08A594D7F90 /* Shareblog */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3658DA9AF8104D31EA0B9EB4 /* Build configuration list for PBXNativeTarget "Shareblog" */;
+			buildPhases = (
+				5002F9B4AFC9DDD6B9C0E37D /* Sources */,
+				14116F49A2796C96156A2584 /* Frameworks */,
+				236BAE5B9179A6F1F5356FE7 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				82FBD3BFC0D04DBD10859ABC /* PBXTargetDependency */,
+			);
+			name = Shareblog;
+			packageProductDependencies = (
+				82CA87C1F02569495C8E0C11 /* ShareblogKit */,
+			);
+			productName = Shareblog;
+			productReference = 4B8D4323366CE7A3CA498897 /* Shareblog.app */;
+			productType = "com.apple.product-type.application";
+		};
+		464BAC28BD1F01EDC71BA81A /* ShareblogShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C95132A3AA2DDF7F027A2AE3 /* Build configuration list for PBXNativeTarget "ShareblogShareExtension" */;
+			buildPhases = (
+				76D398D90EFC7ACC30CE9AB9 /* Sources */,
+				C44DA211AAA3FE19D1D7E0E5 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ShareblogShareExtension;
+			packageProductDependencies = (
+				E6EEA65B19FA3908CF53E69E /* ShareblogKit */,
+			);
+			productName = ShareblogShareExtension;
+			productReference = 7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1C72EBDD93DD81987085DCB7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					40BF3D11F5F0E08A594D7F90 = {
+						ProvisioningStyle = Automatic;
+					};
+					464BAC28BD1F01EDC71BA81A = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = B723111ECFC7BCA5471AA3AA /* Build configuration list for PBXProject "Shareblog" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 665181714D8A6BE3522D1BE1;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8D8BF01DC6BB86304BC9159E /* XCLocalSwiftPackageReference "ShareblogKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1A7478B3B4C3508BC2A9A9D5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				40BF3D11F5F0E08A594D7F90 /* Shareblog */,
+				464BAC28BD1F01EDC71BA81A /* ShareblogShareExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5002F9B4AFC9DDD6B9C0E37D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B4E5E55C11A3AF0CDF599FB /* AuthCoordinator.swift in Sources */,
+				0EED2F373403B33F7E554CFD /* EditObjectView.swift in Sources */,
+				1DBB49A315C221EABC8395BD /* FeedView.swift in Sources */,
+				5FF18EED222EB12CE091852F /* OnboardingView.swift in Sources */,
+				5D39D2EA25235C23A066C753 /* RootView.swift in Sources */,
+				54AA8EFC9D32C5DA963325F2 /* SettingsView.swift in Sources */,
+				042FDA89416CF551CCCC2B1F /* ShareblogApp.swift in Sources */,
+				91B433E6C69D53D5E3E44873 /* SiteSetupView.swift in Sources */,
+				F545FDCB7D1833F7808B2B3B /* VerifyCodeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		76D398D90EFC7ACC30CE9AB9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0BE2A19ED8E24E5D35C7E13 /* ArticleComposeView.swift in Sources */,
+				A1E36C5370FC05907848380D /* BookComposeView.swift in Sources */,
+				950BEA98F11EA5D853CAC209 /* ComposeView.swift in Sources */,
+				1B3A73C84011044DE6243811 /* MusicComposeView.swift in Sources */,
+				F064FAF1322ADDE27D4438D1 /* PhotoComposeView.swift in Sources */,
+				A39F600FEB2AEEFC83EE8037 /* ShareCoordinator.swift in Sources */,
+				CFA2FA0F230D732E4BBB3D1D /* ShareRootView.swift in Sources */,
+				7ECF73FB42E718BE58F46A50 /* ShareViewController.swift in Sources */,
+				3445A8869C91F93951D3F722 /* ThoughtComposeView.swift in Sources */,
+				99A1E88FF4E23E27D4DCA566 /* TypePickerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		82FBD3BFC0D04DBD10859ABC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 464BAC28BD1F01EDC71BA81A /* ShareblogShareExtension */;
+			targetProxy = E30FF1600DBBFA2F546CB065 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		00C2FFB71AC7973EE04EE626 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		33965BA40EB3759DB9DF94CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Shareblog/Shareblog.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = CWG3GL54SL;
+				INFOPLIST_FILE = Shareblog/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.adrianthomas.shareblog;
+				PRODUCT_NAME = Shareblog;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		361AE8B4DFA5F2845A585D9D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		4A0031C471E441E7D0E42B48 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ShareblogShareExtension/ShareblogShareExtension.entitlements;
+				DEVELOPMENT_TEAM = CWG3GL54SL;
+				INFOPLIST_FILE = ShareblogShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.adrianthomas.shareblog.ShareExtension;
+				PRODUCT_NAME = ShareblogShareExtension;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		777548CF1E0FD0B79B47896D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Shareblog/Shareblog.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = CWG3GL54SL;
+				INFOPLIST_FILE = Shareblog/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.adrianthomas.shareblog;
+				PRODUCT_NAME = Shareblog;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D692D13B78AAFEC4D14BF4B0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ShareblogShareExtension/ShareblogShareExtension.entitlements;
+				DEVELOPMENT_TEAM = CWG3GL54SL;
+				INFOPLIST_FILE = ShareblogShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.adrianthomas.shareblog.ShareExtension;
+				PRODUCT_NAME = ShareblogShareExtension;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3658DA9AF8104D31EA0B9EB4 /* Build configuration list for PBXNativeTarget "Shareblog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				777548CF1E0FD0B79B47896D /* Debug */,
+				33965BA40EB3759DB9DF94CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B723111ECFC7BCA5471AA3AA /* Build configuration list for PBXProject "Shareblog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				361AE8B4DFA5F2845A585D9D /* Debug */,
+				00C2FFB71AC7973EE04EE626 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C95132A3AA2DDF7F027A2AE3 /* Build configuration list for PBXNativeTarget "ShareblogShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4A0031C471E441E7D0E42B48 /* Debug */,
+				D692D13B78AAFEC4D14BF4B0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8D8BF01DC6BB86304BC9159E /* XCLocalSwiftPackageReference "ShareblogKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ShareblogKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		82CA87C1F02569495C8E0C11 /* ShareblogKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ShareblogKit;
+		};
+		E6EEA65B19FA3908CF53E69E /* ShareblogKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ShareblogKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 1C72EBDD93DD81987085DCB7 /* Project object */;
+}
