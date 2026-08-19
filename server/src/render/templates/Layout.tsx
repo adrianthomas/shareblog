@@ -50,6 +50,8 @@ export function Layout({
               .skip-link { position: absolute; left: -9999px; top: 0; background: var(--bg); color: var(--fg);
                            padding: 0.75rem 1rem; border: 2px solid var(--focus); border-radius: 4px; z-index: 100; }
               .skip-link:focus { left: 1rem; top: 1rem; }
+              .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+                         overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
               a { color: var(--focus); }
               a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
               header { display: flex; justify-content: space-between; align-items: baseline;
@@ -64,12 +66,18 @@ export function Layout({
               .card img { max-width: 100%; height: auto; border-radius: 6px; }
               .meta { font-size: 0.85rem; color: var(--muted); }
               .book, .music { display: flex; gap: 1rem; flex-wrap: wrap; }
-              .book img, .music img { width: 90px; max-width: 100%; height: auto; border-radius: 4px; flex-shrink: 0; }
+              .book img { width: 90px; max-width: 100%; height: auto; border-radius: 4px; flex-shrink: 0; }
+              .music img.artwork {
+                width: 90px; max-width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+                border-radius: 4px; flex-shrink: 0;
+              }
+              .music-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
               a.title-link { text-decoration: none; color: inherit; }
               a.title-link:hover { text-decoration: underline; }
               @media (max-width: 400px) {
                 .book, .music { flex-direction: column; }
-                .book img, .music img { width: 140px; }
+                .book img { width: 140px; }
+                .music img.artwork { width: 140px; }
               }
             `,
           }}
