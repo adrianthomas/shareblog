@@ -5,7 +5,9 @@ no hosted service yet — self-hosting on your own domain is the only way to
 run it in production today. This doc covers a generic Linux server; adapt
 the reverse-proxy/process-manager steps if your host does things differently
 (e.g. Uberspace uses `supervisord` instead of `systemd`, and doesn't support
-wildcard domains — see the note at the end).
+wildcard domains — see the note at the end). On Uberspace specifically, skip
+straight to [UBERSPACE.md](UBERSPACE.md) for a full walkthrough using its
+actual commands instead of adapting these on the fly.
 
 ## What you need
 
