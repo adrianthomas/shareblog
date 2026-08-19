@@ -11,7 +11,7 @@ struct ServerSetupView: View {
             VStack(spacing: 20) {
                 Text("Connect to your server")
                     .font(.largeTitle.bold())
-                Text("Enter the domain of your self-hosted Shareblog server. See server/README.md if you haven't set one up yet.")
+                Text("Enter the domain of your self-hosted Shareblog server.")
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
@@ -31,6 +31,11 @@ struct ServerSetupView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(input.isEmpty)
+
+                NavigationLink("How do I set up my blog?") {
+                    HowToSetUpView()
+                }
+                .font(.footnote)
             }
             .padding()
         }
