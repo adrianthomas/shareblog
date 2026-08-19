@@ -8,7 +8,8 @@ export type MessageKey =
   | "skipToContent"
   | "nothingHereYet"
   | "ratingLabel"
-  | "primaryNavigation";
+  | "primaryNavigation"
+  | "listenOn";
 
 type Messages = Record<MessageKey, string>;
 
@@ -24,6 +25,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Nothing here yet.",
     ratingLabel: "Rating: {rating} out of 5 stars",
     primaryNavigation: "Primary",
+    listenOn: "Listen on {platform}",
   },
   de: {
     home: "Start",
@@ -36,6 +38,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Hier gibt es noch nichts.",
     ratingLabel: "Bewertung: {rating} von 5 Sternen",
     primaryNavigation: "Hauptnavigation",
+    listenOn: "Hören auf {platform}",
   },
   fr: {
     home: "Accueil",
@@ -48,6 +51,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Rien ici pour l'instant.",
     ratingLabel: "Note : {rating} étoiles sur 5",
     primaryNavigation: "Navigation principale",
+    listenOn: "Écouter sur {platform}",
   },
   es: {
     home: "Inicio",
@@ -60,6 +64,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Todavía no hay nada aquí.",
     ratingLabel: "Valoración: {rating} de 5 estrellas",
     primaryNavigation: "Navegación principal",
+    listenOn: "Escuchar en {platform}",
   },
   ja: {
     home: "ホーム",
@@ -72,6 +77,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "まだ何もありません。",
     ratingLabel: "評価: 5つ星中{rating}つ",
     primaryNavigation: "メインナビゲーション",
+    listenOn: "{platform}で聴く",
   },
 };
 
