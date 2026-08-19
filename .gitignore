@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+dist/
+*.log
+
+# Env
+.env
+.env.local
+
+# Xcode
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/DerivedData/
+ios/build/
+ios/.swiftpm/
+ios/**/.swiftpm/
+
+# Server data
+server/data/uploads/*
+!server/data/uploads/.gitkeep

@@ -1,0 +1,114 @@
+import type { FastifyInstance } from "fastify";
+import { and, eq, desc } from "drizzle-orm";
+import { db } from "../db/client.js";
+import { contentObjects } from "../db/schema.js";
+import type { ContentType } from "../db/schema.js";
+import { resolveTenant } from "../middleware/tenant.js";
+import { renderList, renderObjectPage, renderFeed } from "../render/render.js";
+import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
+
+async function publishedObjects(siteId: string, type?: ContentType) {
+  const conditions = [eq(contentObjects.siteId, siteId), eq(contentObjects.status, "published")];
+  if (type) conditions.push(eq(contentObjects.type, type));
+  return db
+    .select()
+    .from(contentObjects)
+    .where(and(...conditions))
+    .orderBy(desc(contentObjects.publishedAt));
+}
+
+function sendHtml(reply: import("fastify").FastifyReply, html: string) {
+  return reply
+    .header("content-type", "text/html; charset=utf-8")
+    .header("cache-control", `public, max-age=${PAGE_CACHE_TTL_MS / 1000}`)
+    .send(html);
+}
+
+// Serves a cached render if one exists, otherwise renders, caches, and
+// serves. Keyed by site + full request URL so listing pages, detail pages,
+// and pagination/query variants all get distinct entries.
+async function sendCachedHtml(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  siteId: string,
+  render: () => Promise<string>,
+) {
+  const cached = getCachedPage(siteId, request.raw.url ?? request.url);
+  if (cached) return sendHtml(reply, cached.body);
+
+  const html = await render();
+  setCachedPage(siteId, request.raw.url ?? request.url, html, "text/html; charset=utf-8");
+  return sendHtml(reply, html);
+}
+
+const LISTING_TYPES: Array<{ path: string; type?: ContentType; title: string }> = [
+  { path: "/posts", type: "thought", title: "Posts" },
+  { path: "/articles", type: "article", title: "Articles" },
+  { path: "/books", type: "book", title: "Books" },
+  { path: "/music", type: "music", title: "Music" },
+  { path: "/photos", type: "photo", title: "Photos" },
+];
+
+const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
+  { prefix: "/posts", type: "thought" },
+  { prefix: "/articles", type: "article" },
+  { prefix: "/books", type: "book" },
+  { prefix: "/music", type: "music" },
+  { prefix: "/photos", type: "photo" },
+];
+
+export async function sitePageRoutes(app: FastifyInstance) {
+  app.get("/", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => {
+      const objects = await publishedObjects(site.id);
+      return renderList(site, site.title, objects.slice(0, 20));
+    });
+  });
+
+  app.get("/feed.xml", { preHandler: resolveTenant }, async (request, reply) => {
+    const objects = await publishedObjects(request.site!.id);
+    const xml = await renderFeed(request.site!, objects.slice(0, 50));
+    return reply.header("content-type", "application/rss+xml; charset=utf-8").send(xml);
+  });
+
+  for (const listing of LISTING_TYPES) {
+    app.get(listing.path, { preHandler: resolveTenant }, async (request, reply) => {
+      const site = request.site!;
+      return sendCachedHtml(request, reply, site.id, async () => {
+        const objects = await publishedObjects(site.id, listing.type);
+        return renderList(site, listing.title, objects);
+      });
+    });
+  }
+
+  for (const detail of DETAIL_TYPES) {
+    app.get(`${detail.prefix}/:slug`, { preHandler: resolveTenant }, async (request, reply) => {
+      const site = request.site!;
+      const { slug } = request.params as { slug: string };
+
+      const cached = getCachedPage(site.id, request.raw.url ?? request.url);
+      if (cached) return sendHtml(reply, cached.body);
+
+      const [object] = await db
+        .select()
+        .from(contentObjects)
+        .where(
+          and(
+            eq(contentObjects.siteId, site.id),
+            eq(contentObjects.type, detail.type),
+            eq(contentObjects.slug, slug),
+            eq(contentObjects.status, "published"),
+          ),
+        )
+        .limit(1);
+
+      if (!object) {
+        return reply.code(404).send("Not found");
+      }
+      const html = await renderObjectPage(site, object);
+      setCachedPage(site.id, request.raw.url ?? request.url, html, "text/html; charset=utf-8");
+      return sendHtml(reply, html);
+    });
+  }
+}
