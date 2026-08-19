@@ -2,6 +2,7 @@ import SwiftUI
 import ShareblogKit
 
 struct OnboardingView: View {
+    @EnvironmentObject private var auth: AuthCoordinator
     @State private var email = ""
     @State private var isRequesting = false
     @State private var errorMessage: String?
@@ -38,6 +39,11 @@ struct OnboardingView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(email.isEmpty || isRequesting)
+
+                Button("Not \(ServerConfig.domain ?? "the right server")? Change it.") {
+                    auth.changeServer()
+                }
+                .font(.footnote)
             }
             .padding()
             .navigationDestination(isPresented: $codeRequested) {

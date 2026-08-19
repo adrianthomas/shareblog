@@ -3,7 +3,7 @@ import ShareblogKit
 
 struct ServerSetupView: View {
     @EnvironmentObject private var auth: AuthCoordinator
-    @State private var input = ""
+    @State private var input = ServerConfig.lastInput ?? ""
     @State private var errorMessage: String?
 
     var body: some View {
@@ -46,7 +46,7 @@ struct ServerSetupView: View {
             errorMessage = "Enter a valid domain, like yourdomain.com."
             return
         }
-        ServerConfig.save(domain: domain, apiBaseURL: apiBaseURL)
+        ServerConfig.save(rawInput: input, domain: domain, apiBaseURL: apiBaseURL)
         auth.didConfigureServer()
     }
 }
