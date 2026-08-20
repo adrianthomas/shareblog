@@ -180,10 +180,12 @@ SSH: copy `deploy.env.example` to `deploy.env`, fill in `UBERSPACE_USER`,
 ```
 
 from your own machine. It refuses to run with uncommitted local changes,
-pushes the current branch to `origin`, then SSHes in and runs `git pull`,
-`npm install`, `npm run build`, `npm run db:migrate`, and
-`supervisorctl restart shareblog` in `server/` — the same commands you'd
-type by hand. `deploy.env` is gitignored since it's machine-specific.
+then SSHes in and runs `git pull`, `npm install`, `npm run build`,
+`npm run db:migrate`, and `supervisorctl restart shareblog` in
+`server/` — the same commands you'd type by hand. Push to `origin`
+yourself first; the script's own push step is commented out, since the
+remote `git pull` needs your commits to already be there.
+`deploy.env` is gitignored since it's machine-specific.
 
 ## No wildcard subdomains
 
