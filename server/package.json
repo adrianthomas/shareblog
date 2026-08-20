@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "postinstall": "node scripts/fix-better-sqlite3.cjs"
   },
   "dependencies": {
     "@fastify/compress": "^9.2.0",
