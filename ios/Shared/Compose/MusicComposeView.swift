@@ -10,6 +10,7 @@ struct MusicComposeView: View {
     @State private var status: ObjectStatus = .published
     @State private var isResolving = false
     @State private var resolveError: String?
+    @State private var urlText = ""
 
     var body: some View {
         VStack {
@@ -35,7 +36,17 @@ struct MusicComposeView: View {
                 } else if let resolveError {
                     Text(resolveError).foregroundStyle(.red)
                 } else if coordinator.sharedURL == nil {
-                    ContentUnavailableView("No music link", systemImage: "music.note")
+                    // No link came in from a share — let the user paste one
+                    // in directly so the type still works standalone.
+                    Section {
+                        TextField("Link (Apple Music, Spotify, YouTube Music)", text: $urlText)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .onSubmit(loadURL)
+                        Button("Load", action: loadURL)
+                            .disabled(urlText.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
                 }
             }
             PublishBar(status: $status, isPublishing: coordinator.isPublishing, isEnabled: resolved != nil) {
@@ -63,5 +74,15 @@ struct MusicComposeView: View {
                 resolveError = error.localizedDescription
             }
         }
+    }
+
+    private func loadURL() {
+        let trimmed = urlText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        guard let url = URL(string: trimmed), url.scheme != nil else {
+            resolveError = "That doesn't look like a valid link."
+            return
+        }
+        coordinator.sharedURL = url
     }
 }

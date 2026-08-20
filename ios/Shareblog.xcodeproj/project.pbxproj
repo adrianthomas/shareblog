@@ -15,6 +15,7 @@
 		1D90240EC101BF48073D4416 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DF6B46A261004A2D3ECE532B /* Assets.xcassets */; };
 		1DBB49A315C221EABC8395BD /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE91C38F0A4F341515EE1533 /* FeedView.swift */; };
 		28FDE2FB9473ECD6F876C1E1 /* PhotoComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A20432D9CFE54848904EB0 /* PhotoComposeView.swift */; };
+		2A35743504B2C8D96772836A /* CreatePostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF38E3755B1F509CFA5FD02 /* CreatePostView.swift */; };
 		449B314E0729EF56EB2E2972 /* ShareCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77AF96D511E4048D01EF6E3 /* ShareCoordinator.swift */; };
 		46F09D88A1634D5E4003897E /* TypePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1CD24CD93EEDBD231FB92D /* TypePickerView.swift */; };
 		495979F03E55BCE2A32B15F8 /* BrandMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4327D7BD2BBAB6213C08F7A /* BrandMark.swift */; };
@@ -81,6 +82,7 @@
 		622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToSetUpView.swift; sourceTree = "<group>"; };
 		67B53B928F226F8D4A9B5EC2 /* ThoughtComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtComposeView.swift; sourceTree = "<group>"; };
 		6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		6BF38E3755B1F509CFA5FD02 /* CreatePostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePostView.swift; sourceTree = "<group>"; };
 		742B693BF8392EE8E21EA5A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A1CD24CD93EEDBD231FB92D /* TypePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypePickerView.swift; sourceTree = "<group>"; };
@@ -173,6 +175,7 @@
 				081DB3F19E285D6957543A21 /* Assets.xcassets */,
 				C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */,
 				A4327D7BD2BBAB6213C08F7A /* BrandMark.swift */,
+				6BF38E3755B1F509CFA5FD02 /* CreatePostView.swift */,
 				0E861506DB4A02175CA3716F /* EditObjectView.swift */,
 				BE91C38F0A4F341515EE1533 /* FeedView.swift */,
 				A13EF172D6573EF670A34016 /* HelpView.swift */,
@@ -326,6 +329,7 @@
 				9BE4F27354B989C0DEC71E81 /* BookComposeView.swift in Sources */,
 				495979F03E55BCE2A32B15F8 /* BrandMark.swift in Sources */,
 				A3C4D60311F5ED28BED974CB /* ComposeView.swift in Sources */,
+				2A35743504B2C8D96772836A /* CreatePostView.swift in Sources */,
 				0EED2F373403B33F7E554CFD /* EditObjectView.swift in Sources */,
 				1DBB49A315C221EABC8395BD /* FeedView.swift in Sources */,
 				C7A3C9DD57CA3B28E72FD6AC /* HelpView.swift in Sources */,

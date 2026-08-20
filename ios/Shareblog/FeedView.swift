@@ -9,6 +9,7 @@ struct FeedView: View {
     @State private var errorMessage: String?
     @State private var isOffline = false
     @State private var showSettings = false
+    @State private var createCoordinator: ShareCoordinator?
 
     var body: some View {
         NavigationStack {
@@ -42,6 +43,16 @@ struct FeedView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        createCoordinator = ShareCoordinator(extensionItems: []) {
+                            createCoordinator = nil
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("New post")
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
@@ -64,6 +75,14 @@ struct FeedView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+            }
+            .sheet(isPresented: Binding(
+                get: { createCoordinator != nil },
+                set: { isPresented in if !isPresented { createCoordinator = nil } }
+            ), onDismiss: { Task { await load() } }) {
+                if let createCoordinator {
+                    CreatePostView(coordinator: createCoordinator)
+                }
             }
         }
     }
