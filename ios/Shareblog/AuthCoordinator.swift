@@ -64,6 +64,10 @@ final class AuthCoordinator: ObservableObject {
         self.site = site
     }
 
+    func didUpdateSite(_ site: Site) {
+        self.site = site
+    }
+
     /// Revokes every token for the account server-side — not just this
     /// device's — since the token is iCloud-Keychain-synced and tokens don't
     /// expire on their own; explicit sign-out is the only way this session

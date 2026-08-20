@@ -145,6 +145,13 @@ public final class APIClient: @unchecked Sendable {
         return wrapper.site
     }
 
+    public func updateSite(theme: SiteTheme) async throws -> Site {
+        struct Body: Encodable { let theme: SiteTheme }
+        struct Wrapper: Decodable { let site: Site }
+        let wrapper: Wrapper = try await request("/sites", method: "PATCH", body: Body(theme: theme))
+        return wrapper.site
+    }
+
     // MARK: - Resolvers
 
     public func resolveBook(query: String) async throws -> [BookCandidate] {

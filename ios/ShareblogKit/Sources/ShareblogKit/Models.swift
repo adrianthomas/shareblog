@@ -13,11 +13,25 @@ public struct User: Codable, Sendable {
     public let email: String
 }
 
+/// Mirrors the server's `themeValues` enum (`server/src/db/schema.ts`) —
+/// keep the two in sync if a theme is added.
+public enum SiteTheme: String, Codable, CaseIterable, Sendable {
+    case classic, cards
+
+    public var displayName: String {
+        switch self {
+        case .classic: return "Classic"
+        case .cards: return "Cards"
+        }
+    }
+}
+
 public struct Site: Codable, Sendable {
     public let id: String
     public let subdomain: String
     public let title: String
     public let tagline: String?
+    public let theme: SiteTheme
 }
 
 public struct AuthVerifyResponse: Codable, Sendable {
