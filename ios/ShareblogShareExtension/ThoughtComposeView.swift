@@ -9,7 +9,9 @@ struct ThoughtComposeView: View {
     var body: some View {
         VStack {
             Form {
-                if let errorMessage = coordinator.errorMessage {
+                if coordinator.offlineSaveAvailable {
+                    OfflineNotice(actionTitle: "Finish this later") { coordinator.saveForLater() }
+                } else if let errorMessage = coordinator.errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 }
                 TextEditor(text: $bodyText)
