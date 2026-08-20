@@ -51,6 +51,13 @@ struct SettingsView: View {
                     }
                 }
                 Section {
+                    NavigationLink {
+                        HelpView()
+                    } label: {
+                        Label("Help", systemImage: "questionmark.circle")
+                    }
+                }
+                Section {
                     Button("Sign out", role: .destructive) {
                         auth.signOut()
                         dismiss()
