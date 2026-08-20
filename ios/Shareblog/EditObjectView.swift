@@ -9,11 +9,39 @@ struct EditObjectView: View {
     let onDeleted: () -> Void
 
     var body: some View {
-        if object.type == .photo {
+        switch object.type {
+        case .photo:
             PhotoObjectView(object: object, onDeleted: onDeleted)
-        } else {
+        case .quote:
+            QuoteObjectView(object: object, onDeleted: onDeleted)
+        default:
             GenericObjectView(object: object, onDeleted: onDeleted)
         }
+    }
+}
+
+/// The draft/published-aware save action shared by every object-editing
+/// screen: a draft always offers "Publish" (nothing to gate on, since
+/// publishing as-shared is a valid choice); a published post only offers
+/// "Update", and only once something has actually changed, so there's no
+/// dead tap that round-trips the same content back to the server.
+private struct SaveButton: View {
+    let status: ObjectStatus
+    let isSaving: Bool
+    let hasChanges: Bool
+    let action: () -> Void
+
+    private var isEnabled: Bool { status == .draft || hasChanges }
+
+    var body: some View {
+        Button(action: action) {
+            if isSaving {
+                ProgressView()
+            } else {
+                Text(status == .draft ? "Publish" : "Update")
+            }
+        }
+        .disabled(!isEnabled || isSaving)
     }
 }
 
@@ -98,6 +126,10 @@ private struct PhotoObjectView: View {
         _caption = State(initialValue: object.metadata.stringValue("caption") ?? "")
     }
 
+    private var hasChanges: Bool {
+        caption != (object.metadata.stringValue("caption") ?? "")
+    }
+
     var body: some View {
         Form {
             Section("Photo") {
@@ -130,12 +162,8 @@ private struct PhotoObjectView: View {
                 Text(errorMessage).foregroundStyle(.red)
             }
 
-            if object.status == .draft {
-                Button {
-                    Task { await publish() }
-                } label: {
-                    if isSaving { ProgressView() } else { Text("Publish") }
-                }
+            SaveButton(status: object.status, isSaving: isSaving, hasChanges: hasChanges) {
+                Task { await save() }
             }
 
             DeleteObjectButton(object: object) {
@@ -161,14 +189,18 @@ private struct PhotoObjectView: View {
         }
     }
 
-    private func publish() async {
+    private func save() async {
         isSaving = true
         errorMessage = nil
         defer { isSaving = false }
         do {
             var metadata = object.metadata
             metadata["caption"] = .string(caption)
-            _ = try await APIClient.shared.updateObject(id: object.id, status: .published, metadata: metadata)
+            _ = try await APIClient.shared.updateObject(
+                id: object.id,
+                status: object.status == .draft ? .published : nil,
+                metadata: metadata
+            )
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
@@ -193,6 +225,10 @@ private struct GenericObjectView: View {
         _bodyText = State(initialValue: object.body ?? "")
     }
 
+    private var hasChanges: Bool {
+        title != (object.title ?? "") || bodyText != (object.body ?? "")
+    }
+
     var body: some View {
         Form {
             Section(object.type.rawValue.capitalized) {
@@ -207,16 +243,8 @@ private struct GenericObjectView: View {
                 Text(errorMessage).foregroundStyle(.red)
             }
 
-            if object.status == .draft {
-                Button {
-                    Task { await publish() }
-                } label: {
-                    if isSaving {
-                        ProgressView()
-                    } else {
-                        Text("Publish")
-                    }
-                }
+            SaveButton(status: object.status, isSaving: isSaving, hasChanges: hasChanges) {
+                Task { await save() }
             }
 
             DeleteObjectButton(object: object) {
@@ -227,7 +255,7 @@ private struct GenericObjectView: View {
         .navigationTitle(object.status == .draft ? "Draft" : "Published")
     }
 
-    private func publish() async {
+    private func save() async {
         isSaving = true
         errorMessage = nil
         defer { isSaving = false }
@@ -236,7 +264,83 @@ private struct GenericObjectView: View {
                 id: object.id,
                 title: title.isEmpty ? nil : title,
                 body: bodyText.isEmpty ? nil : bodyText,
-                status: .published
+                status: object.status == .draft ? .published : nil
+            )
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+/// A Quote's editable content spans two fields the generic title/body form
+/// doesn't cover — author and comment both live in metadata, not body — so
+/// it needs the same kind of dedicated screen Photo gets.
+private struct QuoteObjectView: View {
+    let object: ContentObject
+    let onDeleted: () -> Void
+
+    @State private var bodyText: String
+    @State private var author: String
+    @State private var comment: String
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+    @Environment(\.dismiss) private var dismiss
+
+    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+        self.object = object
+        self.onDeleted = onDeleted
+        _bodyText = State(initialValue: object.body ?? "")
+        _author = State(initialValue: object.metadata.stringValue("author") ?? "")
+        _comment = State(initialValue: object.metadata.stringValue("comment") ?? "")
+    }
+
+    private var hasChanges: Bool {
+        bodyText != (object.body ?? "")
+            || author != (object.metadata.stringValue("author") ?? "")
+            || comment != (object.metadata.stringValue("comment") ?? "")
+    }
+
+    var body: some View {
+        Form {
+            Section("Quote") {
+                TextEditor(text: $bodyText)
+                    .frame(minHeight: 120)
+                TextField("Author", text: $author)
+            }
+            Section("Comment (optional)") {
+                TextEditor(text: $comment)
+                    .frame(minHeight: 80)
+            }
+
+            if let errorMessage {
+                Text(errorMessage).foregroundStyle(.red)
+            }
+
+            SaveButton(status: object.status, isSaving: isSaving, hasChanges: hasChanges) {
+                Task { await save() }
+            }
+
+            DeleteObjectButton(object: object) {
+                onDeleted()
+                dismiss()
+            }
+        }
+        .navigationTitle(object.status == .draft ? "Draft" : "Published")
+    }
+
+    private func save() async {
+        isSaving = true
+        errorMessage = nil
+        defer { isSaving = false }
+        do {
+            var metadata: [String: AnyCodable] = ["author": .string(author)]
+            if !comment.isEmpty { metadata["comment"] = .string(comment) }
+            _ = try await APIClient.shared.updateObject(
+                id: object.id,
+                body: bodyText.isEmpty ? nil : bodyText,
+                status: object.status == .draft ? .published : nil,
+                metadata: metadata
             )
             dismiss()
         } catch {
