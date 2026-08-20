@@ -69,3 +69,7 @@ iOS Simulator SDK (`xcodebuild ... -destination 'generic/platform=iOS
 Simulator'`), so the code compiles — running the actual share-sheet flow
 end-to-end still needs a real device or a working simulator, which needs a
 macOS software update.
+
+## License
+
+[MIT](LICENSE)
