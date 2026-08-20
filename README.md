@@ -13,7 +13,8 @@ npm run db:migrate
 npm run dev
 ```
 
-Requires a local Postgres (Homebrew `postgresql@16` works — no Docker needed).
+No external database to install — SQLite is created automatically at
+`DATABASE_URL` (defaults to `./data/shareblog.db`) on first migration.
 Auth codes/links are logged to the console in dev, not emailed.
 
 Local dev hits the server as `api.localhost:3000` (API) and
