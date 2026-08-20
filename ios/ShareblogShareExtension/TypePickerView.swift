@@ -4,23 +4,19 @@ import ShareblogKit
 struct TypePickerView: View {
     @ObservedObject var coordinator: ShareCoordinator
 
-    private let types: [(ContentType, String, String)] = [
-        (.thought, "Thought", "bubble.left"),
-        (.article, "Article", "doc.text"),
-        (.photo, "Photo", "photo"),
-        (.book, "Book", "book"),
-        (.music, "Music", "music.note"),
-    ]
+    private let types: [ContentType] = [.thought, .article, .photo, .book, .music]
 
     var body: some View {
-        List(types, id: \.0) { type, label, icon in
+        List(types, id: \.self) { type in
             NavigationLink(value: type) {
                 HStack {
-                    Image(systemName: icon).frame(width: 28)
-                    Text(label)
+                    Image(systemName: type.symbolName)
+                        .foregroundStyle(.tint)
+                        .frame(width: 28)
+                    Text(type.displayName)
                     Spacer()
                     if type == coordinator.selectedType {
-                        Image(systemName: "checkmark").foregroundStyle(.blue)
+                        Image(systemName: "checkmark").foregroundStyle(.tint)
                     }
                 }
             }

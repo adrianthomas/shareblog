@@ -9,6 +9,7 @@ struct ServerSetupView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
+                BrandMark()
                 Text("Connect to your server")
                     .font(.largeTitle.bold())
                 Text("Enter the domain of your self-hosted Shareblog server.")

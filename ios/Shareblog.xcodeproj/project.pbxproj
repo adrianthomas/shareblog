@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		042FDA89416CF551CCCC2B1F /* ShareblogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95F9D497C85E41A31746280 /* ShareblogApp.swift */; };
+		0AA622BA263775FB7719393E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 081DB3F19E285D6957543A21 /* Assets.xcassets */; };
 		0EED2F373403B33F7E554CFD /* EditObjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E861506DB4A02175CA3716F /* EditObjectView.swift */; };
 		1B3A73C84011044DE6243811 /* MusicComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015CDB080795DFCF98DFE5FD /* MusicComposeView.swift */; };
+		1D90240EC101BF48073D4416 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DF6B46A261004A2D3ECE532B /* Assets.xcassets */; };
 		1DBB49A315C221EABC8395BD /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE91C38F0A4F341515EE1533 /* FeedView.swift */; };
 		3445A8869C91F93951D3F722 /* ThoughtComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C55C92C78D3766EB7925F8E /* ThoughtComposeView.swift */; };
-		3D8056CE18320BCD32E3F6EF /* Info 2.plist in Resources */ = {isa = PBXBuildFile; fileRef = 56AA5B0BA21DDD2C8E669549 /* Info 2.plist */; };
+		495979F03E55BCE2A32B15F8 /* BrandMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4327D7BD2BBAB6213C08F7A /* BrandMark.swift */; };
 		4B4E5E55C11A3AF0CDF599FB /* AuthCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */; };
 		54AA8EFC9D32C5DA963325F2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92435F7BD00E74ACE366B7F /* SettingsView.swift */; };
 		573EBBCD423D077133E8B01B /* HowToSetUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */; };
@@ -28,6 +30,7 @@
 		A1E36C5370FC05907848380D /* BookComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */; };
 		A39F600FEB2AEEFC83EE8037 /* ShareCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424F4BAEDC1ACA41920C8304 /* ShareCoordinator.swift */; };
 		B0BE2A19ED8E24E5D35C7E13 /* ArticleComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */; };
+		C7A3C9DD57CA3B28E72FD6AC /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A13EF172D6573EF670A34016 /* HelpView.swift */; };
 		CFA2FA0F230D732E4BBB3D1D /* ShareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D0C571AD4C4B46860B242F /* ShareRootView.swift */; };
 		E40B8A3BFEDBC0F73BBBCBE9 /* ShareblogKit in Frameworks */ = {isa = PBXBuildFile; productRef = E6EEA65B19FA3908CF53E69E /* ShareblogKit */; };
 		F064FAF1322ADDE27D4438D1 /* PhotoComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F129CBDA0B6CD83C52F50A0A /* PhotoComposeView.swift */; };
@@ -60,26 +63,29 @@
 
 /* Begin PBXFileReference section */
 		015CDB080795DFCF98DFE5FD /* MusicComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicComposeView.swift; sourceTree = "<group>"; };
+		081DB3F19E285D6957543A21 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		08D7BDBFDEB16352EF81D113 /* ServerSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupView.swift; sourceTree = "<group>"; };
 		0E861506DB4A02175CA3716F /* EditObjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditObjectView.swift; sourceTree = "<group>"; };
 		2C245BE1ABED539CA58802EE /* SiteSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteSetupView.swift; sourceTree = "<group>"; };
 		2C55C92C78D3766EB7925F8E /* ThoughtComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtComposeView.swift; sourceTree = "<group>"; };
 		424F4BAEDC1ACA41920C8304 /* ShareCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCoordinator.swift; sourceTree = "<group>"; };
-		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleComposeView.swift; sourceTree = "<group>"; };
-		56AA5B0BA21DDD2C8E669549 /* Info 2.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info 2.plist"; sourceTree = "<group>"; };
 		5DF6E49CBBDC05D970A3D45A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToSetUpView.swift; sourceTree = "<group>"; };
 		6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		742B693BF8392EE8E21EA5A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookComposeView.swift; sourceTree = "<group>"; };
+		A13EF172D6573EF670A34016 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
+		A4327D7BD2BBAB6213C08F7A /* BrandMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandMark.swift; sourceTree = "<group>"; };
 		B1D891961FAB1E4107FC215E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		BE91C38F0A4F341515EE1533 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
 		C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
 		CD351AAC9596074785F6095B /* VerifyCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyCodeView.swift; sourceTree = "<group>"; };
 		CF90155CBFDE2BB1359EF919 /* TypePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypePickerView.swift; sourceTree = "<group>"; };
-		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
+		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ShareblogKit; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
+		DF6B46A261004A2D3ECE532B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E92435F7BD00E74ACE366B7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		EDADFFC2E407C6F09849D393 /* Shareblog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Shareblog.entitlements; sourceTree = "<group>"; };
 		F0D0C571AD4C4B46860B242F /* ShareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRootView.swift; sourceTree = "<group>"; };
@@ -132,9 +138,12 @@
 		73F8C363E25789407B4524AE /* Shareblog */ = {
 			isa = PBXGroup;
 			children = (
+				081DB3F19E285D6957543A21 /* Assets.xcassets */,
 				C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */,
+				A4327D7BD2BBAB6213C08F7A /* BrandMark.swift */,
 				0E861506DB4A02175CA3716F /* EditObjectView.swift */,
 				BE91C38F0A4F341515EE1533 /* FeedView.swift */,
+				A13EF172D6573EF670A34016 /* HelpView.swift */,
 				622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */,
 				5DF6E49CBBDC05D970A3D45A /* Info.plist */,
 				FA5FD7DD88ECF74FFFCCFD1B /* OnboardingView.swift */,
@@ -161,9 +170,9 @@
 			isa = PBXGroup;
 			children = (
 				5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */,
+				DF6B46A261004A2D3ECE532B /* Assets.xcassets */,
 				9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */,
 				FDFF5B36B472F2A160196623 /* ComposeView.swift */,
-				56AA5B0BA21DDD2C8E669549 /* Info 2.plist */,
 				742B693BF8392EE8E21EA5A4 /* Info.plist */,
 				015CDB080795DFCF98DFE5FD /* MusicComposeView.swift */,
 				F129CBDA0B6CD83C52F50A0A /* PhotoComposeView.swift */,
@@ -185,6 +194,7 @@
 			buildConfigurationList = 3658DA9AF8104D31EA0B9EB4 /* Build configuration list for PBXNativeTarget "Shareblog" */;
 			buildPhases = (
 				5002F9B4AFC9DDD6B9C0E37D /* Sources */,
+				7D132D0EB01CFAA3921D3669 /* Resources */,
 				14116F49A2796C96156A2584 /* Frameworks */,
 				236BAE5B9179A6F1F5356FE7 /* Embed Foundation Extensions */,
 			);
@@ -231,9 +241,11 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					40BF3D11F5F0E08A594D7F90 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					464BAC28BD1F01EDC71BA81A = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -266,7 +278,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3D8056CE18320BCD32E3F6EF /* Info 2.plist in Resources */,
+				1D90240EC101BF48073D4416 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D132D0EB01CFAA3921D3669 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AA622BA263775FB7719393E /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,8 +298,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B4E5E55C11A3AF0CDF599FB /* AuthCoordinator.swift in Sources */,
+				495979F03E55BCE2A32B15F8 /* BrandMark.swift in Sources */,
 				0EED2F373403B33F7E554CFD /* EditObjectView.swift in Sources */,
 				1DBB49A315C221EABC8395BD /* FeedView.swift in Sources */,
+				C7A3C9DD57CA3B28E72FD6AC /* HelpView.swift in Sources */,
 				573EBBCD423D077133E8B01B /* HowToSetUpView.swift in Sources */,
 				5FF18EED222EB12CE091852F /* OnboardingView.swift in Sources */,
 				5D39D2EA25235C23A066C753 /* RootView.swift in Sources */,
@@ -323,6 +345,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -383,7 +406,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Shareblog/Shareblog.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = Shareblog/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -400,6 +422,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -465,7 +488,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShareblogShareExtension/ShareblogShareExtension.entitlements;
-				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = ShareblogShareExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -486,7 +508,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Shareblog/Shareblog.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = Shareblog/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -503,7 +524,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShareblogShareExtension/ShareblogShareExtension.entitlements;
-				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = ShareblogShareExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

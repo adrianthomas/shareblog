@@ -11,6 +11,7 @@ struct OnboardingView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
+                BrandMark()
                 Text("Shareblog")
                     .font(.largeTitle.bold())
                 Text("Sign in with your email to publish to your site.")

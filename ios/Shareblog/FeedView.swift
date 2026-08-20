@@ -41,7 +41,12 @@ struct FeedView: View {
             .navigationTitle(auth.site?.title ?? "Feed")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Settings") { showSettings = true }
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
                 }
             }
             .refreshable { await load() }
@@ -94,17 +99,16 @@ private struct PendingRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(item.type.rawValue.capitalized)
+            HStack(spacing: 6) {
+                Image(systemName: item.type.symbolName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(item.type.displayName)
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
-                Text("Queued")
-                    .font(.caption2.bold())
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.orange.opacity(0.25), in: Capsule())
+                StatusBadge(text: "Queued", color: .orange)
             }
-            Text(item.title ?? item.body ?? item.type.rawValue.capitalized)
+            Text(item.title ?? item.body ?? item.type.displayName)
                 .lineLimit(2)
                 .foregroundStyle(.secondary)
         }
@@ -117,21 +121,34 @@ private struct FeedRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(object.type.rawValue.capitalized)
+            HStack(spacing: 6) {
+                Image(systemName: object.type.symbolName)
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+                Text(object.type.displayName)
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
                 if object.status == .draft {
-                    Text("Draft")
-                        .font(.caption2.bold())
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.yellow.opacity(0.3), in: Capsule())
+                    StatusBadge(text: "Draft", color: .yellow)
                 }
             }
-            Text(object.title ?? object.body ?? object.type.rawValue)
+            Text(object.title ?? object.body ?? object.type.displayName)
                 .lineLimit(2)
         }
         .padding(.vertical, 2)
+    }
+}
+
+private struct StatusBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.caption2.bold())
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.2), in: Capsule())
+            .foregroundStyle(color)
     }
 }
