@@ -1,8 +1,9 @@
 # Self-hosting Shareblog
 
-Shareblog runs as a single Node process (Fastify) backed by Postgres. There's
-no hosted service yet — self-hosting on your own domain is the only way to
-run it in production today. This doc covers a generic Linux server; adapt
+Shareblog runs as a single Node process (Fastify) backed by a SQLite file —
+no separate database server to install or manage. There's no hosted service
+yet — self-hosting on your own domain is the only way to run it in
+production today. This doc covers a generic Linux server; adapt
 the reverse-proxy/process-manager steps if your host does things differently
 (e.g. Uberspace uses `supervisord` instead of `systemd`, and doesn't support
 wildcard domains — see the note at the end). On Uberspace specifically, skip
@@ -14,7 +15,7 @@ actual commands instead of adapting these on the fly.
 - A Linux server (VPS or similar) you can SSH into and run long-lived
   processes on.
 - A domain you control, with the ability to add DNS records.
-- Node.js 22+ and PostgreSQL 14+.
+- Node.js 22+.
 - A reverse proxy that can terminate TLS. These steps use
   [Caddy](https://caddyserver.com) because it gets you automatic Let's
   Encrypt certs with almost no config; nginx + certbot works too if you
@@ -45,21 +46,14 @@ npm run build
 `sharp` (image processing) has native bindings — always run `npm install` on
 the target machine itself, never copy a `node_modules` built elsewhere.
 
-## 2. Set up Postgres
-
-```bash
-sudo -u postgres createuser shareblog -P
-sudo -u postgres createdb --encoding=UTF8 --owner=shareblog --template=template0 shareblog
-```
-
-## 3. Configure the environment
+## 2. Configure the environment
 
 Copy `.env.example` to `.env` and fill in production values:
 
 ```
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgres://shareblog:<password>@localhost:5432/shareblog
+DATABASE_URL=/home/youruser/shareblog/server/data/shareblog.db
 BASE_DOMAIN=yourdomain.com
 API_BASE_URL=https://api.yourdomain.com
 STORAGE_DRIVER=local
@@ -78,20 +72,25 @@ will fail to send them (dev-only console logging is disabled once
 `NODE_ENV=production`), so don't skip this — see
 [server/src/auth/email.ts](server/src/auth/email.ts).
 
-## 4. Run migrations
+`DATABASE_URL` is just a file path — SQLite creates it automatically on
+first migration, no server to provision. It's worth pointing it at the same
+`data/` directory as `LOCAL_STORAGE_DIR`: a full backup is then just
+`systemctl stop shareblog && cp -r data/ backup/`.
+
+## 3. Run migrations
 
 ```bash
 npm run db:migrate
 ```
 
-## 5. Keep the server running
+## 4. Keep the server running
 
 A basic systemd unit at `/etc/systemd/system/shareblog.service`:
 
 ```ini
 [Unit]
 Description=Shareblog server
-After=network.target postgresql.service
+After=network.target
 
 [Service]
 Type=simple
@@ -110,7 +109,7 @@ sudo systemctl enable --now shareblog
 sudo systemctl status shareblog
 ```
 
-## 6. Reverse proxy + TLS
+## 5. Reverse proxy + TLS
 
 DNS: point `yourdomain.com`, `api.yourdomain.com`, and each site subdomain
 you create at your server's IP (A/AAAA records).
@@ -131,7 +130,7 @@ sudo systemctl reload caddy
 Add a new line (or extend the host list) for every additional site you
 create — Caddy requests a cert for each hostname automatically.
 
-## 7. Point the iOS app at your server
+## 6. Point the iOS app at your server
 
 Open the app — the first screen asks for your server's domain
 (`yourdomain.com`, no `https://` needed). It assumes the `api.<domain>`

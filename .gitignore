@@ -21,3 +21,4 @@ ios/**/.swiftpm/
 # Server data
 server/data/uploads/*
 !server/data/uploads/.gitkeep
+server/data/*.db*

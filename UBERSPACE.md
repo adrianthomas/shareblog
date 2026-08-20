@@ -1,10 +1,11 @@
 # Running Shareblog on Uberspace
 
 Uberspace-specific walkthrough for [SELF_HOSTING.md](SELF_HOSTING.md): shared
-hosting, no root/sudo, no systemd, no Docker. You get your own Postgres
-role in a shared cluster, `supervisord` instead of systemd, and
-`uberspace web domain`/`uberspace web backend` instead of your own reverse
-proxy — Uberspace terminates TLS for you automatically via Let's Encrypt.
+hosting, no root/sudo, no systemd, no Docker. The database is a single
+SQLite file in your account's own storage — nothing to provision. You also
+get `supervisord` instead of systemd, and `uberspace web
+domain`/`uberspace web backend` instead of your own reverse proxy —
+Uberspace terminates TLS for you automatically via Let's Encrypt.
 
 Every command below runs as your normal Uberspace user over SSH — nothing
 needs `sudo`, and nothing here will work if you try to use it.
@@ -45,18 +46,7 @@ binaries, so this should just work with a plain `npm install` — as with any
 host, always run it on the box itself, never copy over a `node_modules`
 built elsewhere.
 
-## 3. Set up Postgres
-
-Uberspace already runs a Postgres cluster for your account — there's no
-install step and no separate superuser to sudo into, your own account can
-create roles and databases directly:
-
-```bash
-createuser shareblog -P
-createdb --encoding=UTF8 --owner=shareblog --template=template0 shareblog
-```
-
-## 4. Configure the environment
+## 3. Configure the environment
 
 ```bash
 cp .env.example .env
@@ -67,7 +57,7 @@ Fill in:
 ```
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgres://shareblog:<password>@localhost:5432/shareblog
+DATABASE_URL=/home/<username>/shareblog/server/data/shareblog.db
 BASE_DOMAIN=yourdomain.com
 API_BASE_URL=https://api.yourdomain.com
 STORAGE_DRIVER=local
@@ -99,13 +89,18 @@ address (`noreply@yourdomain.com` once that domain is added via
 `noreply@<username>.uber.space` if you'd rather skip that step) as both
 `SMTP_USER` and the address in `SMTP_FROM`.
 
-## 5. Run migrations
+`DATABASE_URL` is just a path in your account's own storage — SQLite
+creates the file automatically on first migration, no role/database to
+provision. Keeping it under `data/` next to `LOCAL_STORAGE_DIR` means a
+full backup is just `supervisorctl stop shareblog && cp -r data/ backup/`.
+
+## 4. Run migrations
 
 ```bash
 npm run db:migrate
 ```
 
-## 6. Keep the server running — supervisord, not systemd
+## 5. Keep the server running — supervisord, not systemd
 
 Uberspace has no systemd or sudo; long-running processes are supervised by
 `supervisord` instead, via one `.ini` file per service in
@@ -142,7 +137,7 @@ supervisorctl update
 supervisorctl status shareblog
 ```
 
-## 7. Domains and routing
+## 6. Domains and routing
 
 One Shareblog process serves everything, split by the `Host` header (see
 [tenant.ts](server/src/middleware/tenant.ts)): the apex/API host, plus one
@@ -169,9 +164,9 @@ uberspace web domain add myfirstsite.yourdomain.com
 uberspace web backend set myfirstsite.yourdomain.com --http --port 3000
 ```
 
-## 8. Point the iOS app at your server
+## 7. Point the iOS app at your server
 
-Same as any other host — see step 7 in [SELF_HOSTING.md](SELF_HOSTING.md).
+Same as any other host — see step 6 in [SELF_HOSTING.md](SELF_HOSTING.md).
 Open the app, enter `yourdomain.com` (no scheme needed) on the first
 screen, and it assumes the `api.<domain>` convention set up above.
 

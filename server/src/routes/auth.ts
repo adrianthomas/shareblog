@@ -8,12 +8,12 @@ import { generateApiToken, hashToken } from "../auth/tokens.js";
 import { authGuard } from "../middleware/auth-guard.js";
 
 const requestCodeSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().toLowerCase(),
   context: z.enum(["web", "mobile"]),
 });
 
 const verifyCodeSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().toLowerCase(),
   code: z.string().length(6),
   deviceName: z.string().max(120).optional(),
 });
