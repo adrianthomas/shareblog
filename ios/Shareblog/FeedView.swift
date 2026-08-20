@@ -36,7 +36,9 @@ struct FeedView: View {
             }
             .navigationDestination(for: String.self) { id in
                 if let object = objects.first(where: { $0.id == id }) {
-                    EditObjectView(object: object)
+                    EditObjectView(object: object) {
+                        objects.removeAll { $0.id == id }
+                    }
                 }
             }
             .navigationTitle(auth.site?.title ?? "Feed")

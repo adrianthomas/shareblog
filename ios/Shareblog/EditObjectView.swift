@@ -3,12 +3,78 @@ import ShareblogKit
 
 struct EditObjectView: View {
     let object: ContentObject
+    /// Called after the object is successfully deleted (whether that's
+    /// unpublishing a live post or deleting a draft), so the caller can drop
+    /// it from whatever list it's showing.
+    let onDeleted: () -> Void
 
     var body: some View {
         if object.type == .photo {
-            PhotoObjectView(object: object)
+            PhotoObjectView(object: object, onDeleted: onDeleted)
         } else {
-            GenericObjectView(object: object)
+            GenericObjectView(object: object, onDeleted: onDeleted)
+        }
+    }
+}
+
+/// Destructive delete action shared by every object-editing screen. Labeled
+/// "Unpublish" for a live post (deleting it takes the post down) versus
+/// "Delete draft" for one that was never public — same underlying request,
+/// different framing for what the user is actually giving up.
+private struct DeleteObjectButton: View {
+    let object: ContentObject
+    let onDeleted: () -> Void
+
+    @State private var isDeleting = false
+    @State private var showConfirmation = false
+    @State private var errorMessage: String?
+
+    private var isPublished: Bool { object.status == .published }
+    private var actionTitle: String { isPublished ? "Unpublish" : "Delete Draft" }
+
+    var body: some View {
+        Section {
+            if let errorMessage {
+                Text(errorMessage).foregroundStyle(.red)
+            }
+            Button(role: .destructive) {
+                showConfirmation = true
+            } label: {
+                if isDeleting {
+                    ProgressView()
+                } else {
+                    Text(actionTitle)
+                }
+            }
+            .disabled(isDeleting)
+        }
+        .confirmationDialog(
+            isPublished ? "Unpublish this post?" : "Delete this draft?",
+            isPresented: $showConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(actionTitle, role: .destructive) {
+                Task { await delete() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                isPublished
+                    ? "This removes the post and its content from your site. This can't be undone."
+                    : "This can't be undone."
+            )
+        }
+    }
+
+    private func delete() async {
+        isDeleting = true
+        errorMessage = nil
+        defer { isDeleting = false }
+        do {
+            try await APIClient.shared.deleteObject(id: object.id)
+            onDeleted()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }
@@ -17,6 +83,7 @@ struct EditObjectView: View {
 /// image has to be resolved via a lookup before it can be displayed.
 private struct PhotoObjectView: View {
     let object: ContentObject
+    let onDeleted: () -> Void
 
     @State private var caption: String
     @State private var imageURL: URL?
@@ -25,8 +92,9 @@ private struct PhotoObjectView: View {
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject) {
+    init(object: ContentObject, onDeleted: @escaping () -> Void) {
         self.object = object
+        self.onDeleted = onDeleted
         _caption = State(initialValue: object.metadata.stringValue("caption") ?? "")
     }
 
@@ -69,6 +137,11 @@ private struct PhotoObjectView: View {
                     if isSaving { ProgressView() } else { Text("Publish") }
                 }
             }
+
+            DeleteObjectButton(object: object) {
+                onDeleted()
+                dismiss()
+            }
         }
         .navigationTitle(object.status == .draft ? "Draft" : "Published")
         .task { await loadImage() }
@@ -105,6 +178,7 @@ private struct PhotoObjectView: View {
 
 private struct GenericObjectView: View {
     let object: ContentObject
+    let onDeleted: () -> Void
 
     @State private var title: String
     @State private var bodyText: String
@@ -112,8 +186,9 @@ private struct GenericObjectView: View {
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject) {
+    init(object: ContentObject, onDeleted: @escaping () -> Void) {
         self.object = object
+        self.onDeleted = onDeleted
         _title = State(initialValue: object.title ?? "")
         _bodyText = State(initialValue: object.body ?? "")
     }
@@ -142,6 +217,11 @@ private struct GenericObjectView: View {
                         Text("Publish")
                     }
                 }
+            }
+
+            DeleteObjectButton(object: object) {
+                onDeleted()
+                dismiss()
             }
         }
         .navigationTitle(object.status == .draft ? "Draft" : "Published")

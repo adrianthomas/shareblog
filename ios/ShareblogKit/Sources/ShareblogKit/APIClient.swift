@@ -267,6 +267,13 @@ public final class APIClient: @unchecked Sendable {
         return wrapper.object
     }
 
+    /// Deletes the object and, on the server, any uploaded image content it
+    /// referenced (a Photo's image, an Article's cover) — not just the post
+    /// row. Used both to unpublish a live post and to delete a draft.
+    public func deleteObject(id: String) async throws {
+        let _: EmptyResponse = try await request("/objects/\(id)", method: "DELETE", empty: true)
+    }
+
     public func listObjects(type: ContentType? = nil, status: ObjectStatus? = nil) async throws -> [ContentObject] {
         var path = "/objects"
         var query: [String] = []

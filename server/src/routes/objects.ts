@@ -2,11 +2,31 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { and, eq, lt, desc } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { contentObjects, contentTypeValues } from "../db/schema.js";
+import { assets, contentObjects, contentTypeValues } from "../db/schema.js";
 import { authGuard } from "../middleware/auth-guard.js";
 import { createObjectSchema, updateObjectSchema } from "../lib/schemas.js";
 import { slugify, slugFromBody } from "../lib/slugify.js";
 import { invalidateSitePages } from "../render/page-cache.js";
+import { storage } from "../storage/index.js";
+
+// A Photo/Article/Book object's only link to its uploaded image is one of
+// these metadata fields (there's no DB relation — assets.contentObjectId is
+// never actually set on upload). Deleting the object needs to walk the same
+// fields to find what to purge from storage.
+function referencedAssetIds(metadata: unknown): string[] {
+  if (!metadata || typeof metadata !== "object") return [];
+  const record = metadata as Record<string, unknown>;
+  return [record.assetId, record.coverAssetId].filter((value): value is string => typeof value === "string");
+}
+
+async function deleteAsset(assetId: string): Promise<void> {
+  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId)).limit(1);
+  if (!asset) return;
+  const variants = asset.variants as Record<string, string>;
+  const keys = new Set([asset.storageKey, ...Object.values(variants)].filter(Boolean));
+  await Promise.all([...keys].map((key) => storage.delete(key)));
+  await db.delete(assets).where(eq(assets.id, assetId));
+}
 
 async function uniqueSlug(siteId: string, base: string): Promise<string> {
   let slug = base;
@@ -133,7 +153,15 @@ export async function objectRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     if (!site) return reply.code(404).send();
 
-    await db.delete(contentObjects).where(and(eq(contentObjects.id, id), eq(contentObjects.siteId, site.id)));
+    const [existing] = await db
+      .select()
+      .from(contentObjects)
+      .where(and(eq(contentObjects.id, id), eq(contentObjects.siteId, site.id)))
+      .limit(1);
+    if (!existing) return reply.code(404).send();
+
+    await Promise.all(referencedAssetIds(existing.metadata).map(deleteAsset));
+    await db.delete(contentObjects).where(eq(contentObjects.id, id));
     invalidateSitePages(site.id);
     return reply.code(204).send();
   });
