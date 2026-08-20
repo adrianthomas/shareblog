@@ -9,7 +9,7 @@ export interface BookMetadata {
   isbn10?: string;
   coverUrl?: string;
   rating?: number;
-  links?: { bookshop?: string; amazon?: string; appleBooks?: string };
+  links?: { bookshop?: string; amazon?: string; kobo?: string; appleBooks?: string };
 }
 
 export interface MusicMetadata {

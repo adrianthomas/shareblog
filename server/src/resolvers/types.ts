@@ -5,6 +5,12 @@ export interface ResolvedBookCandidate {
   isbn10?: string;
   coverUrl?: string;
   source: "open_library" | "google_books";
+  links: {
+    amazon?: string;
+    bookshop?: string;
+    kobo?: string;
+    appleBooks?: string;
+  };
 }
 
 export interface ResolvedMusic {
