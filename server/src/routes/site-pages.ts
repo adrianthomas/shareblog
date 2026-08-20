@@ -4,7 +4,7 @@ import { db } from "../db/client.js";
 import { contentObjects } from "../db/schema.js";
 import type { ContentType } from "../db/schema.js";
 import { resolveTenant } from "../middleware/tenant.js";
-import { renderList, renderObjectPage, renderFeed } from "../render/render.js";
+import { renderList, renderObjectPage, renderFeed, renderLandingPage } from "../render/render.js";
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
 import { t, type MessageKey } from "../render/i18n.js";
 
@@ -80,7 +80,12 @@ const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
 ];
 
 export async function sitePageRoutes(app: FastifyInstance) {
-  app.get("/", { preHandler: resolveTenant }, async (request, reply) => {
+  app.get("/", async (request, reply) => {
+    if (request.headers.host === process.env.BASE_DOMAIN) {
+      return sendHtml(reply, renderLandingPage());
+    }
+    await resolveTenant(request, reply);
+    if (reply.sent) return;
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => {
       const objects = await publishedObjects(site.id);
