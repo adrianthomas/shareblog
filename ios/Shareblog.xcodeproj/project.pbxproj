@@ -31,10 +31,12 @@
 		7F2C65D0D5E3B839BE6D59C8 /* BookComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236753978F021F688DDDFFC0 /* BookComposeView.swift */; };
 		81123F5C92ADEF09F923E3F1 /* ServerSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D7BDBFDEB16352EF81D113 /* ServerSetupView.swift */; };
 		82E05708F698086D681AD0F9 /* PhotoComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A20432D9CFE54848904EB0 /* PhotoComposeView.swift */; };
+		8FA3404B0E3E291E7CB0C506 /* QuoteComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E0C253FEBFBDCFC7919A93 /* QuoteComposeView.swift */; };
 		91B433E6C69D53D5E3E44873 /* SiteSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C245BE1ABED539CA58802EE /* SiteSetupView.swift */; };
 		9AB0931DAB45E4708BBB81F4 /* MusicComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205C1E2734AD2500C78D07C /* MusicComposeView.swift */; };
 		9BE4F27354B989C0DEC71E81 /* BookComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236753978F021F688DDDFFC0 /* BookComposeView.swift */; };
 		A3C4D60311F5ED28BED974CB /* ComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F591CDD3AB92A3C3E5F60B8F /* ComposeView.swift */; };
+		BDCCD8EA931521EDB700092C /* QuoteComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E0C253FEBFBDCFC7919A93 /* QuoteComposeView.swift */; };
 		C7A3C9DD57CA3B28E72FD6AC /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A13EF172D6573EF670A34016 /* HelpView.swift */; };
 		CFA2FA0F230D732E4BBB3D1D /* ShareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D0C571AD4C4B46860B242F /* ShareRootView.swift */; };
 		D3FAD177C743C6733A7358BF /* MusicComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C205C1E2734AD2500C78D07C /* MusicComposeView.swift */; };
@@ -77,6 +79,7 @@
 		236753978F021F688DDDFFC0 /* BookComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookComposeView.swift; sourceTree = "<group>"; };
 		27A20432D9CFE54848904EB0 /* PhotoComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoComposeView.swift; sourceTree = "<group>"; };
 		2C245BE1ABED539CA58802EE /* SiteSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteSetupView.swift; sourceTree = "<group>"; };
+		31E0C253FEBFBDCFC7919A93 /* QuoteComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteComposeView.swift; sourceTree = "<group>"; };
 		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DF6E49CBBDC05D970A3D45A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToSetUpView.swift; sourceTree = "<group>"; };
@@ -151,6 +154,7 @@
 				F591CDD3AB92A3C3E5F60B8F /* ComposeView.swift */,
 				C205C1E2734AD2500C78D07C /* MusicComposeView.swift */,
 				27A20432D9CFE54848904EB0 /* PhotoComposeView.swift */,
+				31E0C253FEBFBDCFC7919A93 /* QuoteComposeView.swift */,
 				F77AF96D511E4048D01EF6E3 /* ShareCoordinator.swift */,
 				67B53B928F226F8D4A9B5EC2 /* ThoughtComposeView.swift */,
 				8A1CD24CD93EEDBD231FB92D /* TypePickerView.swift */,
@@ -337,6 +341,7 @@
 				9AB0931DAB45E4708BBB81F4 /* MusicComposeView.swift in Sources */,
 				5FF18EED222EB12CE091852F /* OnboardingView.swift in Sources */,
 				82E05708F698086D681AD0F9 /* PhotoComposeView.swift in Sources */,
+				8FA3404B0E3E291E7CB0C506 /* QuoteComposeView.swift in Sources */,
 				5D39D2EA25235C23A066C753 /* RootView.swift in Sources */,
 				81123F5C92ADEF09F923E3F1 /* ServerSetupView.swift in Sources */,
 				54AA8EFC9D32C5DA963325F2 /* SettingsView.swift in Sources */,
@@ -358,6 +363,7 @@
 				17DF2A1770D5CF12174B8E2B /* ComposeView.swift in Sources */,
 				D3FAD177C743C6733A7358BF /* MusicComposeView.swift in Sources */,
 				28FDE2FB9473ECD6F876C1E1 /* PhotoComposeView.swift in Sources */,
+				BDCCD8EA931521EDB700092C /* QuoteComposeView.swift in Sources */,
 				0654C657B3E974AAFC17BD23 /* ShareCoordinator.swift in Sources */,
 				CFA2FA0F230D732E4BBB3D1D /* ShareRootView.swift in Sources */,
 				7ECF73FB42E718BE58F46A50 /* ShareViewController.swift in Sources */,

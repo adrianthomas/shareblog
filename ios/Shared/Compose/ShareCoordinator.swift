@@ -129,6 +129,19 @@ final class ShareCoordinator: ObservableObject {
         }
     }
 
+    func publishQuote(body: String, author: String, comment: String, status: ObjectStatus) async {
+        var metadata: [String: AnyCodable] = ["author": .string(author)]
+        if !comment.isEmpty { metadata["comment"] = .string(comment) }
+        let snapshot = PendingSnapshot(
+            type: .quote, title: nil, body: body, status: status, sourceUrl: nil, metadata: metadata, imageData: nil
+        )
+        await publish(snapshot) {
+            try await APIClient.shared.createObject(
+                type: .quote, title: nil, body: body, status: status, sourceUrl: nil, metadata: metadata
+            )
+        }
+    }
+
     func publishPhoto(image: UIImage, caption: String, status: ObjectStatus) async {
         guard let data = image.jpegData(compressionQuality: 0.9) else {
             errorMessage = APIError.decoding(NSError(domain: "Shareblog", code: 0)).errorDescription

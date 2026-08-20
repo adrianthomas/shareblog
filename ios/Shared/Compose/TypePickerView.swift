@@ -4,7 +4,7 @@ import ShareblogKit
 struct TypePickerView: View {
     @ObservedObject var coordinator: ShareCoordinator
 
-    private let types: [ContentType] = [.thought, .article, .photo, .book, .music]
+    private let types: [ContentType] = [.thought, .quote, .article, .photo, .book, .music]
 
     var body: some View {
         List(types, id: \.self) { type in

@@ -22,6 +22,8 @@ struct ComposeView: View {
                 MusicComposeView(coordinator: coordinator)
             case .article:
                 ArticleComposeView(coordinator: coordinator)
+            case .quote:
+                QuoteComposeView(coordinator: coordinator)
             }
         }
         .navigationBarTitleDisplayMode(.inline)

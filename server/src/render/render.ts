@@ -11,7 +11,16 @@ import { PhotoPost } from "./templates/PhotoPost.js";
 import { BookCard } from "./templates/BookCard.js";
 import { MusicCard } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
-import type { ContentObject, ArticleMetadata, PhotoMetadata, BookMetadata, MusicMetadata, Site } from "./templates/types.js";
+import { QuotePost } from "./templates/QuotePost.js";
+import type {
+  ContentObject,
+  ArticleMetadata,
+  PhotoMetadata,
+  BookMetadata,
+  MusicMetadata,
+  QuoteMetadata,
+  Site,
+} from "./templates/types.js";
 import { t, resolveLocale, type MessageKey } from "./i18n.js";
 
 function wrap(
@@ -58,6 +67,7 @@ const PATH_PREFIX: Record<ContentObject["type"], string> = {
   book: "books",
   music: "music",
   article: "articles",
+  quote: "quotes",
 };
 
 const LISTING_KEY: Record<ContentObject["type"], MessageKey> = {
@@ -66,6 +76,7 @@ const LISTING_KEY: Record<ContentObject["type"], MessageKey> = {
   book: "books",
   music: "music",
   article: "articles",
+  quote: "quotes",
 };
 
 async function renderCard(object: ContentObject, locale: string, theme: Site["theme"]): Promise<React.ReactNode> {
@@ -85,6 +96,8 @@ async function renderCard(object: ContentObject, locale: string, theme: Site["th
         theme,
         coverImageUrl: await articleImageUrl(object),
       });
+    case "quote":
+      return React.createElement(QuotePost, { object, locale, theme });
   }
 }
 
@@ -115,6 +128,8 @@ async function renderDetail(object: ContentObject, locale: string, theme: Site["
         coverImageUrl: await articleImageUrl(object),
         ...detailProps,
       });
+    case "quote":
+      return React.createElement(QuotePost, { object, linked: false, locale, ...detailProps });
   }
 }
 
@@ -161,8 +176,14 @@ function siteOrigin(site: Site): string {
 
 function feedTitle(object: ContentObject): string {
   if (object.title) return object.title;
-  const excerpt = (object.body ?? "").slice(0, 60);
-  return excerpt.length < (object.body ?? "").length ? `${excerpt}…` : excerpt || object.type;
+  const body = object.body ?? "";
+  const excerpt = body.slice(0, 60);
+  const truncated = excerpt.length < body.length ? `${excerpt}…` : excerpt || object.type;
+  if (object.type === "quote") {
+    const { author } = object.metadata as QuoteMetadata;
+    return author ? `“${truncated}” — ${author}` : `“${truncated}”`;
+  }
+  return truncated;
 }
 
 // Escapes text for use both as XML character data and, since the same
@@ -222,6 +243,13 @@ async function feedItemContent(object: ContentObject): Promise<string> {
       const image = url ? `<p><img src="${escapeXml(url)}" alt="${alt}" /></p>` : "";
       const caption = metadata.caption ? `<p>${escapeXml(metadata.caption)}</p>` : "";
       return image + caption;
+    }
+    case "quote": {
+      const metadata = object.metadata as QuoteMetadata;
+      const quote = `<p>“${escapeXml(object.body ?? "")}”</p>`;
+      const attribution = `<p>— ${escapeXml(metadata.author)}</p>`;
+      const comment = metadata.comment ? `<p>${escapeXml(metadata.comment)}</p>` : "";
+      return quote + attribution + comment;
     }
   }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 public enum ContentType: String, Codable, CaseIterable, Sendable {
-    case thought, photo, book, article, music
+    case thought, photo, book, article, music, quote
 
     public var displayName: String {
         switch self {
@@ -10,6 +10,7 @@ public enum ContentType: String, Codable, CaseIterable, Sendable {
         case .book: return "Book"
         case .article: return "Article"
         case .music: return "Music"
+        case .quote: return "Quote"
         }
     }
 
@@ -23,6 +24,7 @@ public enum ContentType: String, Codable, CaseIterable, Sendable {
         case .book: return "book.closed"
         case .article: return "doc.text"
         case .music: return "music.note"
+        case .quote: return "text.quote"
         }
     }
 }

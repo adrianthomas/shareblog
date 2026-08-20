@@ -46,12 +46,18 @@ export const musicMetadataSchema = z.object({
     .default({}),
 });
 
+export const quoteMetadataSchema = z.object({
+  author: z.string().min(1),
+  comment: z.string().optional(),
+});
+
 export const metadataSchemaByType = {
   thought: thoughtMetadataSchema,
   photo: photoMetadataSchema,
   book: bookMetadataSchema,
   article: articleMetadataSchema,
   music: musicMetadataSchema,
+  quote: quoteMetadataSchema,
 } as const;
 
 export const createObjectSchema = z
