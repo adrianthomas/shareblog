@@ -17,15 +17,22 @@ const scraper = metascraper([
   metascraperUrl(),
 ]);
 
+// Scraping is best-effort: sites block bots, 404, time out, or serve HTML
+// metascraper can't parse. Rather than fail the whole share, fall back to
+// the plain URL so the user can supply title/excerpt/etc themselves.
 export async function resolveArticle(targetUrl: string): Promise<ResolvedArticle> {
-  const response = await got(targetUrl, { timeout: { request: 8000 } });
-  const metadata = await scraper({ html: response.body, url: targetUrl });
+  try {
+    const response = await got(targetUrl, { timeout: { request: 8000 } });
+    const metadata = await scraper({ html: response.body, url: targetUrl });
 
-  return {
-    title: metadata.title || undefined,
-    excerpt: metadata.description || undefined,
-    imageUrl: metadata.image || undefined,
-    siteName: metadata.publisher || undefined,
-    canonicalUrl: metadata.url || targetUrl,
-  };
+    return {
+      title: metadata.title || undefined,
+      excerpt: metadata.description || undefined,
+      imageUrl: metadata.image || undefined,
+      siteName: metadata.publisher || undefined,
+      canonicalUrl: metadata.url || targetUrl,
+    };
+  } catch {
+    return { canonicalUrl: targetUrl };
+  }
 }

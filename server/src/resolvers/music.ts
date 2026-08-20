@@ -28,20 +28,24 @@ async function resolveAppleMusic(url: URL): Promise<ResolvedMusic> {
   const id = trackId ?? pathId;
 
   if (id) {
-    const response = await got("https://itunes.apple.com/lookup", {
-      searchParams: { id },
-      responseType: "json",
-      timeout: { request: 8000 },
-    }).json<ITunesLookupResponse>();
-    const result = response.results[0];
-    if (result) {
-      return {
-        artist: result.artistName ?? "Unknown artist",
-        releaseTitle: result.trackName ?? result.collectionName ?? "Untitled",
-        artworkUrl: result.artworkUrl100?.replace("100x100", "600x600"),
-        sourceUrl: url.toString(),
-        links: { appleMusic: url.toString() },
-      };
+    try {
+      const response = await got("https://itunes.apple.com/lookup", {
+        searchParams: { id },
+        responseType: "json",
+        timeout: { request: 8000 },
+      }).json<ITunesLookupResponse>();
+      const result = response.results[0];
+      if (result) {
+        return {
+          artist: result.artistName ?? "Unknown artist",
+          releaseTitle: result.trackName ?? result.collectionName ?? "Untitled",
+          artworkUrl: result.artworkUrl100?.replace("100x100", "600x600"),
+          sourceUrl: url.toString(),
+          links: { appleMusic: url.toString() },
+        };
+      }
+    } catch {
+      // fall through to the open-graph fallback below
     }
   }
 
@@ -54,20 +58,24 @@ interface SpotifyOembedResponse {
 }
 
 async function resolveSpotify(url: URL): Promise<ResolvedMusic> {
-  const response = await got("https://open.spotify.com/oembed", {
-    searchParams: { url: url.toString() },
-    responseType: "json",
-    timeout: { request: 8000 },
-  }).json<SpotifyOembedResponse>();
+  try {
+    const response = await got("https://open.spotify.com/oembed", {
+      searchParams: { url: url.toString() },
+      responseType: "json",
+      timeout: { request: 8000 },
+    }).json<SpotifyOembedResponse>();
 
-  // Spotify's oEmbed only gives a combined title, no separate artist field.
-  return {
-    artist: "",
-    releaseTitle: response.title ?? "Untitled",
-    artworkUrl: response.thumbnail_url,
-    sourceUrl: url.toString(),
-    links: { spotify: url.toString() },
-  };
+    // Spotify's oEmbed only gives a combined title, no separate artist field.
+    return {
+      artist: "",
+      releaseTitle: response.title ?? "Untitled",
+      artworkUrl: response.thumbnail_url,
+      sourceUrl: url.toString(),
+      links: { spotify: url.toString() },
+    };
+  } catch {
+    return fallbackViaOpenGraph(url, { spotify: url.toString() });
+  }
 }
 
 interface YouTubeOembedResponse {
@@ -86,19 +94,23 @@ async function resolveYouTubeMusic(url: URL): Promise<ResolvedMusic> {
     lookupUrl.hostname = "www.youtube.com";
   }
 
-  const response = await got("https://www.youtube.com/oembed", {
-    searchParams: { url: lookupUrl.toString(), format: "json" },
-    responseType: "json",
-    timeout: { request: 8000 },
-  }).json<YouTubeOembedResponse>();
+  try {
+    const response = await got("https://www.youtube.com/oembed", {
+      searchParams: { url: lookupUrl.toString(), format: "json" },
+      responseType: "json",
+      timeout: { request: 8000 },
+    }).json<YouTubeOembedResponse>();
 
-  return {
-    artist: response.author_name ?? "Unknown artist",
-    releaseTitle: response.title ?? "Untitled",
-    artworkUrl: response.thumbnail_url,
-    sourceUrl: url.toString(),
-    links: { youtubeMusic: url.toString() },
-  };
+    return {
+      artist: response.author_name ?? "Unknown artist",
+      releaseTitle: response.title ?? "Untitled",
+      artworkUrl: response.thumbnail_url,
+      sourceUrl: url.toString(),
+      links: { youtubeMusic: url.toString() },
+    };
+  } catch {
+    return fallbackViaOpenGraph(url, { youtubeMusic: url.toString() });
+  }
 }
 
 async function fallbackViaOpenGraph(url: URL, links: ResolvedMusic["links"]): Promise<ResolvedMusic> {
