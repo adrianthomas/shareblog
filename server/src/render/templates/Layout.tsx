@@ -41,6 +41,18 @@ export function Layout({
         <title>{pageTitle}</title>
         {site.tagline ? <meta name="description" content={site.tagline} /> : null}
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
+        {theme === "cards" ? (
+          <>
+            {/* For the cards theme's quote letter-card, which sets its quote text
+                in a cursive hand rather than the site's system UI font. */}
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+            <link
+              rel="stylesheet"
+              href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap"
+            />
+          </>
+        ) : null}
         <style
           dangerouslySetInnerHTML={{
             __html: `

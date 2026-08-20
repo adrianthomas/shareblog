@@ -43,6 +43,8 @@ export interface CardsItemData {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   hero: CardsHero;
+  /** "quote" renders the letter-card treatment (cursive type on paper) instead of the generic text card. Only meaningful when `hero.imageUrl` is unset. */
+  variant?: "quote";
 }
 
 // The caption (eyebrow/title/subtitle) is a child of the hero, absolutely
@@ -128,6 +130,41 @@ function TextCard({
   );
 }
 
+// A dedicated treatment for quotes: the generic TextCard (foreground type
+// + accent stripe) read as "a card on top of a card" once nested inside the
+// feed item's own rounded, shadowed surface. This leans into that instead —
+// the card itself becomes a piece of writing paper (warm parchment tone,
+// faint ruled lines, a per-post tilt so it reads as something set down
+// rather than a UI rectangle), with the quote set in a cursive hand rather
+// than the site's system UI font. The tilt/paper coloring is fixed
+// regardless of light/dark mode, the same way a photo doesn't invert for
+// dark mode — it's a physical object, not interface chrome.
+function QuoteCard({
+  title,
+  subtitle,
+  dateLabel,
+  seed,
+  titleTag: TitleTag = "h2",
+  full = false,
+}: {
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  dateLabel?: string;
+  seed: string;
+  titleTag?: "h1" | "h2";
+  full?: boolean;
+}) {
+  const tilt = ((hashSeed(seed) % 9) - 4) * 0.25;
+  const style = { "--cards-quote-tilt": `${tilt}deg` } as React.CSSProperties;
+  return (
+    <div className={`cards-quote-card${full ? " cards-quote-card--full" : ""}`} style={style}>
+      <TitleTag className="cards-quote-text">{title}</TitleTag>
+      {subtitle ? <p className="cards-quote-author">{subtitle}</p> : null}
+      {dateLabel ? <p className="cards-quote-date">{dateLabel}</p> : null}
+    </div>
+  );
+}
+
 function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: string }) {
   return (
     <a className="cards-close" href={backHref} aria-label={backLabel}>
@@ -142,11 +179,13 @@ function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: str
 // <a> (works with JS disabled — it's a normal link to the detail page).
 // `data-cards-card` is the hook the client script uses to intercept the
 // click and animate into the detail view instead of a hard navigation.
-export function CardsFeedItem({ href, eyebrow, title, subtitle, hero }: CardsItemData) {
+export function CardsFeedItem({ href, eyebrow, title, subtitle, hero, variant }: CardsItemData) {
   return (
-    <a className="cards-item" href={href} data-cards-card>
+    <a className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`} href={href} data-cards-card>
       {hero.imageUrl ? (
         <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
+      ) : variant === "quote" ? (
+        <QuoteCard title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       ) : (
         <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       )}
@@ -173,21 +212,27 @@ export function CardsDetailHeader({
   hero,
   backHref,
   backLabel,
+  variant,
 }: CardsItemData & { dateLabel: string; backHref: string; backLabel: string }) {
   if (!hero.imageUrl) {
+    const headerClass = `cards-detail-header cards-detail-header--text${variant === "quote" ? " cards-detail-header--quote" : ""}`;
     return (
       <>
         <CloseButton backHref={backHref} backLabel={backLabel} />
-        <header className="cards-detail-header cards-detail-header--text">
-          <TextCard
-            eyebrow={eyebrow}
-            title={title}
-            subtitle={subtitle}
-            dateLabel={dateLabel}
-            seed={hero.gradientSeed}
-            titleTag="h1"
-            full
-          />
+        <header className={headerClass}>
+          {variant === "quote" ? (
+            <QuoteCard title={title} subtitle={subtitle} dateLabel={dateLabel} seed={hero.gradientSeed} titleTag="h1" full />
+          ) : (
+            <TextCard
+              eyebrow={eyebrow}
+              title={title}
+              subtitle={subtitle}
+              dateLabel={dateLabel}
+              seed={hero.gradientSeed}
+              titleTag="h1"
+              full
+            />
+          )}
         </header>
       </>
     );
@@ -294,6 +339,25 @@ export const cardsStyles = `
   .cards-detail-header .cards-title { font-size: clamp(1.6rem, 4vw, 2.4rem); }
   .cards-detail-header .cards-caption { max-width: 1120px; margin: 0 auto; padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); padding-bottom: 1.75rem; }
 
+  /* On a wide viewport, a cover-image detail header bled to the full
+     100vw browser width reads as a thin, oversized banner rather than
+     "immersive" — that framing only works when the viewport itself is
+     narrow enough to already feel edge-to-edge, i.e. mobile. From tablet
+     width up, drop the full-bleed treatment and present the same
+     hero+caption as a large centered card instead, closer to how the App
+     Store itself renders an expanded card on a bigger screen. */
+  @media (min-width: 720px) {
+    .cards-detail-header:not(.cards-detail-header--text) {
+      width: auto; max-width: 640px;
+      margin: max(2.5rem, calc(env(safe-area-inset-top) + 1.5rem)) auto 0;
+      border-radius: 24px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .cards-detail-header:not(.cards-detail-header--text) .cards-detail-hero {
+      min-height: 0; aspect-ratio: 4 / 3;
+    }
+  }
+
   /* Text-only card (no cover image): real foreground-colored type on the
      card's own surface instead of white text forced onto a colored block
      standing in for a missing photo. A thin per-post accent stripe across
@@ -327,6 +391,51 @@ export const cardsStyles = `
   .cards-detail-header--text .cards-text-card { padding: 1.75rem 1.75rem 1.5rem; border-radius: 16px; }
   .cards-detail-header--text .cards-text-card--full .cards-text-title { -webkit-line-clamp: unset; }
   .cards-detail-header--text .cards-text-title { font-size: clamp(1.3rem, 3.2vw, 1.75rem); }
+
+  /* Quote card: a piece of writing paper rather than a UI rectangle. The
+     outer .cards-item link normally supplies its own rounded, shadowed
+     surface, which made the text card read as "a card on top of a card" —
+     here the paper card carries its own shadow and tilt instead, so the
+     link wrapping it is stripped back to nothing. Paper tone and tilt are
+     fixed regardless of light/dark mode, same as a photo not inverting for
+     dark mode: it's a physical object sitting on the page, not chrome. */
+  .cards-item--quote { background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
+  .cards-item--quote:hover { box-shadow: none; }
+  .cards-quote-card {
+    position: relative;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0, transparent 1.85rem, rgba(61,50,34,0.07) 1.85rem, rgba(61,50,34,0.07) calc(1.85rem + 1px)),
+      linear-gradient(160deg, #fffdf7, #f8f1e2 65%);
+    padding: 2.1rem 1.75rem 1.5rem;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px rgba(30,20,5,0.12), 0 12px 28px rgba(30,20,5,0.2);
+    transform: rotate(var(--cards-quote-tilt, 0deg));
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cards-item--quote:hover .cards-quote-card { transform: rotate(0deg) translateY(-2px); box-shadow: 0 2px 4px rgba(30,20,5,0.14), 0 18px 36px rgba(30,20,5,0.22); }
+  /* A generic cursive stack — Dancing Script is loaded for Latin text (see
+     the font <link> in Layout.tsx); a script in another writing system
+     falls through per-character to the next font that has the glyph, same
+     as any other font stack, so a non-Latin quote still renders legibly
+     rather than showing missing-glyph boxes. */
+  .cards-quote-text {
+    margin: 0; font-family: "Dancing Script", "Segoe Script", "Apple Chancery", cursive;
+    font-weight: 700; font-size: 1.6rem; line-height: 1.35; color: #3a3122;
+    display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cards-quote-card--full .cards-quote-text { -webkit-line-clamp: unset; }
+  .cards-quote-author {
+    margin: 0.9rem 0 0; text-align: right;
+    font-family: "Dancing Script", "Segoe Script", "Apple Chancery", cursive;
+    font-weight: 600; font-size: 1.15rem; color: #6b5a3d;
+  }
+  .cards-quote-author::before { content: "— "; }
+  .cards-quote-date {
+    margin: 1.25rem 0 0; padding-top: 0.7rem; border-top: 1px dashed rgba(61,50,34,0.28);
+    font-size: 0.78rem; color: #6b5a3d; text-align: right; letter-spacing: 0.02em;
+  }
+  .cards-detail-header--quote .cards-quote-card { padding: 2.5rem 2rem 1.75rem; border-radius: 8px; }
+  .cards-detail-header--quote .cards-quote-text { font-size: clamp(1.6rem, 3.4vw, 2.1rem); }
 
   /* Body content beneath a detail header — the "content beneath" the App
      Store's expanded card falls back to a normal readable text column
@@ -499,7 +608,7 @@ export const cardsScript = `
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var heroEl = link.querySelector('.cards-hero');
-    var textEl = link.querySelector('.cards-text-card');
+    var textEl = link.querySelector('.cards-text-card, .cards-quote-card');
 
     document.documentElement.classList.add('cards-lock-scroll');
 
