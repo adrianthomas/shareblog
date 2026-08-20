@@ -1,10 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import sharp from "sharp";
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { assets } from "../db/schema.js";
 import { authGuard } from "../middleware/auth-guard.js";
 import { storage } from "../storage/index.js";
+import { processImage } from "../image/process-image.js";
 
 const VARIANTS = [
   { name: "thumb", width: 400 },
@@ -36,8 +36,7 @@ export async function assetRoutes(app: FastifyInstance) {
     }
 
     const buffer = await file.toBuffer();
-    const image = sharp(buffer).rotate(); // rotate() normalizes EXIF orientation, then strips it
-    const meta = await image.metadata();
+    const processed = await processImage(buffer, VARIANTS.map(({ name, width }) => ({ name, width })));
 
     const [asset] = await db
       .insert(assets)
@@ -46,21 +45,16 @@ export async function assetRoutes(app: FastifyInstance) {
         storageKey: "", // filled in below once we know the asset id
         originalFilename: file.filename,
         mimeType: "image/jpeg",
-        width: meta.width,
-        height: meta.height,
+        width: processed.width,
+        height: processed.height,
         variants: {},
       })
       .returning();
 
     const variants: Record<string, string> = {};
     for (const variant of VARIANTS) {
-      const resized = await image
-        .clone()
-        .resize({ width: variant.width, withoutEnlargement: true })
-        .jpeg({ quality: 85 })
-        .toBuffer();
       const key = `${site.id}/${asset.id}/${variant.name}.jpg`;
-      await storage.put(key, resized, "image/jpeg");
+      await storage.put(key, processed.variants[variant.name], "image/jpeg");
       variants[variant.name] = key;
     }
 
