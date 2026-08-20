@@ -37,6 +37,7 @@ export function QuotePost({
           title={quoted}
           subtitle={metadata.author}
           hero={hero}
+          variant="quote"
         />
       );
     }
@@ -51,6 +52,7 @@ export function QuotePost({
           hero={hero}
           backHref={backHref!}
           backLabel={backLabel!}
+          variant="quote"
         />
         {metadata.comment ? (
           <div className="cards-body">
