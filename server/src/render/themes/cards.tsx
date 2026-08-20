@@ -1,11 +1,10 @@
 import React from "react";
 import { t, type MessageKey } from "../i18n.js";
 
-// A small curated set of gradient pairs for content that has no hero image
-// (a Thought has no photo; an Article/Book/Music post might not have set
-// one). Picked for enough contrast to carry white overlay text at AA
-// contrast, chosen deterministically per post so the same post always gets
-// the same background instead of reshuffling on every render.
+// A small curated set of color pairs used to give text-only posts (a
+// Thought, Quote, or an Article/Book/Music post that hasn't set a cover) a
+// per-post color identity — chosen deterministically per post so the same
+// post always gets the same accent instead of reshuffling on every render.
 const GRADIENTS = [
   ["#4f46e5", "#9333ea"],
   ["#0ea5e9", "#0891b2"],
@@ -26,9 +25,10 @@ function hashSeed(seed: string): number {
   return Math.abs(hash);
 }
 
-export function gradientForSeed(seed: string): string {
-  const [from, to] = GRADIENTS[hashSeed(seed) % GRADIENTS.length];
-  return `linear-gradient(155deg, ${from}, ${to})`;
+// The same per-post color identity used to distinguish text-only cards —
+// deterministic per seed so the same post always gets the same accent.
+function accentForSeed(seed: string): string {
+  return GRADIENTS[hashSeed(seed) % GRADIENTS.length][0];
 }
 
 export interface CardsHero {
@@ -43,10 +43,6 @@ export interface CardsItemData {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   hero: CardsHero;
-}
-
-function heroStyle(hero: CardsHero): React.CSSProperties {
-  return hero.imageUrl ? {} : { backgroundImage: gradientForSeed(hero.gradientSeed) };
 }
 
 // The caption (eyebrow/title/subtitle) is a child of the hero, absolutely
@@ -64,8 +60,8 @@ function Hero({
   caption: React.ReactNode;
 }) {
   return (
-    <div className={`cards-hero ${className}`} style={heroStyle(hero)}>
-      {hero.imageUrl ? <img src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" /> : null}
+    <div className={`cards-hero ${className}`}>
+      <img src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
       <div className="cards-scrim" aria-hidden="true" />
       {caption}
     </div>
@@ -95,6 +91,53 @@ function Caption({
   );
 }
 
+// The card design for a post with no image (a Thought, a Quote, or an
+// Article/Book/Music post that hasn't set a cover): rather than mimicking
+// the photo card with a colored block standing in for the missing image —
+// which forces the same low-contrast white-on-scrim treatment a photo
+// needs, on a post where the text *is* the whole point — this sets real
+// foreground-colored type on the card's own surface, with a thin per-post
+// accent stripe standing in for the color identity a cover image would
+// otherwise carry. `full` skips the feed card's line-clamp (used on the
+// detail page, where the text should never be truncated).
+function TextCard({
+  eyebrow,
+  title,
+  subtitle,
+  seed,
+  dateLabel,
+  titleTag: TitleTag = "h2",
+  full = false,
+}: {
+  eyebrow: React.ReactNode;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  seed: string;
+  dateLabel?: string;
+  titleTag?: "h1" | "h2";
+  full?: boolean;
+}) {
+  const style = { "--cards-accent": accentForSeed(seed) } as React.CSSProperties;
+  return (
+    <div className={`cards-text-card${full ? " cards-text-card--full" : ""}`} style={style}>
+      <p className="cards-text-eyebrow">{eyebrow}</p>
+      <TitleTag className="cards-text-title">{title}</TitleTag>
+      {subtitle ? <p className="cards-text-subtitle">{subtitle}</p> : null}
+      {dateLabel ? <p className="cards-text-date">{dateLabel}</p> : null}
+    </div>
+  );
+}
+
+function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: string }) {
+  return (
+    <a className="cards-close" href={backHref} aria-label={backLabel}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+        <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      </svg>
+    </a>
+  );
+}
+
 // The feed-list rendering of a post: a full-bleed card that's also a plain
 // <a> (works with JS disabled — it's a normal link to the detail page).
 // `data-cards-card` is the hook the client script uses to intercept the
@@ -102,15 +145,23 @@ function Caption({
 export function CardsFeedItem({ href, eyebrow, title, subtitle, hero }: CardsItemData) {
   return (
     <a className="cards-item" href={href} data-cards-card>
-      <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
+      {hero.imageUrl ? (
+        <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
+      ) : (
+        <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} seed={hero.gradientSeed} />
+      )}
     </a>
   );
 }
 
 // The top-of-page header on a detail page in the cards theme: same visual
 // language as the feed card (full-bleed hero + overlaid caption) but
-// stretched taller and immersive, plus the persistent close control. The
-// close control is a real link (not a script-built button) so it works
+// stretched taller and immersive, plus the persistent close control. A
+// text-only post skips the immersive full-bleed treatment entirely — a
+// forced ~72vh block of nothing but an accent color behind a couple of
+// sentences reads as empty space, not "immersive" — and lands directly in
+// a normal readable column instead, at full, unclamped length. The close
+// control is a real link (not a script-built button) so it works
 // identically whether the page was reached by a hard navigation or by the
 // client script's animated overlay — the script just intercepts its click
 // to animate the close instead of letting it navigate.
@@ -123,19 +174,27 @@ export function CardsDetailHeader({
   backHref,
   backLabel,
 }: CardsItemData & { dateLabel: string; backHref: string; backLabel: string }) {
+  if (!hero.imageUrl) {
+    return (
+      <>
+        <CloseButton backHref={backHref} backLabel={backLabel} />
+        <header className="cards-detail-header cards-detail-header--text">
+          <TextCard
+            eyebrow={eyebrow}
+            title={title}
+            subtitle={subtitle}
+            dateLabel={dateLabel}
+            seed={hero.gradientSeed}
+            titleTag="h1"
+            full
+          />
+        </header>
+      </>
+    );
+  }
   return (
     <>
-      <a className="cards-close" href={backHref} aria-label={backLabel}>
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
-          <path
-            d="M5 5l14 14M19 5L5 19"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </svg>
-      </a>
+      <CloseButton backHref={backHref} backLabel={backLabel} />
       <header className="cards-detail-header">
         <Hero
           hero={hero}
@@ -186,7 +245,12 @@ export const cardsStyles = `
   body.theme-cards[data-cards-detail="true"] header.site-header,
   body.theme-cards[data-cards-detail="true"] .cards-tabbar { display: none; }
 
-  .cards-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+  /* align-items: start (rather than the grid default of stretch) lets a
+     short text card size to its own content instead of being stretched to
+     match a taller photo card sharing its row — a compact card for a short
+     thought reads as intentional, a short thought stretched to fill 400px
+     of near-empty card reads as broken. */
+  .cards-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
 
   .cards-item {
     position: relative; display: block; border-radius: 20px; overflow: hidden;
@@ -223,8 +287,46 @@ export const cardsStyles = `
      max-width, to read as immersive rather than "a big card in a column." */
   .cards-detail-header { position: relative; width: 100vw; margin-left: calc(50% - 50vw); }
   .cards-detail-hero { aspect-ratio: auto; min-height: min(72vh, 640px); border-radius: 0; }
-  .cards-detail-header .cards-title { font-size: clamp(1.6rem, 4vw, 2.4rem); -webkit-line-clamp: 4; }
+  /* No line-clamp here: this heading is the entire content of its own
+     page, with nothing below it restoring the truncated part (unlike a
+     feed card's title, which is a summary of a page you can still open) —
+     silently hiding part of it would leave no way to read the rest. */
+  .cards-detail-header .cards-title { font-size: clamp(1.6rem, 4vw, 2.4rem); }
   .cards-detail-header .cards-caption { max-width: 1120px; margin: 0 auto; padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); padding-bottom: 1.75rem; }
+
+  /* Text-only card (no cover image): real foreground-colored type on the
+     card's own surface instead of white text forced onto a colored block
+     standing in for a missing photo. A thin per-post accent stripe across
+     the top carries the color identity a cover image would otherwise give
+     the card, without competing with the text for contrast. */
+  .cards-text-card {
+    position: relative; padding: 1.5rem 1.375rem 1.25rem; background: var(--bg);
+    border-top: 3px solid var(--cards-accent);
+  }
+  .cards-text-eyebrow {
+    margin: 0 0 0.6rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--cards-accent);
+  }
+  .cards-text-title {
+    margin: 0; font-size: 1.2rem; line-height: 1.45; font-weight: 600; color: var(--fg);
+    display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cards-text-subtitle { margin: 0.6rem 0 0; font-size: 0.9rem; color: var(--muted); }
+  .cards-text-date { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--muted); }
+
+  /* The detail page's version of the same card: unclamped (see the note
+     on .cards-detail-header .cards-title above — this is the whole page's
+     content, nothing below it can recover a truncated line), and set in a
+     normal readable column rather than the full-bleed immersive header a
+     cover image gets, since a forced ~72vh block of nothing but an accent
+     color behind a couple of sentences reads as empty space, not immersive. */
+  .cards-detail-header--text {
+    width: auto; max-width: 680px; margin: 0 auto;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
+  }
+  .cards-detail-header--text .cards-text-card { padding: 1.75rem 1.75rem 1.5rem; border-radius: 16px; }
+  .cards-detail-header--text .cards-text-card--full .cards-text-title { -webkit-line-clamp: unset; }
+  .cards-detail-header--text .cards-text-title { font-size: clamp(1.3rem, 3.2vw, 1.75rem); }
 
   /* Body content beneath a detail header — the "content beneath" the App
      Store's expanded card falls back to a normal readable text column
@@ -391,7 +493,7 @@ export const cardsScript = `
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var heroEl = link.querySelector('.cards-hero');
-    var img = heroEl ? heroEl.querySelector('img') : null;
+    var textEl = link.querySelector('.cards-text-card');
 
     document.documentElement.classList.add('cards-lock-scroll');
 
@@ -404,19 +506,28 @@ export const cardsScript = `
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
 
-    var clone = document.createElement('div');
-    clone.className = 'cards-hero';
-    clone.style.position = 'absolute';
-    clone.style.inset = '0';
-    if (img) {
+    var clone;
+    if (heroEl) {
+      clone = document.createElement('div');
+      clone.className = 'cards-hero';
+      clone.style.position = 'absolute';
+      clone.style.inset = '0';
+      var img = heroEl.querySelector('img');
       var cloneImg = document.createElement('img');
       cloneImg.src = img.currentSrc || img.src;
       cloneImg.alt = '';
       clone.appendChild(cloneImg);
-    } else if (heroEl) {
-      clone.style.backgroundImage = getComputedStyle(heroEl).backgroundImage;
-      clone.style.backgroundSize = 'cover';
-      clone.style.backgroundPosition = 'center';
+    } else if (textEl) {
+      // The text card's real content, not a placeholder — there's no
+      // fetch needed to know what it says, so it can just be there from
+      // the first frame. Pinned to the top/sides but not the bottom, so
+      // it keeps its own natural (content-sized) height while growing
+      // rather than being stretched to fill the panel.
+      clone = textEl.cloneNode(true);
+      clone.style.position = 'absolute';
+      clone.style.top = '0'; clone.style.left = '0'; clone.style.right = '0';
+    } else {
+      clone = document.createElement('div');
     }
     panel.appendChild(clone);
 
