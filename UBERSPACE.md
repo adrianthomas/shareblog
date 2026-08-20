@@ -55,18 +55,7 @@ cp .env.example .env
 Fill in:
 
 ```
-NODE_ENV=production
-PORT=3000
-DATABASE_URL=/home/<username>/shareblog/server/data/shareblog.db
-BASE_DOMAIN=yourdomain.com
-API_BASE_URL=https://api.yourdomain.com
-STORAGE_DRIVER=local
-LOCAL_STORAGE_DIR=/home/<username>/shareblog/server/data/uploads
-SMTP_HOST=<host>.uberspace.de
-SMTP_PORT=587
-SMTP_USER=noreply@yourdomain.com
-SMTP_PASS=<mailbox password from the mailbox you create below>
-SMTP_FROM=Shareblog <noreply@yourdomain.com>
+
 ```
 
 `PORT` just needs to be free and in Uberspace's allowed range (1024–65535);
