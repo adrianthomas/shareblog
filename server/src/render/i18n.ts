@@ -5,6 +5,7 @@ export type MessageKey =
   | "books"
   | "music"
   | "photos"
+  | "quotes"
   | "skipToContent"
   | "nothingHereYet"
   | "ratingLabel"
@@ -23,6 +24,7 @@ const MESSAGES: Record<string, Messages> = {
     books: "Books",
     music: "Music",
     photos: "Photos",
+    quotes: "Quotes",
     skipToContent: "Skip to content",
     nothingHereYet: "Nothing here yet.",
     ratingLabel: "Rating: {rating} out of 5 stars",
@@ -38,6 +40,7 @@ const MESSAGES: Record<string, Messages> = {
     books: "Bücher",
     music: "Musik",
     photos: "Fotos",
+    quotes: "Zitate",
     skipToContent: "Zum Inhalt springen",
     nothingHereYet: "Hier gibt es noch nichts.",
     ratingLabel: "Bewertung: {rating} von 5 Sternen",
@@ -53,6 +56,7 @@ const MESSAGES: Record<string, Messages> = {
     books: "Livres",
     music: "Musique",
     photos: "Photos",
+    quotes: "Citations",
     skipToContent: "Aller au contenu",
     nothingHereYet: "Rien ici pour l'instant.",
     ratingLabel: "Note : {rating} étoiles sur 5",
@@ -68,6 +72,7 @@ const MESSAGES: Record<string, Messages> = {
     books: "Libros",
     music: "Música",
     photos: "Fotos",
+    quotes: "Citas",
     skipToContent: "Saltar al contenido",
     nothingHereYet: "Todavía no hay nada aquí.",
     ratingLabel: "Valoración: {rating} de 5 estrellas",
@@ -83,6 +88,7 @@ const MESSAGES: Record<string, Messages> = {
     books: "本",
     music: "音楽",
     photos: "写真",
+    quotes: "引用",
     skipToContent: "コンテンツへスキップ",
     nothingHereYet: "まだ何もありません。",
     ratingLabel: "評価: 5つ星中{rating}つ",

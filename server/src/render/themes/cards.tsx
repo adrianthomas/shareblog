@@ -154,6 +154,7 @@ const TAB_PATHS: Array<{ href: string; key: MessageKey }> = [
   { href: "/books", key: "books" },
   { href: "/music", key: "music" },
   { href: "/photos", key: "photos" },
+  { href: "/quotes", key: "quotes" },
 ];
 
 // A bottom tab bar stands in for the App Store's Today/Games/Apps row —
@@ -263,7 +264,14 @@ export const cardsStyles = `
   }
   .cards-overlay-backdrop--visible { opacity: 1; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 
-  .cards-panel { position: fixed; background: var(--bg); z-index: 1001; will-change: transform, top, left, width, height, border-radius; }
+  /* Static full-viewport box, positioned/sized only via \`transform\` — never
+     top/left/width/height — so the open/close animation runs on the
+     compositor thread instead of forcing layout on every frame. */
+  .cards-panel {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: var(--bg); z-index: 1001; overflow: hidden;
+    transform-origin: 0 0; will-change: transform, border-radius;
+  }
   .cards-panel-scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .cards-panel-scroll:focus { outline: none; }
   .cards-panel-scroll main { padding-bottom: 4rem; }
@@ -286,16 +294,84 @@ export const cardsScript = `
 (function () {
   if (!('animate' in Element.prototype) || !window.fetch || !window.history.pushState) return;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var OPEN_EASING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+  // Standard Newton-Raphson cubic-bezier solver (the same algorithm
+  // browsers use internally for CSS easing) so the eased curve can be
+  // baked directly into WAAPI keyframe offsets/values below, sample by
+  // sample, in lockstep with the border-radius correction — a single
+  // \`easing\` option on .animate() can't express that per-sample math.
+  function cubicBezier(x1, y1, x2, y2) {
+    function a(p1, p2) { return 1 - 3 * p2 + 3 * p1; }
+    function b(p1, p2) { return 3 * p2 - 6 * p1; }
+    function c(p1) { return 3 * p1; }
+    function calc(t, p1, p2) { return ((a(p1, p2) * t + b(p1, p2)) * t + c(p1)) * t; }
+    function slope(t, p1, p2) { return 3 * a(p1, p2) * t * t + 2 * b(p1, p2) * t + c(p1); }
+    return function (x) {
+      var t = x;
+      for (var i = 0; i < 8; i++) {
+        var s = slope(t, x1, x2);
+        if (Math.abs(s) < 1e-6) break;
+        t -= (calc(t, x1, x2) - x) / s;
+      }
+      return calc(t, y1, y2);
+    };
+  }
+
+  var OPEN_EASING = cubicBezier(0.34, 1.56, 0.64, 1);
   // Shrinking back into the card is a deceleration (fast start, gentle
   // settle) — the same shape as OPEN_EASING but without the overshoot,
   // since bouncing past the card's own size on the way in looks like a
   // glitch rather than a bounce. The previous curve accelerated instead
   // (barely moved for most of the animation, then snapped shut in the
   // last beat), which read as an abrupt cut rather than a close.
-  var CLOSE_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  var CLOSE_EASING = cubicBezier(0.22, 1, 0.36, 1);
   var OPEN_MS = 480, CLOSE_MS = 420;
+  var FLIP_STEPS = 30;
   var current = null;
+
+  // A full-screen, non-uniform FLIP (translate + independent X/Y scale)
+  // between two rects, animated purely via \`transform\` — never top/left/
+  // width/height — so the browser runs it entirely on the compositor
+  // thread instead of forcing layout on every frame. The one wrinkle a
+  // pure transform introduces: scaling a box non-uniformly (a landscape
+  // card growing into a portrait viewport, or back) turns a circular
+  // border-radius into an ellipse, since the radius is painted in the
+  // element's own local space before the transform stretches it. Correct
+  // for that by pre-dividing the *target* radius by the scale at each
+  // sampled keyframe (radius/scaleX horizontally, radius/scaleY
+  // vertically) so the two cancel out and the corner reads as the
+  // intended round radius throughout the animation, not just at its
+  // start and end.
+  function buildFlipKeyframes(fromRect, toRect, fromRadius, toRadius, easing, fadeOut) {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var fromSX = fromRect.width / vw, fromSY = fromRect.height / vh;
+    var toSX = toRect.width / vw, toSY = toRect.height / vh;
+    var frames = [];
+    for (var i = 0; i <= FLIP_STEPS; i++) {
+      var t = i / FLIP_STEPS;
+      var e = easing(t);
+      var sx = fromSX + e * (toSX - fromSX);
+      var sy = fromSY + e * (toSY - fromSY);
+      var dx = fromRect.left + e * (toRect.left - fromRect.left);
+      var dy = fromRect.top + e * (toRect.top - fromRect.top);
+      var radius = Math.max(0, fromRadius + e * (toRadius - fromRadius));
+      var frame = {
+        offset: t,
+        transform: 'translate(' + dx.toFixed(2) + 'px, ' + dy.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ', ' + sy.toFixed(4) + ')',
+        borderRadius: (radius / sx).toFixed(2) + 'px / ' + (radius / sy).toFixed(2) + 'px',
+      };
+      // Close only: fade the detail content out well before the shrink
+      // gets small enough for the non-uniform scale's stretch (unavoidable
+      // once the panel holds real body text, not just a single image) to
+      // read as distortion rather than a smooth zoom. Driven by linear
+      // time (t), not eased progress (e) — CLOSE_EASING front-loads almost
+      // all of its motion into the first few percent, so keying the fade
+      // to e made the content vanish in a single jarring frame instead of
+      // fading smoothly across the animation.
+      if (fadeOut) frame.opacity = String(Math.max(0, 1 - t * 1.6));
+      frames.push(frame);
+    }
+    return frames;
+  }
 
   function isDetailPage() { return document.body.dataset.cardsDetail === 'true'; }
 
@@ -313,7 +389,7 @@ export const cardsScript = `
 
   function openCard(link) {
     var rect = link.getBoundingClientRect();
-    var radius = getComputedStyle(link).borderRadius;
+    var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var heroEl = link.querySelector('.cards-hero');
     var img = heroEl ? heroEl.querySelector('img') : null;
 
@@ -327,12 +403,6 @@ export const cardsScript = `
     panel.className = 'cards-panel';
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
-    panel.style.top = rect.top + 'px';
-    panel.style.left = rect.left + 'px';
-    panel.style.width = rect.width + 'px';
-    panel.style.height = rect.height + 'px';
-    panel.style.borderRadius = radius;
-    panel.style.overflow = 'hidden';
 
     var clone = document.createElement('div');
     clone.className = 'cards-hero';
@@ -349,6 +419,13 @@ export const cardsScript = `
       clone.style.backgroundPosition = 'center';
     }
     panel.appendChild(clone);
+
+    var fullscreen = { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+    var frames = buildFlipKeyframes(rect, fullscreen, radius, 0, OPEN_EASING, false);
+    // Paint at the card's own position/size before the first animation
+    // frame runs, so there's no flash of a full-screen panel first.
+    panel.style.transform = frames[0].transform;
+    panel.style.borderRadius = frames[0].borderRadius;
     document.body.appendChild(panel);
 
     var main = document.getElementById('main-content');
@@ -359,15 +436,22 @@ export const cardsScript = `
     requestAnimationFrame(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
       if (reduceMotion) {
-        setFullscreen(panel);
+        var last = frames[frames.length - 1];
+        panel.style.transform = last.transform;
+        panel.style.borderRadius = last.borderRadius;
       } else {
-        panel.animate(
-          [
-            { top: rect.top + 'px', left: rect.left + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: radius },
-            { top: '0px', left: '0px', width: '100vw', height: '100vh', borderRadius: '0px' },
-          ],
-          { duration: OPEN_MS, easing: OPEN_EASING, fill: 'forwards' },
-        );
+        // Easing is already baked into the keyframes' offsets/values
+        // (see buildFlipKeyframes), so play them back linearly.
+        var openAnim = panel.animate(frames, { duration: OPEN_MS, easing: 'linear', fill: 'forwards' });
+        openAnim.onfinish = function () {
+          // A fill:'forwards' animation keeps overriding direct style
+          // writes to the same properties indefinitely — commit its end
+          // state into real inline styles and release it, so the drag
+          // gesture and the close animation's own writes below aren't
+          // silently fighting a lingering finished animation.
+          try { openAnim.commitStyles(); } catch (err) {}
+          openAnim.cancel();
+        };
       }
     });
 
@@ -431,11 +515,6 @@ export const cardsScript = `
     if (e.key === 'Escape' && current) closeOverlay({});
   }
 
-  function setFullscreen(panel) {
-    panel.style.top = '0px'; panel.style.left = '0px';
-    panel.style.width = '100vw'; panel.style.height = '100vh'; panel.style.borderRadius = '0px';
-  }
-
   function closeOverlay(opts) {
     if (!current) return;
     var o = current;
@@ -443,8 +522,15 @@ export const cardsScript = `
     document.removeEventListener('keydown', onKeydown);
     o.controller.abort();
 
-    var rect = o.link.getBoundingClientRect();
-    var radius = getComputedStyle(o.link).borderRadius;
+    // Read the panel's *current* on-screen box rather than assuming it's
+    // full-screen — it may still carry a drag-gesture transform (see
+    // wireDismissGesture) if the user let go mid-drag below the commit
+    // threshold. getBoundingClientRect reflects that transform correctly,
+    // so the close animation always starts exactly where the panel is.
+    var fromRect = o.panel.getBoundingClientRect();
+    var fromRadius = parseFloat(getComputedStyle(o.panel).borderRadius) || 0;
+    var toRect = o.link.getBoundingClientRect();
+    var toRadius = parseFloat(getComputedStyle(o.link).borderRadius) || 0;
     o.backdrop.classList.remove('cards-overlay-backdrop--visible');
 
     var main = document.getElementById('main-content');
@@ -462,14 +548,10 @@ export const cardsScript = `
     if (reduceMotion) {
       cleanup();
     } else {
-      var current2 = o.panel.getBoundingClientRect();
-      var anim = o.panel.animate(
-        [
-          { top: current2.top + 'px', left: current2.left + 'px', width: current2.width + 'px', height: current2.height + 'px' },
-          { top: rect.top + 'px', left: rect.left + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: radius },
-        ],
-        { duration: CLOSE_MS, easing: CLOSE_EASING, fill: 'forwards' },
-      );
+      var frames = buildFlipKeyframes(fromRect, toRect, fromRadius, toRadius, CLOSE_EASING, true);
+      o.panel.style.transform = frames[0].transform;
+      o.panel.style.borderRadius = frames[0].borderRadius;
+      var anim = o.panel.animate(frames, { duration: CLOSE_MS, easing: 'linear', fill: 'forwards' });
       anim.onfinish = cleanup;
     }
 
@@ -497,7 +579,16 @@ export const cardsScript = `
       var raw = e.clientY - startY;
       if (raw <= 0) { delta = 0; return; }
       delta = raw < 200 ? raw : 200 + (raw - 200) * 0.35;
-      panel.style.transform = 'translateY(' + delta + 'px) scale(' + (1 - delta / 2400) + ')';
+      var s = 1 - delta / 2400;
+      // The panel's transform-origin is its top-left corner (0 0), needed
+      // so the open/close FLIP math above has a fixed anchor. Scaling
+      // directly from there would shrink the panel toward that corner —
+      // pre-translate by the same amount the origin shift would otherwise
+      // move the visual center, so the drag still reads as "shrinking
+      // toward the middle" the way it would with the default center origin.
+      var tx = (1 - s) * window.innerWidth / 2;
+      var ty = delta + (1 - s) * window.innerHeight / 2;
+      panel.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + s + ')';
       panel.style.borderRadius = Math.min(28, delta / 4) + 'px';
       backdrop.style.opacity = String(Math.max(0.15, 1 - delta / 360));
     });
@@ -508,24 +599,14 @@ export const cardsScript = `
       var elapsed = Math.max(1, Date.now() - startTime);
       var velocity = delta / elapsed;
       if (delta > 120 || velocity > 0.5) {
-        // closeOverlay reads the panel's current on-screen rect via
-        // getBoundingClientRect and animates its top/left/width/height from
-        // there — which would double up with the drag's own transform if
-        // that were left in place. Bake the dragged position into those
-        // box properties instead (getBoundingClientRect still reflects the
-        // transform at this point, so this doesn't cause a visible jump)
-        // and only then drop the transform, so the close animation picks
-        // up exactly where the drag let go rather than snapping back to
-        // full-screen first.
-        var draggedRect = panel.getBoundingClientRect();
-        panel.style.transform = '';
-        panel.style.top = draggedRect.top + 'px';
-        panel.style.left = draggedRect.left + 'px';
-        panel.style.width = draggedRect.width + 'px';
-        panel.style.height = draggedRect.height + 'px';
+        // closeOverlay reads the panel's current on-screen box via
+        // getBoundingClientRect, which reflects this drag's transform
+        // correctly — no need to bake anything in first, it can just take
+        // over from here directly.
         if (current) closeOverlay({});
       } else {
-        panel.style.transition = reduceMotion ? 'none' : 'transform 0.32s ' + OPEN_EASING + ', border-radius 0.32s ' + OPEN_EASING;
+        var springEasing = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+        panel.style.transition = reduceMotion ? 'none' : 'transform 0.32s ' + springEasing + ', border-radius 0.32s ' + springEasing;
         backdrop.style.transition = 'opacity 0.32s ease';
         panel.style.transform = '';
         panel.style.borderRadius = '';

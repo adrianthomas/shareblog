@@ -11,6 +11,7 @@ function navItems(site: Site) {
     { href: "/books", label: t(site.locale, "books") },
     { href: "/music", label: t(site.locale, "music") },
     { href: "/photos", label: t(site.locale, "photos") },
+    { href: "/quotes", label: t(site.locale, "quotes") },
   ];
 }
 
@@ -80,6 +81,10 @@ export function Layout({
                 border-radius: 4px; flex-shrink: 0;
               }
               .music-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+              .quote-text { margin: 0 0 0.75rem; padding-left: 1rem; border-left: 3px solid var(--border); }
+              .quote-text p { margin: 0 0 0.5rem; font-size: 1.15rem; font-style: italic; line-height: 1.4; }
+              .quote-text footer { font-size: 0.9rem; color: var(--muted); }
+              .quote-text cite { font-style: normal; }
               a.title-link { text-decoration: none; color: inherit; }
               a.title-link:hover { text-decoration: underline; }
               @media (max-width: 400px) {

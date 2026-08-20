@@ -66,7 +66,7 @@ export const magicTokens = sqliteTable("magic_tokens", {
   createdAt: createdAt(),
 });
 
-export const contentTypeValues = ["thought", "photo", "book", "article", "music"] as const;
+export const contentTypeValues = ["thought", "photo", "book", "article", "music", "quote"] as const;
 export type ContentType = (typeof contentTypeValues)[number];
 
 export const contentObjects = sqliteTable(

@@ -69,6 +69,7 @@ const LISTING_TYPES: Array<{ path: string; type?: ContentType; titleKey: Message
   { path: "/books", type: "book", titleKey: "books" },
   { path: "/music", type: "music", titleKey: "music" },
   { path: "/photos", type: "photo", titleKey: "photos" },
+  { path: "/quotes", type: "quote", titleKey: "quotes" },
 ];
 
 const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
@@ -77,6 +78,7 @@ const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
   { prefix: "/books", type: "book" },
   { prefix: "/music", type: "music" },
   { prefix: "/photos", type: "photo" },
+  { prefix: "/quotes", type: "quote" },
 ];
 
 export async function sitePageRoutes(app: FastifyInstance) {

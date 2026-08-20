@@ -29,3 +29,8 @@ export interface ArticleMetadata {
   coverAssetId?: string;
   excerpt?: string;
 }
+
+export interface QuoteMetadata {
+  author: string;
+  comment?: string;
+}
