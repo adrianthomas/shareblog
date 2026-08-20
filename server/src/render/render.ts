@@ -5,6 +5,7 @@ import { db } from "../db/client.js";
 import { assets } from "../db/schema.js";
 import { storage } from "../storage/index.js";
 import { Layout } from "./templates/Layout.js";
+import { LandingPage } from "./templates/LandingPage.js";
 import { ThoughtPost } from "./templates/ThoughtPost.js";
 import { PhotoPost } from "./templates/PhotoPost.js";
 import { BookCard } from "./templates/BookCard.js";
@@ -115,6 +116,10 @@ async function renderDetail(object: ContentObject, locale: string, theme: Site["
         ...detailProps,
       });
   }
+}
+
+export function renderLandingPage(): string {
+  return "<!doctype html>" + renderToStaticMarkup(React.createElement(LandingPage));
 }
 
 export async function renderList(
