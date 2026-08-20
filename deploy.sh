@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Deploys the current branch to Uberspace: pushes to origin, then SSHes in
-# and runs the same steps documented in UBERSPACE.md's "Updating" section.
+# Deploys the current branch to Uberspace: SSHes in and runs the same
+# steps documented in UBERSPACE.md's "Updating" section. Assumes you've
+# already pushed to origin yourself (the push step below is commented out).
 #
 # Setup: copy deploy.env.example to deploy.env and fill in your values.
 set -euo pipefail
@@ -25,8 +26,8 @@ fi
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
-echo "==> Pushing ${branch} to origin"
-git push origin "${branch}"
+# echo "==> Pushing ${branch} to origin"
+# git push origin "${branch}"
 
 echo "==> Deploying on ${UBERSPACE_USER}@${UBERSPACE_HOST}"
 ssh "${UBERSPACE_USER}@${UBERSPACE_HOST}" bash -s <<REMOTE
