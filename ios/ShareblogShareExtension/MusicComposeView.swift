@@ -4,6 +4,8 @@ import ShareblogKit
 struct MusicComposeView: View {
     @ObservedObject var coordinator: ShareCoordinator
     @State private var resolved: MusicResolveResponse?
+    @State private var artist = ""
+    @State private var releaseTitle = ""
     @State private var note = ""
     @State private var status: ObjectStatus = .published
     @State private var isResolving = false
@@ -20,10 +22,14 @@ struct MusicComposeView: View {
 
                 if isResolving {
                     ProgressView("Looking up…")
-                } else if let resolved {
+                } else if resolved != nil {
+                    // Lookup is best-effort: when it can't identify the
+                    // track (blocked, unsupported link, etc.) these come
+                    // back as placeholders, so keep them editable rather
+                    // than locking the user out of publishing.
                     Section {
-                        Text(resolved.releaseTitle).bold()
-                        Text(resolved.artist).foregroundStyle(.secondary)
+                        TextField("Title", text: $releaseTitle)
+                        TextField("Artist", text: $artist)
                         TextField("Your take (optional)", text: $note, axis: .vertical)
                     }
                 } else if let resolveError {
@@ -34,7 +40,11 @@ struct MusicComposeView: View {
             }
             PublishBar(status: $status, isPublishing: coordinator.isPublishing, isEnabled: resolved != nil) {
                 guard let resolved else { return }
-                Task { await coordinator.publishMusic(resolved: resolved, note: note, status: status) }
+                Task {
+                    await coordinator.publishMusic(
+                        resolved: resolved, artist: artist, releaseTitle: releaseTitle, note: note, status: status
+                    )
+                }
             }
         }
         .navigationTitle("Music")
@@ -45,7 +55,10 @@ struct MusicComposeView: View {
             isResolving = true
             defer { isResolving = false }
             do {
-                resolved = try await APIClient.shared.resolveMusic(url: url.absoluteString)
+                let result = try await APIClient.shared.resolveMusic(url: url.absoluteString)
+                resolved = result
+                artist = result.artist
+                releaseTitle = result.releaseTitle
             } catch {
                 resolveError = error.localizedDescription
             }

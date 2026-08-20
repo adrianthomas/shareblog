@@ -173,12 +173,12 @@ final class ShareCoordinator: ObservableObject {
         }
     }
 
-    func publishMusic(resolved: MusicResolveResponse, note: String, status: ObjectStatus) async {
+    func publishMusic(resolved: MusicResolveResponse, artist: String, releaseTitle: String, note: String, status: ObjectStatus) async {
         var links: [String: AnyCodable] = [:]
         for (platform, url) in resolved.links { links[platform] = .string(url) }
         var metadata: [String: AnyCodable] = [
-            "artist": .string(resolved.artist),
-            "releaseTitle": .string(resolved.releaseTitle),
+            "artist": .string(artist),
+            "releaseTitle": .string(releaseTitle),
             "links": .object(links),
         ]
         if let artworkUrl = resolved.artworkUrl { metadata["artworkUrl"] = .string(artworkUrl) }
