@@ -359,12 +359,18 @@ export const cardsStyles = `
 
   html.cards-lock-scroll, html.cards-lock-scroll body { overflow: hidden; }
 
+  /* backdrop-filter itself is NOT transitioned (Safari doesn't interpolate
+     it smoothly — it stays at its start value for most of the transition
+     and then snaps to the end value near the end, instead of gradually
+     blurring/unblurring). Keep the blur amount constant and fade the whole
+     element via opacity instead, which fades the dim + blur together as
+     one unit and animates reliably everywhere. */
   .cards-overlay-backdrop {
     position: fixed; inset: 0; z-index: 1000; background: rgba(10,10,10,0.4);
-    backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
-    opacity: 0; transition: opacity 0.32s ease, backdrop-filter 0.32s ease;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    opacity: 0; transition: opacity 0.32s ease;
   }
-  .cards-overlay-backdrop--visible { opacity: 1; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .cards-overlay-backdrop--visible { opacity: 1; }
 
   /* Static full-viewport box, positioned/sized only via \`transform\` — never
      top/left/width/height — so the open/close animation runs on the
