@@ -180,6 +180,22 @@ npm run db:migrate
 supervisorctl restart shareblog
 ```
 
+## Automating this
+
+[deploy.sh](deploy.sh) at the repo root runs the update steps above over
+SSH: copy `deploy.env.example` to `deploy.env`, fill in `UBERSPACE_USER`,
+`UBERSPACE_HOST`, and `REMOTE_PATH` (the repo path from step 1), then run
+
+```bash
+./deploy.sh
+```
+
+from your own machine. It refuses to run with uncommitted local changes,
+pushes the current branch to `origin`, then SSHes in and runs `git pull`,
+`npm install`, `npm run build`, `npm run db:migrate`, and
+`supervisorctl restart shareblog` in `server/` — the same commands you'd
+type by hand. `deploy.env` is gitignored since it's machine-specific.
+
 ## No wildcard subdomains
 
 Uberspace's automatic domain/cert tooling only does HTTP-01 validation, so
