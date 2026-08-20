@@ -9,6 +9,7 @@ dist/
 # Env
 .env
 .env.local
+deploy.env
 
 # Xcode
 ios/**/xcuserdata/
