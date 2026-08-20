@@ -173,19 +173,27 @@ supervisorctl restart shareblog
 
 [deploy.sh](deploy.sh) at the repo root runs the update steps above over
 SSH: copy `deploy.env.example` to `deploy.env`, fill in `UBERSPACE_USER`,
-`UBERSPACE_HOST`, and `REMOTE_PATH` (the repo path from step 1), then run
+`UBERSPACE_HOST`, `REMOTE_PATH` (the repo path from step 1), and
+`REPO_URL` (an `https://` clone URL — the Uberspace box has no GitHub
+credentials of its own, so this only works against a public repo), then
+run
 
 ```bash
 ./deploy.sh
 ```
 
 from your own machine. It refuses to run with uncommitted local changes,
-then SSHes in and runs `git pull`, `npm install`, `npm run build`,
-`npm run db:migrate`, and `supervisorctl restart shareblog` in
-`server/` — the same commands you'd type by hand. Push to `origin`
-yourself first; the script's own push step is commented out, since the
-remote `git pull` needs your commits to already be there.
-`deploy.env` is gitignored since it's machine-specific.
+then SSHes in and either `git pull`s the existing clone at `REMOTE_PATH`
+or, on the very first run, `git clone`s `REPO_URL` there — followed by
+`npm install`, `npm run build`, `npm run db:migrate`, and
+`supervisorctl restart shareblog` in `server/`, the same commands you'd
+type by hand. Push to `origin` yourself first; the script's own push
+step is commented out, since the remote `git pull` needs your commits
+to already be there. `deploy.env` is gitignored since it's
+machine-specific. Note this only handles updates/first clone — the
+one-time account setup (steps 2, 3, 5, and 6 above: Node version,
+`.env`, the supervisord service file, domains) still has to be done by
+hand before the first `./deploy.sh` run will fully succeed.
 
 ## No wildcard subdomains
 
