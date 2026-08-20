@@ -10,8 +10,8 @@ import { PhotoPost } from "./templates/PhotoPost.js";
 import { BookCard } from "./templates/BookCard.js";
 import { MusicCard } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
-import type { ContentObject, ArticleMetadata, PhotoMetadata, Site } from "./templates/types.js";
-import { t, type MessageKey } from "./i18n.js";
+import type { ContentObject, ArticleMetadata, PhotoMetadata, BookMetadata, MusicMetadata, Site } from "./templates/types.js";
+import { t, resolveLocale, type MessageKey } from "./i18n.js";
 
 function wrap(
   site: Site,
@@ -160,21 +160,105 @@ function feedTitle(object: ContentObject): string {
   return excerpt.length < (object.body ?? "").length ? `${excerpt}…` : excerpt || object.type;
 }
 
-export async function renderFeed(site: Site, objects: ContentObject[]): Promise<string> {
-  const origin = siteOrigin(site);
-  const items = objects
-    .map((object) => {
-      const link = `${origin}/${objectPath(object)}`;
-      const title = feedTitle(object);
-      return `<item><title><![CDATA[${title}]]></title><link>${link}</link><guid>${link}</guid><pubDate>${(
-        object.publishedAt ?? object.createdAt
-      ).toUTCString()}</pubDate></item>`;
-    })
-    .join("");
+// Escapes text for use both as XML character data and, since the same
+// characters are unsafe in both contexts, as the HTML markup we build for
+// each item's CDATA-wrapped <description>.
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
 
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${site.title}</title><description>${
-    site.tagline ?? ""
-  }</description>${items}</channel></rss>`;
+function paragraphs(body: string | null): string {
+  return (body ?? "")
+    .split("\n\n")
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeXml(paragraph)}</p>`)
+    .join("");
+}
+
+async function feedItemContent(object: ContentObject): Promise<string> {
+  switch (object.type) {
+    case "thought":
+      return paragraphs(object.body);
+    case "article": {
+      const metadata = object.metadata as ArticleMetadata;
+      const cover = await articleImageUrl(object);
+      const image = cover ? `<p><img src="${escapeXml(cover)}" alt="" /></p>` : "";
+      const excerpt = metadata.excerpt ? `<p><em>${escapeXml(metadata.excerpt)}</em></p>` : "";
+      return image + excerpt + paragraphs(object.body);
+    }
+    case "book": {
+      const metadata = object.metadata as BookMetadata;
+      const image = metadata.coverUrl
+        ? `<p><img src="${escapeXml(metadata.coverUrl)}" alt="Cover of ${escapeXml(object.title ?? "")}" /></p>`
+        : "";
+      const author = `<p>${escapeXml(metadata.author)}</p>`;
+      const rating = metadata.rating
+        ? `<p>${"★".repeat(metadata.rating)}${"☆".repeat(5 - metadata.rating)}</p>`
+        : "";
+      return image + author + rating + paragraphs(object.body);
+    }
+    case "music": {
+      const metadata = object.metadata as MusicMetadata;
+      const image = metadata.artworkUrl
+        ? `<p><img src="${escapeXml(metadata.artworkUrl)}" alt="Artwork for ${escapeXml(metadata.releaseTitle)}" /></p>`
+        : "";
+      const artist = `<p>${escapeXml(metadata.artist)}</p>`;
+      return image + artist + paragraphs(object.body);
+    }
+    case "photo": {
+      const metadata = object.metadata as PhotoMetadata;
+      const url = await photoImageUrl(object);
+      const alt = escapeXml(metadata.caption ?? "");
+      const image = url ? `<p><img src="${escapeXml(url)}" alt="${alt}" /></p>` : "";
+      const caption = metadata.caption ? `<p>${escapeXml(metadata.caption)}</p>` : "";
+      return image + caption;
+    }
+  }
+}
+
+export async function renderFeed(
+  site: Site,
+  objects: ContentObject[],
+  opts: { title?: string; description?: string; path?: string } = {},
+): Promise<string> {
+  const origin = siteOrigin(site);
+  const selfUrl = `${origin}${opts.path ?? "/feed.xml"}`;
+  const channelTitle = opts.title ? `${opts.title} — ${site.title}` : site.title;
+  const channelDescription = opts.description ?? site.tagline ?? "";
+
+  const items = (
+    await Promise.all(
+      objects.map(async (object) => {
+        const link = `${origin}/${objectPath(object)}`;
+        const title = escapeXml(feedTitle(object));
+        const content = await feedItemContent(object);
+        const pubDate = (object.publishedAt ?? object.createdAt).toUTCString();
+        return (
+          `<item><title>${title}</title><link>${escapeXml(link)}</link>` +
+          `<guid isPermaLink="true">${escapeXml(link)}</guid><pubDate>${pubDate}</pubDate>` +
+          `<description><![CDATA[${content}]]></description></item>`
+        );
+      }),
+    )
+  ).join("");
+
+  return (
+    `<?xml version="1.0" encoding="UTF-8"?>` +
+    `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>` +
+    `<title>${escapeXml(channelTitle)}</title>` +
+    `<link>${escapeXml(origin)}</link>` +
+    `<atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml" />` +
+    `<description>${escapeXml(channelDescription)}</description>` +
+    `<language>${resolveLocale(site.locale)}</language>` +
+    `<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>` +
+    items +
+    `</channel></rss>`
+  );
 }
 
 export function objectPath(object: ContentObject): string {
