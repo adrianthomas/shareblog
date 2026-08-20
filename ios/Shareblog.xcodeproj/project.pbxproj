@@ -65,21 +65,21 @@
 		2C245BE1ABED539CA58802EE /* SiteSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteSetupView.swift; sourceTree = "<group>"; };
 		2C55C92C78D3766EB7925F8E /* ThoughtComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtComposeView.swift; sourceTree = "<group>"; };
 		424F4BAEDC1ACA41920C8304 /* ShareCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCoordinator.swift; sourceTree = "<group>"; };
-		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5492B18CD433B03CDE6110B1 /* ArticleComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleComposeView.swift; sourceTree = "<group>"; };
 		56AA5B0BA21DDD2C8E669549 /* Info 2.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info 2.plist"; sourceTree = "<group>"; };
 		5DF6E49CBBDC05D970A3D45A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToSetUpView.swift; sourceTree = "<group>"; };
 		6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		742B693BF8392EE8E21EA5A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F97B842C6D757C2ECCC7D95 /* BookComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookComposeView.swift; sourceTree = "<group>"; };
 		B1D891961FAB1E4107FC215E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		BE91C38F0A4F341515EE1533 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
 		C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
 		CD351AAC9596074785F6095B /* VerifyCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyCodeView.swift; sourceTree = "<group>"; };
 		CF90155CBFDE2BB1359EF919 /* TypePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypePickerView.swift; sourceTree = "<group>"; };
-		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ShareblogKit; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
+		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
 		E92435F7BD00E74ACE366B7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		EDADFFC2E407C6F09849D393 /* Shareblog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Shareblog.entitlements; sourceTree = "<group>"; };
 		F0D0C571AD4C4B46860B242F /* ShareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRootView.swift; sourceTree = "<group>"; };
@@ -231,11 +231,9 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					40BF3D11F5F0E08A594D7F90 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					464BAC28BD1F01EDC71BA81A = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -385,6 +383,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Shareblog/Shareblog.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = Shareblog/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -466,6 +465,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShareblogShareExtension/ShareblogShareExtension.entitlements;
+				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = ShareblogShareExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -486,6 +486,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Shareblog/Shareblog.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = Shareblog/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -502,6 +503,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShareblogShareExtension/ShareblogShareExtension.entitlements;
+				DEVELOPMENT_TEAM = CWG3GL54SL;
 				INFOPLIST_FILE = ShareblogShareExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
