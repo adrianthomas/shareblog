@@ -18,6 +18,7 @@ ios/DerivedData/
 ios/build/
 ios/.swiftpm/
 ios/**/.swiftpm/
+ios/**/.build/
 
 # Server data
 server/data/uploads/*
