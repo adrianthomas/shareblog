@@ -10,7 +10,7 @@ configs:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: CWG3GL54SL
     CODE_SIGN_STYLE: Automatic
     ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
 
@@ -63,7 +63,7 @@ targets:
         CFBundleDisplayName: Shareblog
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
-          NSExtensionPrincipalClass: ShareViewController
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
           NSExtensionAttributes:
             NSExtensionActivationRule:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1

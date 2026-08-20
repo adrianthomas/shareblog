@@ -241,11 +241,11 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					40BF3D11F5F0E08A594D7F90 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = CWG3GL54SL;
 						ProvisioningStyle = Automatic;
 					};
 					464BAC28BD1F01EDC71BA81A = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = CWG3GL54SL;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -378,7 +378,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = CWG3GL54SL;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -455,7 +455,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = CWG3GL54SL;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
