@@ -18,6 +18,7 @@ source deploy.env
 : "${UBERSPACE_USER:?set in deploy.env}"
 : "${UBERSPACE_HOST:?set in deploy.env}"
 : "${REMOTE_PATH:?set in deploy.env}"
+: "${REPO_URL:?set in deploy.env}"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "Working tree has uncommitted changes — commit or stash before deploying." >&2
@@ -32,8 +33,15 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 echo "==> Deploying on ${UBERSPACE_USER}@${UBERSPACE_HOST}"
 ssh "${UBERSPACE_USER}@${UBERSPACE_HOST}" bash -s <<REMOTE
 set -euo pipefail
-cd "${REMOTE_PATH}/server"
-git pull
+if [ -d "${REMOTE_PATH}/.git" ]; then
+  cd "${REMOTE_PATH}"
+  git pull
+else
+  echo "==> No repo at ${REMOTE_PATH} yet, cloning ${REPO_URL}"
+  git clone "${REPO_URL}" "${REMOTE_PATH}"
+  cd "${REMOTE_PATH}"
+fi
+cd server
 npm install
 npm run build
 npm run db:migrate
