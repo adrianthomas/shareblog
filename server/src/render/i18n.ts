@@ -9,7 +9,9 @@ export type MessageKey =
   | "nothingHereYet"
   | "ratingLabel"
   | "primaryNavigation"
-  | "listenOn";
+  | "listenOn"
+  | "closePost"
+  | "backTo";
 
 type Messages = Record<MessageKey, string>;
 
@@ -26,6 +28,8 @@ const MESSAGES: Record<string, Messages> = {
     ratingLabel: "Rating: {rating} out of 5 stars",
     primaryNavigation: "Primary",
     listenOn: "Listen on {platform}",
+    closePost: "Close",
+    backTo: "Back to {section}",
   },
   de: {
     home: "Start",
@@ -39,6 +43,8 @@ const MESSAGES: Record<string, Messages> = {
     ratingLabel: "Bewertung: {rating} von 5 Sternen",
     primaryNavigation: "Hauptnavigation",
     listenOn: "Hören auf {platform}",
+    closePost: "Schließen",
+    backTo: "Zurück zu {section}",
   },
   fr: {
     home: "Accueil",
@@ -52,6 +58,8 @@ const MESSAGES: Record<string, Messages> = {
     ratingLabel: "Note : {rating} étoiles sur 5",
     primaryNavigation: "Navigation principale",
     listenOn: "Écouter sur {platform}",
+    closePost: "Fermer",
+    backTo: "Retour à {section}",
   },
   es: {
     home: "Inicio",
@@ -65,6 +73,8 @@ const MESSAGES: Record<string, Messages> = {
     ratingLabel: "Valoración: {rating} de 5 estrellas",
     primaryNavigation: "Navegación principal",
     listenOn: "Escuchar en {platform}",
+    closePost: "Cerrar",
+    backTo: "Volver a {section}",
   },
   ja: {
     home: "ホーム",
@@ -78,6 +88,8 @@ const MESSAGES: Record<string, Messages> = {
     ratingLabel: "評価: 5つ星中{rating}つ",
     primaryNavigation: "メインナビゲーション",
     listenOn: "{platform}で聴く",
+    closePost: "閉じる",
+    backTo: "{section}に戻る",
   },
 };
 

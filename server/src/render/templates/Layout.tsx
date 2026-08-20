@@ -1,6 +1,7 @@
 import React from "react";
 import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
+import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
 
 function navItems(site: Site) {
   return [
@@ -17,12 +18,19 @@ export function Layout({
   site,
   title,
   children,
+  currentPath = "/",
+  cardsDetail = false,
 }: {
   site: Site;
   title?: string;
   children: React.ReactNode;
+  /** The request path, used only to highlight the active tab in the cards theme's bottom bar. */
+  currentPath?: string;
+  /** True on a single-post detail page in the cards theme — hides the normal header/tab bar for an immersive, edge-to-edge layout. */
+  cardsDetail?: boolean;
 }) {
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
+  const theme = site.theme;
 
   return (
     <html lang={resolveLocale(site.locale)}>
@@ -54,10 +62,10 @@ export function Layout({
                          overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
               a { color: var(--focus); }
               a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-              header { display: flex; justify-content: space-between; align-items: baseline;
+              header.site-header { display: flex; justify-content: space-between; align-items: baseline;
                        flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-bottom: 2rem; }
-              header h1 { font-size: 1.1rem; margin: 0; }
-              header h1 a { text-decoration: none; color: inherit; }
+              header.site-header h1 { font-size: 1.1rem; margin: 0; }
+              header.site-header h1 a { text-decoration: none; color: inherit; }
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
@@ -82,12 +90,17 @@ export function Layout({
             `,
           }}
         />
+        {theme === "cards" ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
       </head>
-      <body>
+      <body
+        className={theme === "cards" ? "theme-cards" : undefined}
+        data-theme={theme}
+        data-cards-detail={theme === "cards" && cardsDetail ? "true" : undefined}
+      >
         <a className="skip-link" href="#main-content">
           {t(site.locale, "skipToContent")}
         </a>
-        <header>
+        <header className="site-header">
           <h1>
             <a href="/">{site.title}</a>
           </h1>
@@ -100,6 +113,8 @@ export function Layout({
           </nav>
         </header>
         <main id="main-content">{children}</main>
+        {theme === "cards" && !cardsDetail ? <CardsTabBar locale={site.locale} currentPath={currentPath} /> : null}
+        {theme === "cards" ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
       </body>
     </html>
   );

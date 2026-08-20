@@ -6,6 +6,7 @@ import type { ContentType } from "../db/schema.js";
 import { resolveTenant } from "../middleware/tenant.js";
 import { renderList, renderObjectPage, renderFeed } from "../render/render.js";
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
+import { t, type MessageKey } from "../render/i18n.js";
 
 async function publishedObjects(siteId: string, type?: ContentType) {
   const conditions = [eq(contentObjects.siteId, siteId), eq(contentObjects.status, "published")];
@@ -41,12 +42,12 @@ async function sendCachedHtml(
   return sendHtml(reply, html);
 }
 
-const LISTING_TYPES: Array<{ path: string; type?: ContentType; title: string }> = [
-  { path: "/posts", type: "thought", title: "Posts" },
-  { path: "/articles", type: "article", title: "Articles" },
-  { path: "/books", type: "book", title: "Books" },
-  { path: "/music", type: "music", title: "Music" },
-  { path: "/photos", type: "photo", title: "Photos" },
+const LISTING_TYPES: Array<{ path: string; type?: ContentType; titleKey: MessageKey }> = [
+  { path: "/posts", type: "thought", titleKey: "posts" },
+  { path: "/articles", type: "article", titleKey: "articles" },
+  { path: "/books", type: "book", titleKey: "books" },
+  { path: "/music", type: "music", titleKey: "music" },
+  { path: "/photos", type: "photo", titleKey: "photos" },
 ];
 
 const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
@@ -62,7 +63,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => {
       const objects = await publishedObjects(site.id);
-      return renderList(site, site.title, objects.slice(0, 20));
+      return renderList(site, site.title, objects.slice(0, 20), "/");
     });
   });
 
@@ -77,7 +78,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
       const site = request.site!;
       return sendCachedHtml(request, reply, site.id, async () => {
         const objects = await publishedObjects(site.id, listing.type);
-        return renderList(site, listing.title, objects);
+        return renderList(site, t(site.locale, listing.titleKey), objects, listing.path);
       });
     });
   }
@@ -106,7 +107,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
       if (!object) {
         return reply.code(404).send("Not found");
       }
-      const html = await renderObjectPage(site, object);
+      const html = await renderObjectPage(site, object, `${detail.prefix}/${slug}`);
       setCachedPage(site.id, request.raw.url ?? request.url, html, "text/html; charset=utf-8");
       return sendHtml(reply, html);
     });

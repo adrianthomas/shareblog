@@ -15,6 +15,13 @@ declare module "fastify" {
 const cache = new Map<string, { site: typeof sites.$inferSelect | null; expiresAt: number }>();
 const CACHE_TTL_MS = 30_000;
 
+// Called whenever a site row changes (e.g. theme update) so the next
+// request re-reads it instead of serving a stale cached row for up to
+// CACHE_TTL_MS.
+export function invalidateTenantCache(subdomain: string): void {
+  cache.delete(subdomain);
+}
+
 function extractSubdomain(host: string, baseDomain: string): string | null {
   if (!host.endsWith(`.${baseDomain}`)) return null;
   const subdomain = host.slice(0, -(baseDomain.length + 1));
