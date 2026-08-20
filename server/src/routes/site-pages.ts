@@ -42,6 +42,27 @@ async function sendCachedHtml(
   return sendHtml(reply, html);
 }
 
+function sendXml(reply: import("fastify").FastifyReply, xml: string) {
+  return reply
+    .header("content-type", "application/rss+xml; charset=utf-8")
+    .header("cache-control", `public, max-age=${PAGE_CACHE_TTL_MS / 1000}`)
+    .send(xml);
+}
+
+async function sendCachedFeed(
+  request: import("fastify").FastifyRequest,
+  reply: import("fastify").FastifyReply,
+  siteId: string,
+  render: () => Promise<string>,
+) {
+  const cached = getCachedPage(siteId, request.raw.url ?? request.url);
+  if (cached) return sendXml(reply, cached.body);
+
+  const xml = await render();
+  setCachedPage(siteId, request.raw.url ?? request.url, xml, "application/rss+xml; charset=utf-8");
+  return sendXml(reply, xml);
+}
+
 const LISTING_TYPES: Array<{ path: string; type?: ContentType; titleKey: MessageKey }> = [
   { path: "/posts", type: "thought", titleKey: "posts" },
   { path: "/articles", type: "article", titleKey: "articles" },
@@ -68,9 +89,11 @@ export async function sitePageRoutes(app: FastifyInstance) {
   });
 
   app.get("/feed.xml", { preHandler: resolveTenant }, async (request, reply) => {
-    const objects = await publishedObjects(request.site!.id);
-    const xml = await renderFeed(request.site!, objects.slice(0, 50));
-    return reply.header("content-type", "application/rss+xml; charset=utf-8").send(xml);
+    const site = request.site!;
+    return sendCachedFeed(request, reply, site.id, async () => {
+      const objects = await publishedObjects(site.id);
+      return renderFeed(site, objects.slice(0, 50));
+    });
   });
 
   for (const listing of LISTING_TYPES) {
@@ -79,6 +102,15 @@ export async function sitePageRoutes(app: FastifyInstance) {
       return sendCachedHtml(request, reply, site.id, async () => {
         const objects = await publishedObjects(site.id, listing.type);
         return renderList(site, t(site.locale, listing.titleKey), objects, listing.path);
+      });
+    });
+
+    app.get(`${listing.path}/feed.xml`, { preHandler: resolveTenant }, async (request, reply) => {
+      const site = request.site!;
+      return sendCachedFeed(request, reply, site.id, async () => {
+        const objects = await publishedObjects(site.id, listing.type);
+        const path = `${listing.path}/feed.xml`;
+        return renderFeed(site, objects.slice(0, 50), { title: t(site.locale, listing.titleKey), path });
       });
     });
   }
