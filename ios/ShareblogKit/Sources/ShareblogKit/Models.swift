@@ -2,6 +2,29 @@ import Foundation
 
 public enum ContentType: String, Codable, CaseIterable, Sendable {
     case thought, photo, book, article, music
+
+    public var displayName: String {
+        switch self {
+        case .thought: return "Thought"
+        case .photo: return "Photo"
+        case .book: return "Book"
+        case .article: return "Article"
+        case .music: return "Music"
+        }
+    }
+
+    /// SF Symbol name shared by every surface that shows a content-type
+    /// icon (feed rows, the share extension's type picker), so the two
+    /// don't drift apart.
+    public var symbolName: String {
+        switch self {
+        case .thought: return "bubble.left"
+        case .photo: return "photo"
+        case .book: return "book.closed"
+        case .article: return "doc.text"
+        case .music: return "music.note"
+        }
+    }
 }
 
 public enum ObjectStatus: String, Codable, Sendable {
@@ -81,6 +104,7 @@ public struct BookCandidate: Codable, Sendable, Identifiable {
     public let isbn10: String?
     public let coverUrl: String?
     public let source: String
+    public let links: [String: String]
 }
 
 public struct BookResolveResponse: Codable, Sendable {

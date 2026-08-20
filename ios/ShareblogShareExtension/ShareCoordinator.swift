@@ -150,10 +150,12 @@ final class ShareCoordinator: ObservableObject {
     }
 
     func publishBook(candidate: BookCandidate, note: String, rating: Int?, status: ObjectStatus) async {
+        var links: [String: AnyCodable] = [:]
+        for (store, url) in candidate.links { links[store] = .string(url) }
         var metadata: [String: AnyCodable] = [
             "author": .string(candidate.author),
             "source": .string(candidate.source),
-            "links": .object([:]),
+            "links": .object(links),
         ]
         if let isbn13 = candidate.isbn13 { metadata["isbn13"] = .string(isbn13) }
         if let isbn10 = candidate.isbn10 { metadata["isbn10"] = .string(isbn10) }

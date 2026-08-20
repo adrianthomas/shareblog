@@ -5,6 +5,14 @@ import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
 
+// Retailer brand names — proper nouns, not translated per locale.
+const STORE_LABELS: Record<string, string> = {
+  amazon: "Amazon",
+  bookshop: "Bookshop.org",
+  kobo: "Kobo",
+  appleBooks: "Apple Books",
+};
+
 export function BookCard({
   object,
   variant = "card",
@@ -62,7 +70,7 @@ export function BookCard({
                 .filter(([, url]) => url)
                 .map(([label, url]) => (
                   <a key={label} href={url} style={{ marginRight: "0.75rem" }}>
-                    {label}
+                    {STORE_LABELS[label] ?? label}
                   </a>
                 ))}
             </p>
