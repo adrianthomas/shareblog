@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../db/client.js";
@@ -18,35 +18,62 @@ const verifyCodeSchema = z.object({
   deviceName: z.string().max(120).optional(),
 });
 
+// Keyed by IP + email so one abusive client can't email-bomb a single
+// address forever, and so it can't burn through many addresses from a
+// single IP without being throttled per-address either. Uberspace's SMTP
+// has its own sending limits — this is what keeps an open self-hosted
+// instance from tripping them.
+function emailRateLimitKey(request: FastifyRequest): string {
+  const body = request.body as { email?: unknown } | undefined;
+  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  return `${request.ip}:${email}`;
+}
+
 export async function authRoutes(app: FastifyInstance) {
-  app.post("/auth/request-code", async (request, reply) => {
-    const body = requestCodeSchema.parse(request.body);
-    await requestAuthCode(body.email, body.context);
-    return reply.code(202).send();
-  });
+  app.post(
+    "/auth/request-code",
+    {
+      config: {
+        rateLimit: { max: 5, timeWindow: "15 minutes", hook: "preHandler", keyGenerator: emailRateLimitKey },
+      },
+    },
+    async (request, reply) => {
+      const body = requestCodeSchema.parse(request.body);
+      await requestAuthCode(body.email, body.context);
+      return reply.code(202).send();
+    },
+  );
 
-  app.post("/auth/verify-code", async (request, reply) => {
-    const body = verifyCodeSchema.parse(request.body);
-    const user = await verifyMobileCode(body.email, body.code);
-    if (!user) {
-      return reply.code(401).send({ error: { code: "invalid_code", message: "Invalid or expired code." } });
-    }
+  app.post(
+    "/auth/verify-code",
+    {
+      config: {
+        rateLimit: { max: 10, timeWindow: "15 minutes", hook: "preHandler", keyGenerator: emailRateLimitKey },
+      },
+    },
+    async (request, reply) => {
+      const body = verifyCodeSchema.parse(request.body);
+      const user = await verifyMobileCode(body.email, body.code);
+      if (!user) {
+        return reply.code(401).send({ error: { code: "invalid_code", message: "Invalid or expired code." } });
+      }
 
-    const token = generateApiToken();
-    await db.insert(apiTokens).values({
-      userId: user.id,
-      tokenHash: hashToken(token),
-      deviceName: body.deviceName,
-    });
+      const token = generateApiToken();
+      await db.insert(apiTokens).values({
+        userId: user.id,
+        tokenHash: hashToken(token),
+        deviceName: body.deviceName,
+      });
 
-    const [site] = await db.select().from(sites).where(eq(sites.ownerUserId, user.id)).limit(1);
+      const [site] = await db.select().from(sites).where(eq(sites.ownerUserId, user.id)).limit(1);
 
-    return reply.send({
-      token,
-      user: { id: user.id, email: user.email },
-      site: site ?? null,
-    });
-  });
+      return reply.send({
+        token,
+        user: { id: user.id, email: user.email },
+        site: site ?? null,
+      });
+    },
+  );
 
   // Web magic-link click-through: verifies and redirects with a session cookie.
   app.get("/auth/magic/:token", async (request, reply) => {
@@ -65,6 +92,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     reply.setCookie("shareblog_session", apiToken, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 365,

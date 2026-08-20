@@ -4,6 +4,7 @@ import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import compress from "@fastify/compress";
 import etag from "@fastify/etag";
+import rateLimit from "@fastify/rate-limit";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { join, resolve, normalize, extname } from "node:path";
@@ -34,6 +35,10 @@ export function buildApp() {
   app.register(cors, { origin: true });
   app.register(cookie);
   app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024 } });
+
+  // Baseline DoS protection for every route; the auth routes set tighter,
+  // more specific limits of their own (see routes/auth.ts).
+  app.register(rateLimit, { global: true, max: 200, timeWindow: "1 minute" });
 
   app.register(
     async (api) => {
