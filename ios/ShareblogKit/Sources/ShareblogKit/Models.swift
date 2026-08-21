@@ -143,6 +143,13 @@ extension Dictionary where Key == String, Value == AnyCodable {
         if case let .string(value)? = self[key] { return value }
         return nil
     }
+
+    /// Reads a numeric field out of a decoded `metadata` payload, e.g. a
+    /// Book object's `rating`.
+    public func numberValue(_ key: String) -> Double? {
+        if case let .number(value)? = self[key] { return value }
+        return nil
+    }
 }
 
 /// Type-erased JSON value for the freeform `metadata` field, since its shape

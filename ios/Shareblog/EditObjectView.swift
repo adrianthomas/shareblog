@@ -14,6 +14,10 @@ struct EditObjectView: View {
             PhotoObjectView(object: object, onDeleted: onDeleted)
         case .quote:
             QuoteObjectView(object: object, onDeleted: onDeleted)
+        case .music:
+            MusicObjectView(object: object, onDeleted: onDeleted)
+        case .book:
+            BookObjectView(object: object, onDeleted: onDeleted)
         default:
             GenericObjectView(object: object, onDeleted: onDeleted)
         }
@@ -220,6 +224,218 @@ private struct PhotoObjectView: View {
     private func saveForLater() {
         PendingUploadStore.shared.enqueueEdit(
             objectId: object.id, title: nil, body: nil, status: updatedStatus, metadata: updatedMetadata
+        )
+        dismiss()
+    }
+}
+
+/// A Music object's artist/release title live in metadata (not title/body,
+/// which the generic form edits, and which is why that form rendered a
+/// blank box for these) — needs the same kind of dedicated screen Quote
+/// gets. `links`/`artworkUrl` in metadata aren't shown here, so edits start
+/// from the original metadata dict and patch just the fields below, rather
+/// than reconstructing it and losing them.
+private struct MusicObjectView: View {
+    let object: ContentObject
+    let onDeleted: () -> Void
+
+    @State private var artist: String
+    @State private var releaseTitle: String
+    @State private var note: String
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+    @State private var offlineSaveAvailable = false
+    @Environment(\.dismiss) private var dismiss
+
+    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+        self.object = object
+        self.onDeleted = onDeleted
+        _artist = State(initialValue: object.metadata.stringValue("artist") ?? "")
+        _releaseTitle = State(initialValue: object.metadata.stringValue("releaseTitle") ?? "")
+        _note = State(initialValue: object.body ?? "")
+    }
+
+    private var hasChanges: Bool {
+        artist != (object.metadata.stringValue("artist") ?? "")
+            || releaseTitle != (object.metadata.stringValue("releaseTitle") ?? "")
+            || note != (object.body ?? "")
+    }
+
+    var body: some View {
+        Form {
+            Section("Music") {
+                TextField("Title", text: $releaseTitle)
+                TextField("Artist", text: $artist)
+                if let sourceUrl = object.sourceUrl, let url = URL(string: sourceUrl) {
+                    Link(sourceUrl, destination: url)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
+            Section("Your take (optional)") {
+                TextEditor(text: $note)
+                    .frame(minHeight: 80)
+            }
+
+            if offlineSaveAvailable {
+                OfflineNotice(actionTitle: "Finish this later") { saveForLater() }
+            } else if let errorMessage {
+                Text(errorMessage).foregroundStyle(.red)
+            }
+
+            SaveButton(status: object.status, isSaving: isSaving, hasChanges: hasChanges) {
+                Task { await save() }
+            }
+
+            DeleteObjectButton(object: object) {
+                onDeleted()
+                dismiss()
+            }
+        }
+        .navigationTitle(object.status == .draft ? "Draft" : "Published")
+    }
+
+    private var updatedBody: String? { note.isEmpty ? nil : note }
+    private var updatedStatus: ObjectStatus? { object.status == .draft ? .published : nil }
+    private var updatedMetadata: [String: AnyCodable] {
+        var metadata = object.metadata
+        metadata["artist"] = .string(artist)
+        metadata["releaseTitle"] = .string(releaseTitle)
+        return metadata
+    }
+
+    private func save() async {
+        isSaving = true
+        errorMessage = nil
+        offlineSaveAvailable = false
+        defer { isSaving = false }
+        do {
+            _ = try await APIClient.shared.updateObject(
+                id: object.id, body: updatedBody, status: updatedStatus, metadata: updatedMetadata
+            )
+            dismiss()
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+            if case .network = error { offlineSaveAvailable = true }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func saveForLater() {
+        PendingUploadStore.shared.enqueueEdit(
+            objectId: object.id, title: nil, body: updatedBody, status: updatedStatus, metadata: updatedMetadata
+        )
+        dismiss()
+    }
+}
+
+/// A Book object's author and rating live only in metadata — the generic
+/// form's Title field would show (title is a top-level field, not
+/// metadata), but author and rating never would, and a book without a note
+/// would look just as blank as Music did. `isbn13`/`isbn10`/`coverUrl`/
+/// `links`/`source` in metadata aren't shown here, so edits start from the
+/// original metadata dict and patch just author/rating, leaving those alone.
+private struct BookObjectView: View {
+    let object: ContentObject
+    let onDeleted: () -> Void
+
+    @State private var title: String
+    @State private var author: String
+    @State private var rating: Int
+    @State private var note: String
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+    @State private var offlineSaveAvailable = false
+    @Environment(\.dismiss) private var dismiss
+
+    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+        self.object = object
+        self.onDeleted = onDeleted
+        _title = State(initialValue: object.title ?? "")
+        _author = State(initialValue: object.metadata.stringValue("author") ?? "")
+        _rating = State(initialValue: Int(object.metadata.numberValue("rating") ?? 0))
+        _note = State(initialValue: object.body ?? "")
+    }
+
+    private var hasChanges: Bool {
+        title != (object.title ?? "")
+            || author != (object.metadata.stringValue("author") ?? "")
+            || rating != Int(object.metadata.numberValue("rating") ?? 0)
+            || note != (object.body ?? "")
+    }
+
+    var body: some View {
+        Form {
+            Section("Book") {
+                TextField("Title", text: $title)
+                TextField("Author", text: $author)
+                Picker("Rating", selection: $rating) {
+                    Text("No rating").tag(0)
+                    ForEach(1...5, id: \.self) { n in
+                        Text(String(repeating: "★", count: n)).tag(n)
+                    }
+                }
+            }
+            Section("Your take (optional)") {
+                TextEditor(text: $note)
+                    .frame(minHeight: 80)
+            }
+
+            if offlineSaveAvailable {
+                OfflineNotice(actionTitle: "Finish this later") { saveForLater() }
+            } else if let errorMessage {
+                Text(errorMessage).foregroundStyle(.red)
+            }
+
+            SaveButton(status: object.status, isSaving: isSaving, hasChanges: hasChanges) {
+                Task { await save() }
+            }
+
+            DeleteObjectButton(object: object) {
+                onDeleted()
+                dismiss()
+            }
+        }
+        .navigationTitle(object.status == .draft ? "Draft" : "Published")
+    }
+
+    private var updatedTitle: String? { title.isEmpty ? nil : title }
+    private var updatedBody: String? { note.isEmpty ? nil : note }
+    private var updatedStatus: ObjectStatus? { object.status == .draft ? .published : nil }
+    private var updatedMetadata: [String: AnyCodable] {
+        var metadata = object.metadata
+        metadata["author"] = .string(author)
+        if rating == 0 {
+            metadata.removeValue(forKey: "rating")
+        } else {
+            metadata["rating"] = .number(Double(rating))
+        }
+        return metadata
+    }
+
+    private func save() async {
+        isSaving = true
+        errorMessage = nil
+        offlineSaveAvailable = false
+        defer { isSaving = false }
+        do {
+            _ = try await APIClient.shared.updateObject(
+                id: object.id, title: updatedTitle, body: updatedBody, status: updatedStatus, metadata: updatedMetadata
+            )
+            dismiss()
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+            if case .network = error { offlineSaveAvailable = true }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func saveForLater() {
+        PendingUploadStore.shared.enqueueEdit(
+            objectId: object.id, title: updatedTitle, body: updatedBody, status: updatedStatus, metadata: updatedMetadata
         )
         dismiss()
     }
