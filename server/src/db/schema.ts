@@ -50,6 +50,12 @@ export const sites = sqliteTable("sites", {
   customDomain: text("custom_domain").unique(),
   title: text("title").notNull(),
   tagline: text("tagline"),
+  // Free-text About page, editable from the iOS app's settings and linked
+  // from the site footer (see Layout.tsx). Supports a small safe-formatting
+  // syntax — **bold**, *italic*, [text](url) — parsed by render/format.ts;
+  // null/empty means the site has no About page, and the footer link and
+  // /about route are both hidden in that case.
+  about: text("about"),
   locale: text("locale").notNull().default("en"),
   theme: text("theme", { enum: themeValues }).notNull().default("classic"),
   createdAt: createdAt(),

@@ -62,6 +62,7 @@ export function Layout({
 }) {
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
+  const hasAbout = Boolean(site.about && site.about.trim());
 
   return (
     <html lang={resolveLocale(site.locale)}>
@@ -162,6 +163,13 @@ export function Layout({
               .quote-text cite { font-style: normal; }
               a.title-link { text-decoration: none; color: inherit; }
               a.title-link:hover { text-decoration: underline; }
+              .about-content p { margin: 0 0 1rem; }
+              footer.site-footer {
+                margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+                font-size: 0.9rem;
+              }
+              footer.site-footer a { color: var(--muted); text-decoration: none; }
+              footer.site-footer a:hover, footer.site-footer a:focus-visible { color: var(--fg); }
               @media (max-width: 400px) {
                 .book, .music { flex-direction: column; }
                 .book img { width: 140px; }
@@ -193,6 +201,11 @@ export function Layout({
           </nav>
         </header>
         <main id="main-content">{children}</main>
+        {hasAbout && !(theme === "cards" && cardsDetail) ? (
+          <footer className="site-footer">
+            <a href="/about">{t(site.locale, "about")}</a>
+          </footer>
+        ) : null}
         {theme === "cards" && !cardsDetail ? (
           <CardsTabBar locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
         ) : null}

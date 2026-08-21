@@ -12,6 +12,7 @@ import { BookCard } from "./templates/BookCard.js";
 import { MusicCard } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
 import { QuotePost } from "./templates/QuotePost.js";
+import { AboutPage } from "./templates/AboutPage.js";
 import type {
   ContentObject,
   ArticleMetadata,
@@ -191,6 +192,10 @@ export async function renderObjectPage(
     cardsDetail: site.theme === "cards",
     availablePaths,
   });
+}
+
+export function renderAboutPage(site: Site): string {
+  return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }));
 }
 
 function siteOrigin(site: Site): string {

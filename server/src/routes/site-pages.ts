@@ -4,7 +4,14 @@ import { db } from "../db/client.js";
 import { contentObjects } from "../db/schema.js";
 import type { ContentType } from "../db/schema.js";
 import { resolveTenant } from "../middleware/tenant.js";
-import { renderList, renderObjectPage, renderFeed, renderLandingPage, PATH_PREFIX } from "../render/render.js";
+import {
+  renderList,
+  renderObjectPage,
+  renderFeed,
+  renderLandingPage,
+  renderAboutPage,
+  PATH_PREFIX,
+} from "../render/render.js";
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
 import { t, type MessageKey } from "../render/i18n.js";
 
@@ -104,6 +111,17 @@ export async function sitePageRoutes(app: FastifyInstance) {
       const [objects, availablePaths] = await Promise.all([publishedObjects(site.id), publishedNavPaths(site.id)]);
       return renderList(site, site.title, objects.slice(0, 20), "/", availablePaths);
     });
+  });
+
+  // Linked from the site footer (see Layout.tsx) only when about is set;
+  // still guard the route itself in case a link to it is shared directly
+  // after the owner clears the text back out.
+  app.get("/about", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    if (!site.about || !site.about.trim()) {
+      return reply.code(404).send("Not found");
+    }
+    return sendCachedHtml(request, reply, site.id, async () => renderAboutPage(site));
   });
 
   app.get("/feed.xml", { preHandler: resolveTenant }, async (request, reply) => {
