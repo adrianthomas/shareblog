@@ -251,6 +251,60 @@ export function CardsDetailHeader({
   );
 }
 
+// A book's cover has a real, fixed shape — a paperback, not a landscape
+// photo — so it can't share the generic Hero's 4:3 crop or scrim-overlaid
+// caption without either cropping most of the cover away (on the desktop
+// breakpoint) or fighting the cover art's own typography with white text
+// on top of it. This keeps the cover intact at its own portrait aspect
+// ratio, with title/author/rating set as real page text next to it —
+// beside it once there's room, stacked below it on a narrow viewport —
+// the same way a bookstore shelf card places the blurb next to the
+// jacket photo rather than printing it across the cover.
+export function CardsBookDetailHeader({
+  eyebrow,
+  title,
+  author,
+  stars,
+  ratingLabel,
+  dateLabel,
+  coverUrl,
+  coverAlt,
+  backHref,
+  backLabel,
+}: {
+  eyebrow: React.ReactNode;
+  title: React.ReactNode;
+  author?: React.ReactNode;
+  stars?: string | null;
+  ratingLabel?: string;
+  dateLabel?: string;
+  coverUrl: string;
+  coverAlt: string;
+  backHref: string;
+  backLabel: string;
+}) {
+  return (
+    <>
+      <CloseButton backHref={backHref} backLabel={backLabel} />
+      <header className="cards-book-header">
+        <img className="cards-book-cover" src={coverUrl} alt={coverAlt} loading="lazy" />
+        <div className="cards-book-meta">
+          <p className="cards-book-eyebrow">{eyebrow}</p>
+          <h1 className="cards-book-title">{title}</h1>
+          {author ? <p className="cards-book-author">{author}</p> : null}
+          {stars ? (
+            <p className="cards-book-rating">
+              <span aria-hidden="true">{stars}</span>
+              {ratingLabel ? <span className="sr-only">{ratingLabel}</span> : null}
+            </p>
+          ) : null}
+          {dateLabel ? <p className="cards-book-date">{dateLabel}</p> : null}
+        </div>
+      </header>
+    </>
+  );
+}
+
 const TAB_PATHS: Array<{ href: string; key: MessageKey }> = [
   { href: "/", key: "home" },
   { href: "/posts", key: "posts" },
@@ -403,6 +457,38 @@ export const cardsStyles = `
   .cards-detail-header--text .cards-text-card { padding: 1.75rem 1.75rem 1.5rem; border-radius: 16px; }
   .cards-detail-header--text .cards-text-card--full .cards-text-title { -webkit-line-clamp: unset; }
   .cards-detail-header--text .cards-text-title { font-size: clamp(1.3rem, 3.2vw, 1.75rem); }
+
+  /* Book detail header: a cover has its own fixed portrait shape, unlike
+     a photo — forcing it into the generic hero's 4:3 landscape crop (the
+     desktop rule above) or overlaying title/author on top of the cover
+     art the way a photo caption does would both fight the cover rather
+     than showcase it. Cover and metadata stack narrow-viewport (where
+     there isn't width for both side by side and to still read the cover
+     at a reasonable size) and sit side by side from the same tablet
+     breakpoint the other detail headers switch at. */
+  .cards-book-header {
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+    max-width: 680px; margin: 0 auto; text-align: center;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
+  }
+  .cards-book-cover {
+    width: min(55vw, 220px); aspect-ratio: 2 / 3; object-fit: cover;
+    border-radius: 4px; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.25);
+  }
+  .cards-book-meta { min-width: 0; }
+  .cards-book-eyebrow {
+    margin: 0 0 0.3rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .cards-book-title { margin: 0; font-size: clamp(1.3rem, 3.2vw, 1.75rem); line-height: 1.25; }
+  .cards-book-author { margin: 0.4rem 0 0; font-size: 1rem; color: var(--muted); }
+  .cards-book-rating { margin: 0.6rem 0 0; font-size: 1.15rem; letter-spacing: 0.05em; color: #c9971f; }
+  .cards-book-date { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  @media (min-width: 720px) {
+    .cards-book-header { flex-direction: row; align-items: flex-start; text-align: left; gap: 2rem; }
+    .cards-book-cover { width: 220px; }
+  }
 
   /* Quote card: a piece of writing paper rather than a UI rectangle. The
      outer .cards-item link normally supplies its own rounded, shadowed

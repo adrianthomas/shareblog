@@ -3,7 +3,7 @@ import type { ContentObject, BookMetadata } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
-import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { CardsFeedItem, CardsDetailHeader, CardsBookDetailHeader } from "../themes/cards.js";
 
 // Retailer brand names — proper nouns, not translated per locale.
 const STORE_LABELS: Record<string, string> = {
@@ -92,6 +92,28 @@ export function BookCard({
           subtitle={metadata.author}
           hero={hero}
         />
+      );
+    }
+    if (metadata.coverUrl) {
+      return (
+        <>
+          <CardsBookDetailHeader
+            eyebrow={t(locale, "books")}
+            title={object.title}
+            author={metadata.author}
+            stars={stars}
+            ratingLabel={metadata.rating ? t(locale, "ratingLabel", { rating: metadata.rating }) : undefined}
+            dateLabel={formatDate(object.publishedAt, locale)}
+            coverUrl={metadata.coverUrl}
+            coverAlt={hero.imageAlt}
+            backHref={backHref!}
+            backLabel={backLabel!}
+          />
+          <div className="cards-body">
+            {object.body ? <p>{object.body}</p> : null}
+            <BookLinks links={metadata.links} />
+          </div>
+        </>
       );
     }
     return (
