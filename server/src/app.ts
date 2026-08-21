@@ -1,10 +1,11 @@
-import Fastify from "fastify";
+import Fastify, { type FastifyError } from "fastify";
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import compress from "@fastify/compress";
 import etag from "@fastify/etag";
 import rateLimit from "@fastify/rate-limit";
+import { ZodError } from "zod";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { join, resolve, normalize, extname } from "node:path";
@@ -30,6 +31,33 @@ const STATIC_EXTENSION_CONTENT_TYPES: Record<string, string> = {
 
 export function buildApp() {
   const app = Fastify({ logger: true });
+
+  // Routes generally catch their own risky calls and reply with this
+  // {error: {code, message}} envelope directly (see resolve.ts) — this is
+  // the fallback for whatever slips through uncaught (a route's own
+  // zod .parse(), a rejected promise in objects/assets), so a bug in one
+  // handler can't fall through to Fastify's default {statusCode, error,
+  // message} shape, which every client here fails to decode and reports
+  // as an opaque generic failure instead of the real problem.
+  app.setErrorHandler((error: FastifyError | ZodError, request, reply) => {
+    if (error instanceof ZodError) {
+      const message = error.issues
+        .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+        .join("; ");
+      return reply.code(400).send({ error: { code: "validation_error", message } });
+    }
+
+    const statusCode = error.statusCode ?? 500;
+    if (statusCode >= 500) {
+      request.log.error(error, "unhandled error");
+      return reply
+        .code(statusCode)
+        .send({ error: { code: "internal_error", message: "Something went wrong. Please try again." } });
+    }
+
+    request.log.warn(error, "request error");
+    return reply.code(statusCode).send({ error: { code: error.code ?? "request_error", message: error.message } });
+  });
 
   // No CDN or reverse proxy compressing/caching in front of this on
   // Uberspace — do it in-process. compress skips already-compressed
