@@ -155,23 +155,38 @@ private let relativeDateFormatter: RelativeDateTimeFormatter = {
     return formatter
 }()
 
+/// A content-type glyph sized to roughly a row's full height, so it reads as
+/// the row's leading icon rather than a small inline label decoration.
+private struct TypeIcon: View {
+    let symbolName: String
+    var tint: Color = .accentColor
+
+    var body: some View {
+        Image(systemName: symbolName)
+            .font(.system(size: 20, weight: .medium))
+            .foregroundStyle(tint)
+            .frame(width: 44, height: 44)
+            .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+}
+
 private struct PendingRow: View {
     let item: PendingUpload
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Image(systemName: item.type.symbolName)
-                    .font(.caption)
+        HStack(spacing: 12) {
+            TypeIcon(symbolName: item.type.symbolName, tint: .secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(item.type.displayName)
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    StatusBadge(text: "Queued", color: .orange)
+                }
+                Text(previewText(type: item.type, title: item.title, body: item.body, metadata: item.metadata))
+                    .lineLimit(2)
                     .foregroundStyle(.secondary)
-                Text(item.type.displayName)
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-                StatusBadge(text: "Queued", color: .orange)
             }
-            Text(previewText(type: item.type, title: item.title, body: item.body, metadata: item.metadata))
-                .lineLimit(2)
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
     }
@@ -185,28 +200,28 @@ private struct PendingEditRow: View {
     let object: ContentObject?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                if let type = object?.type {
-                    Image(systemName: type.symbolName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(type.displayName)
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            TypeIcon(symbolName: object?.type.symbolName ?? "questionmark.square", tint: .secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    if let type = object?.type {
+                        Text(type.displayName)
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                    }
+                    StatusBadge(text: "Queued", color: .orange)
                 }
-                StatusBadge(text: "Queued", color: .orange)
-            }
-            Text(
-                previewText(
-                    type: object?.type ?? .thought,
-                    title: item.title ?? object?.title,
-                    body: item.body ?? object?.body,
-                    metadata: item.metadata ?? object?.metadata ?? [:]
+                Text(
+                    previewText(
+                        type: object?.type ?? .thought,
+                        title: item.title ?? object?.title,
+                        body: item.body ?? object?.body,
+                        metadata: item.metadata ?? object?.metadata ?? [:]
+                    )
                 )
-            )
-            .lineLimit(2)
-            .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 2)
     }
@@ -236,21 +251,21 @@ private struct FeedRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Image(systemName: object.type.symbolName)
-                    .font(.caption)
-                    .foregroundStyle(.tint)
-                Text(object.type.displayName)
-                    .font(.caption.bold())
+        HStack(spacing: 12) {
+            TypeIcon(symbolName: object.type.symbolName)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(object.type.displayName)
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    StatusBadge(text: statusText, color: statusColor)
+                }
+                Text(previewText(type: object.type, title: object.title, body: object.body, metadata: object.metadata))
+                    .lineLimit(2)
+                Text(timestampText)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
-                StatusBadge(text: statusText, color: statusColor)
             }
-            Text(previewText(type: object.type, title: object.title, body: object.body, metadata: object.metadata))
-                .lineLimit(2)
-            Text(timestampText)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
     }
