@@ -434,6 +434,13 @@ export const cardsStyles = `
   body.theme-cards { max-width: none; padding: 0; }
   body.theme-cards main { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 6rem; }
   body.theme-cards header.site-header { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 0; }
+  /* Sits right after main's own 6rem bottom padding (above), which already
+     clears the fixed tab bar for whatever content precedes the footer, so
+     the footer only needs its own clearance below its own content. */
+  body.theme-cards footer.site-footer {
+    max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 6rem; border-top: 1px solid var(--border);
+  }
+  body.theme-cards .about-content { max-width: 640px; margin: 0 auto; }
   /* The bottom tab bar is the only nav in this theme — the classic text-link
      row would just repeat it at the top of every page. */
   body.theme-cards header.site-header nav { display: none; }
@@ -658,14 +665,16 @@ export const cardsStyles = `
      such constraint and shows the photo at its own natural aspect ratio. */
   .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image { aspect-ratio: 4 / 3; object-fit: cover; }
   /* Detail page: give the photo a fixed display frame instead of just
-     however tall its own aspect ratio happens to make it — a black
-     letterbox (the same idea as a Photos/Lightroom viewer) + object-fit:
-     contain shows the whole image at the largest size that fits the frame,
-     for any aspect ratio, landscape or portrait, without ever cropping it
-     the way object-fit: cover would. */
+     however tall its own aspect ratio happens to make it, and let it show
+     through object-fit: contain rather than cropping to that frame — the
+     whole image at the largest size that fits, for any aspect ratio,
+     landscape or portrait. No background needed on the image itself: the
+     immersive black backdrop below (.cards-detail-header--photo) already
+     shows through any letterbox gap, so the frame reads as part of the
+     same black viewer rather than a separate boxed image sitting on it. */
   .cards-photo-card--full .cards-photo-image {
     height: min(70vh, 640px); width: 100%;
-    object-fit: contain; background: #000;
+    object-fit: contain;
     border-radius: 12px;
   }
 
@@ -689,21 +698,45 @@ export const cardsStyles = `
   }
   .cards-photo-exif-row dd { margin: 0; font-size: 0.85rem; color: var(--fg); letter-spacing: 0.01em; }
 
-  /* Detail page: same centered-column treatment as a text-only post (see
-     .cards-detail-header--text above) rather than the full-bleed immersive
-     banner a cover-image post gets — the caption/EXIF flow in this card
-     needs real padding around it, which a 100vw bleed doesn't leave room
-     for on mobile. Widens past that column on desktop (see the media query
-     below) since there the photo itself should be the large, dominant
-     element rather than stopping at the same width a couple of sentences
-     of body text gets. */
-  .cards-detail-header--photo {
-    width: auto; max-width: 640px; margin: 0 auto;
-    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
+  /* Detail page: an immersive black viewer rather than a card floating on
+     the page's own background — the one detail page in this theme meant to
+     feel like a fullscreen photo viewer (Photos.app, Lightroom) rather
+     than a document. Bled to 100vw the same way the generic cover-image
+     detail header is (see .cards-detail-header above) and held to at
+     least one viewport tall so the black fills the screen immediately,
+     not just whatever height the caption+photo+EXIF happen to need. Fixed
+     black regardless of light/dark mode, same reasoning as the quote
+     card's fixed paper tone: this is viewer chrome around the photo, not
+     page content that should invert. */
+  .cards-detail-header--photo { width: 100vw; margin-left: calc(50% - 50vw); background: #000; min-height: 100vh; }
+  /* On a hard page load (no JS — see the client-side overlay below, which
+     doesn't hit this since it never puts fetched content inside a <main>)
+     \`main\`'s own fixed 6rem bottom padding (body.theme-cards main, above)
+     would otherwise leave a trailing strip of the page's own background
+     below the header, breaking the immersion right at the bottom edge. */
+  body.theme-cards:has(.cards-detail-header--photo) main { padding-bottom: 0; }
+  /* The actual content column, centered inside that black bleed — widens
+     past this on desktop (see the media query below) since there the
+     photo itself should be the large, dominant element rather than
+     stopping at the same width a couple of sentences of body text gets. */
+  .cards-photo-card--full {
+    max-width: 640px; margin: 0 auto;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 3rem;
   }
   .cards-detail-header--photo .cards-photo-caption { padding: 0; }
+  /* Light-on-black overrides for the caption/EXIF text, matching the fixed
+     black backdrop above — the theme's --fg/--muted/--border tokens are
+     tuned for a page background that's light in light mode and dark in
+     dark mode, not a backdrop that's always black regardless of mode. */
+  .cards-photo-card--full .cards-photo-eyebrow { color: rgba(255,255,255,0.65); }
+  .cards-photo-card--full .cards-photo-title { color: #fff; }
+  .cards-photo-card--full .cards-photo-subtitle { color: rgba(255,255,255,0.82); }
+  .cards-photo-card--full .cards-photo-date { color: rgba(255,255,255,0.6); }
+  .cards-photo-card--full .cards-photo-exif { border-top-color: rgba(255,255,255,0.18); }
+  .cards-photo-card--full .cards-photo-exif-row dt { color: rgba(255,255,255,0.55); }
+  .cards-photo-card--full .cards-photo-exif-row dd { color: rgba(255,255,255,0.92); }
   @media (min-width: 720px) {
-    .cards-detail-header--photo { max-width: min(92vw, 1080px); }
+    .cards-photo-card--full { max-width: min(92vw, 1080px); }
     .cards-photo-card--full .cards-photo-image { height: min(78vh, 820px); }
   }
 
