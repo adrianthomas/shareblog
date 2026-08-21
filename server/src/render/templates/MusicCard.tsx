@@ -46,6 +46,7 @@ export function MusicCard({
           eyebrow={t(locale, "music")}
           title={metadata.releaseTitle}
           subtitle={metadata.artist}
+          type={object.type}
           hero={hero}
         />
       );
@@ -58,6 +59,7 @@ export function MusicCard({
           title={metadata.releaseTitle}
           subtitle={metadata.artist}
           dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
           hero={hero}
           backHref={backHref!}
           backLabel={backLabel!}

@@ -25,6 +25,7 @@ export function ArticleCard({
         eyebrow={t(locale, "articles")}
         title={object.title}
         subtitle={metadata.excerpt}
+        type={object.type}
         hero={{ imageUrl: coverImageUrl, imageAlt: "", gradientSeed: object.slug }}
       />
     );
@@ -70,6 +71,7 @@ export function ArticlePage({
           title={object.title}
           subtitle={metadata.excerpt}
           dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
           hero={{ imageUrl: coverImageUrl, imageAlt: "", gradientSeed: object.slug }}
           backHref={backHref!}
           backLabel={backLabel!}

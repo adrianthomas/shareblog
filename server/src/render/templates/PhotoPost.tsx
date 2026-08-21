@@ -75,6 +75,7 @@ export function PhotoPost({
           href={`/photos/${object.slug}`}
           eyebrow={t(locale, "photos")}
           title={title}
+          type={object.type}
           hero={hero}
           variant="photo"
         />
@@ -86,6 +87,7 @@ export function PhotoPost({
         eyebrow={t(locale, "photos")}
         title={title}
         dateLabel={formatDate(object.publishedAt, locale)}
+        type={object.type}
         hero={hero}
         variant="photo"
         exif={formatExif(exif, locale)}

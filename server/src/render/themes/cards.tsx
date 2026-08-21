@@ -1,20 +1,6 @@
 import React from "react";
 import { t, type MessageKey } from "../i18n.js";
-
-// A small curated set of color pairs used to give text-only posts (a
-// Thought, Quote, or an Article/Book/Music post that hasn't set a cover) a
-// per-post color identity — chosen deterministically per post so the same
-// post always gets the same accent instead of reshuffling on every render.
-const GRADIENTS = [
-  ["#4f46e5", "#9333ea"],
-  ["#0ea5e9", "#0891b2"],
-  ["#db2777", "#9333ea"],
-  ["#ea580c", "#dc2626"],
-  ["#16a34a", "#0d9488"],
-  ["#7c3aed", "#2563eb"],
-  ["#c026d3", "#e11d48"],
-  ["#0284c7", "#4338ca"],
-];
+import type { ContentType } from "../../db/schema.js";
 
 function hashSeed(seed: string): number {
   let hash = 0;
@@ -25,11 +11,20 @@ function hashSeed(seed: string): number {
   return Math.abs(hash);
 }
 
-// The same per-post color identity used to distinguish text-only cards —
-// deterministic per seed so the same post always gets the same accent.
-function accentForSeed(seed: string): string {
-  return GRADIENTS[hashSeed(seed) % GRADIENTS.length][0];
-}
+// A fixed color identity per content type (rather than the old per-post
+// hash) so the same type always reads as the same color across the whole
+// site — Articles are always blue, Posts are always orange, etc. Only
+// thought/article/book/music ever reach TextCard (photo and quote have
+// their own dedicated treatments that don't use this), but every type gets
+// an entry for completeness.
+const TYPE_ACCENTS: Record<ContentType, string> = {
+  thought: "#ea580c",
+  article: "#2563eb",
+  book: "#b45309",
+  music: "#7c3aed",
+  quote: "#8a6d3b",
+  photo: "#64748b",
+};
 
 export interface CardsHero {
   imageUrl?: string;
@@ -51,6 +46,8 @@ export interface CardsItemData {
   eyebrow: string;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  /** Drives the badge color on the text-only card treatment (see TextCard) — unused by the photo/quote variants, which have their own dedicated looks. */
+  type: ContentType;
   hero: CardsHero;
   /** "quote" renders the letter-card treatment (cursive type on paper), on both feed and detail; "photo" renders the caption-above/plain-image-below treatment on the *detail* page only — the feed card stays the full-bleed Hero every other cover-image type uses. Only meaningful when `hero.imageUrl` is unset for "quote", or set for "photo". */
   variant?: "quote" | "photo";
@@ -109,15 +106,18 @@ function Caption({
 // the photo card with a colored block standing in for the missing image —
 // which forces the same low-contrast white-on-scrim treatment a photo
 // needs, on a post where the text *is* the whole point — this sets real
-// foreground-colored type on the card's own surface, with a thin per-post
-// accent stripe standing in for the color identity a cover image would
-// otherwise carry. `full` skips the feed card's line-clamp (used on the
-// detail page, where the text should never be truncated).
+// foreground-colored type on the card's own surface, with a small type
+// badge (dot + label) standing in for the color identity a cover image
+// would otherwise carry. The badge sits fully inside the card's own
+// padding rather than as an edge-to-edge stripe, so it never has to track
+// the card's own corner radius the way an edge-to-edge border did. `full`
+// skips the feed card's line-clamp (used on the detail page, where the
+// text should never be truncated).
 function TextCard({
   eyebrow,
   title,
   subtitle,
-  seed,
+  type,
   dateLabel,
   titleTag: TitleTag = "h2",
   full = false,
@@ -125,15 +125,18 @@ function TextCard({
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
-  seed: string;
+  type: ContentType;
   dateLabel?: string;
   titleTag?: "h1" | "h2";
   full?: boolean;
 }) {
-  const style = { "--cards-accent": accentForSeed(seed) } as React.CSSProperties;
+  const style = { "--cards-accent": TYPE_ACCENTS[type] } as React.CSSProperties;
   return (
     <div className={`cards-text-card${full ? " cards-text-card--full" : ""}`} style={style}>
-      <p className="cards-text-eyebrow">{eyebrow}</p>
+      <p className="cards-text-badge">
+        <span className="cards-text-badge-dot" aria-hidden="true" />
+        {eyebrow}
+      </p>
       <TitleTag className="cards-text-title">{title}</TitleTag>
       {subtitle ? <p className="cards-text-subtitle">{subtitle}</p> : null}
       {dateLabel ? <p className="cards-text-date">{dateLabel}</p> : null}
@@ -243,7 +246,7 @@ function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: str
 // <a> (works with JS disabled — it's a normal link to the detail page).
 // `data-cards-card` is the hook the client script uses to intercept the
 // click and animate into the detail view instead of a hard navigation.
-export function CardsFeedItem({ href, eyebrow, title, subtitle, hero, variant }: CardsItemData) {
+export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, variant }: CardsItemData) {
   return (
     <a className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`} href={href} data-cards-card>
       {hero.imageUrl ? (
@@ -251,7 +254,7 @@ export function CardsFeedItem({ href, eyebrow, title, subtitle, hero, variant }:
       ) : variant === "quote" ? (
         <QuoteCard title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       ) : (
-        <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} seed={hero.gradientSeed} />
+        <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} type={type} />
       )}
     </a>
   );
@@ -272,6 +275,7 @@ export function CardsDetailHeader({
   eyebrow,
   title,
   subtitle,
+  type,
   dateLabel,
   hero,
   backHref,
@@ -312,7 +316,7 @@ export function CardsDetailHeader({
               title={title}
               subtitle={subtitle}
               dateLabel={dateLabel}
-              seed={hero.gradientSeed}
+              type={type}
               titleTag="h1"
               full
             />
@@ -517,17 +521,23 @@ export const cardsStyles = `
 
   /* Text-only card (no cover image): real foreground-colored type on the
      card's own surface instead of white text forced onto a colored block
-     standing in for a missing photo. A thin per-post accent stripe across
-     the top carries the color identity a cover image would otherwise give
-     the card, without competing with the text for contrast. */
+     standing in for a missing photo. A small type badge (dot + label)
+     carries the color identity a cover image would otherwise give the
+     card. It sits fully inside the card's own padding rather than as an
+     edge-to-edge stripe, so — unlike the old border-top treatment — it
+     never has to track the card's own corner radius, on the feed or the
+     detail page. */
   .cards-text-card {
     position: relative; padding: 1.5rem 1.375rem 1.25rem; background: var(--bg);
-    border-top: 3px solid var(--cards-accent);
   }
-  .cards-text-eyebrow {
-    margin: 0 0 0.6rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+  .cards-text-badge {
+    display: inline-flex; align-items: center; gap: 0.4em;
+    margin: 0 0 0.75rem; padding: 0.28em 0.7em 0.28em 0.55em; border-radius: 999px;
+    background: color-mix(in srgb, var(--cards-accent) 16%, var(--bg));
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
     text-transform: uppercase; color: var(--cards-accent);
   }
+  .cards-text-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cards-accent); flex-shrink: 0; }
   .cards-text-title {
     margin: 0; font-size: 1.2rem; line-height: 1.45; font-weight: 600; color: var(--fg);
     display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden;

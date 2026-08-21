@@ -36,6 +36,7 @@ export function QuotePost({
           eyebrow={t(locale, "quotes")}
           title={quoted}
           subtitle={metadata.author}
+          type={object.type}
           hero={hero}
           variant="quote"
         />
@@ -49,6 +50,7 @@ export function QuotePost({
           title={quoted}
           subtitle={metadata.author}
           dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
           hero={hero}
           backHref={backHref!}
           backLabel={backLabel!}

@@ -27,6 +27,7 @@ export function ThoughtPost({
           href={`/posts/${object.slug}`}
           eyebrow={t(locale, "posts")}
           title={object.body}
+          type={object.type}
           hero={hero}
         />
       );
@@ -37,6 +38,7 @@ export function ThoughtPost({
         eyebrow={t(locale, "posts")}
         title={object.body}
         dateLabel={formatDate(object.publishedAt, locale)}
+        type={object.type}
         hero={hero}
         backHref={backHref!}
         backLabel={backLabel!}
