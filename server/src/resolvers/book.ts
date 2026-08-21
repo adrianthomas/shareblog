@@ -1,5 +1,16 @@
 import got from "got";
-import type { ResolvedBookCandidate } from "./types.js";
+import type { AmazonRegion, ResolvedBookCandidate } from "./types.js";
+
+const AMAZON_DOMAINS: Record<AmazonRegion, string> = {
+  us: "amazon.com",
+  uk: "amazon.co.uk",
+  de: "amazon.de",
+  fr: "amazon.fr",
+  it: "amazon.it",
+  es: "amazon.es",
+  ca: "amazon.ca",
+  jp: "amazon.co.jp",
+};
 
 interface OpenLibraryDoc {
   title: string;
@@ -24,11 +35,22 @@ function isbn13ToIsbn10(isbn13: string): string | undefined {
   return core + (check === 10 ? "X" : String(check));
 }
 
+// Amazon's ISBN-based /dp/ link works on every regional storefront (each
+// carries its own catalog under the same ASIN), so one ASIN covers all of them.
+function buildAmazonLinks(asin: string | undefined, query: string): ResolvedBookCandidate["links"]["amazon"] {
+  const links: ResolvedBookCandidate["links"]["amazon"] = {};
+  for (const region of Object.keys(AMAZON_DOMAINS) as AmazonRegion[]) {
+    const domain = AMAZON_DOMAINS[region];
+    links[region] = asin ? `https://www.${domain}/dp/${asin}` : `https://www.${domain}/s?k=${query}`;
+  }
+  return links;
+}
+
 function buildLinks(title: string, author: string, isbn13?: string, isbn10?: string): ResolvedBookCandidate["links"] {
   const asin = isbn10 ?? (isbn13 ? isbn13ToIsbn10(isbn13) : undefined);
   const query = encodeURIComponent(isbn13 ?? isbn10 ?? `${title} ${author}`);
   return {
-    amazon: asin ? `https://www.amazon.com/dp/${asin}` : `https://www.amazon.com/s?k=${query}`,
+    amazon: buildAmazonLinks(asin, query),
     bookshop: `https://bookshop.org/search?keywords=${query}`,
     kobo: `https://www.kobo.com/search?query=${query}`,
     appleBooks: `https://books.apple.com/search?term=${query}`,

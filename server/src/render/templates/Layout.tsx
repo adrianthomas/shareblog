@@ -3,6 +3,30 @@ import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
 
+// Promotes the Amazon storefront closest to the visitor's browser-reported
+// language (navigator.language — never sent to the server, never logged),
+// among the region links BookCard renders with a data-amazon-region
+// attribute. No-ops instantly on pages without any. This is a client-only
+// enhancement precisely because pages are served with a shared public
+// cache-control header (see site-pages.ts): picking a region server-side
+// from the Accept-Language header would require varying the cached
+// response per visitor, which isn't compatible with that caching.
+const amazonRegionScript = `
+(function () {
+  var links = document.querySelectorAll('[data-amazon-region]');
+  if (!links.length) return;
+  var country = (navigator.language || '').split(/[-_]/)[1];
+  var region = country && {
+    US: 'us', GB: 'uk', DE: 'de', AT: 'de', CH: 'de', FR: 'fr', IT: 'it', ES: 'es', CA: 'ca', JP: 'jp',
+  }[country.toUpperCase()];
+  if (!region) return;
+  var match = document.querySelector('[data-amazon-region="' + region + '"]');
+  if (!match) return;
+  if (match !== links[0]) match.parentNode.insertBefore(match, links[0]);
+  match.textContent += ' — closest to you';
+})();
+`;
+
 function navItems(site: Site, availablePaths?: string[]) {
   const items = [
     { href: "/posts", label: t(site.locale, "posts") },
@@ -140,6 +164,7 @@ export function Layout({
           <CardsTabBar locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
         ) : null}
         {theme === "cards" ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
+        <script dangerouslySetInnerHTML={{ __html: amazonRegionScript }} />
       </body>
     </html>
   );

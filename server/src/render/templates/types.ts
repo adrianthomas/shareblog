@@ -9,7 +9,12 @@ export interface BookMetadata {
   isbn10?: string;
   coverUrl?: string;
   rating?: number;
-  links?: { bookshop?: string; amazon?: string; kobo?: string; appleBooks?: string };
+  links?: {
+    bookshop?: string;
+    amazon?: Partial<Record<"us" | "uk" | "de" | "fr" | "it" | "es" | "ca" | "jp", string>>;
+    kobo?: string;
+    appleBooks?: string;
+  };
 }
 
 export interface MusicMetadata {

@@ -1,3 +1,5 @@
+export type AmazonRegion = "us" | "uk" | "de" | "fr" | "it" | "es" | "ca" | "jp";
+
 export interface ResolvedBookCandidate {
   title: string;
   author: string;
@@ -6,7 +8,7 @@ export interface ResolvedBookCandidate {
   coverUrl?: string;
   source: "open_library" | "google_books";
   links: {
-    amazon?: string;
+    amazon: Partial<Record<AmazonRegion, string>>;
     bookshop?: string;
     kobo?: string;
     appleBooks?: string;
