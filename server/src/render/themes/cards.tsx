@@ -1103,6 +1103,16 @@ export const cardsScript = `
     var toRect = o.link.getBoundingClientRect();
     var toRadius = parseFloat(getComputedStyle(o.link).borderRadius) || 0;
     o.backdrop.classList.remove('cards-overlay-backdrop--visible');
+    // A swipe-to-dismiss drag (see wireDismissGesture below) drives the
+    // backdrop's opacity directly via inline style while it's in progress,
+    // which outranks the class rule above in specificity — so on a
+    // drag-committed close, removing the class alone left the backdrop
+    // frozen at whatever opacity the drag let go of for this whole
+    // animation, only disappearing in one abrupt jump when cleanup() below
+    // removes it from the DOM. Explicitly assigning a fresh value here
+    // guarantees the opacity transition actually has something to animate
+    // to, regardless of what a drag left behind.
+    o.backdrop.style.opacity = '0';
 
     var main = document.getElementById('main-content');
     if (main) main.inert = false;
