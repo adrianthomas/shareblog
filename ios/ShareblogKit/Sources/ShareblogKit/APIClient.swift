@@ -70,7 +70,6 @@ public final class APIClient: @unchecked Sendable {
 
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if authenticated {
             guard let token = Keychain.loadToken() else { throw APIError.unauthorized }
@@ -78,6 +77,7 @@ public final class APIClient: @unchecked Sendable {
         }
 
         if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try encoder.encode(AnyEncodableBox(body))
         }
 
