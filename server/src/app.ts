@@ -23,6 +23,11 @@ const EXTENSION_CONTENT_TYPES: Record<string, string> = {
   ".gif": "image/gif",
 };
 
+const STATIC_EXTENSION_CONTENT_TYPES: Record<string, string> = {
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
+};
+
 export function buildApp() {
   const app = Fastify({ logger: true });
 
@@ -69,6 +74,26 @@ export function buildApp() {
       return reply.type(contentType).send(createReadStream(filePath));
     });
   }
+
+  // Bundled static assets (currently just the self-hosted webfont used by
+  // the cards theme) — served straight from the repo rather than a CDN so
+  // rendering a site never depends on a third-party request.
+  const publicDir = resolve(import.meta.dirname, "../public");
+  app.get("/static/*", async (request, reply) => {
+    const wildcard = (request.params as { "*": string })["*"];
+    const filePath = normalize(join(publicDir, wildcard));
+    if (!filePath.startsWith(publicDir)) {
+      return reply.code(400).send();
+    }
+    try {
+      await stat(filePath);
+    } catch {
+      return reply.code(404).send();
+    }
+    const contentType = STATIC_EXTENSION_CONTENT_TYPES[extname(filePath).toLowerCase()] ?? "application/octet-stream";
+    reply.header("cache-control", "public, max-age=31536000, immutable");
+    return reply.type(contentType).send(createReadStream(filePath));
+  });
 
   // Public site pages are registered last and are the fallback for any host
   // that resolves to a tenant subdomain; unmatched hosts (including the API
