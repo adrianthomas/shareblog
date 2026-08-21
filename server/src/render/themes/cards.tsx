@@ -604,21 +604,24 @@ export const cardsStyles = `
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .cards-item--quote:hover .cards-quote-card { transform: rotate(0deg) translateY(-2px); box-shadow: 0 2px 4px rgba(30,20,5,0.14), 0 18px 36px rgba(30,20,5,0.22); }
-  /* A generic cursive stack — Dancing Script is loaded for Latin text (see
-     the font <link> in Layout.tsx); a script in another writing system
-     falls through per-character to the next font that has the glyph, same
-     as any other font stack, so a non-Latin quote still renders legibly
+  /* A typewritten letter rather than a handwritten one — ink-struck,
+     slightly irregular type from a manual machine, still a personal note
+     but a different idea of "letter" than a script face gives. Special
+     Elite is loaded for Latin text (see the font <link> in Layout.tsx); a
+     script in another writing system falls through per-character to the
+     next font that has the glyph (here, the monospace fallback), same as
+     any other font stack, so a non-Latin quote still renders legibly
      rather than showing missing-glyph boxes. */
   .cards-quote-text {
-    margin: 0; font-family: "Dancing Script", "Segoe Script", "Apple Chancery", cursive;
-    font-weight: 700; font-size: 1.6rem; line-height: 1.35; color: #3a3122;
+    margin: 0; font-family: "Special Elite", "Courier New", monospace;
+    font-size: 1.05rem; line-height: 1.65; color: #3a3122;
     display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
   }
   .cards-quote-card--full .cards-quote-text { -webkit-line-clamp: unset; }
   .cards-quote-author {
     margin: 0.9rem 0 0; text-align: right;
-    font-family: "Dancing Script", "Segoe Script", "Apple Chancery", cursive;
-    font-weight: 600; font-size: 1.15rem; color: #6b5a3d;
+    font-family: "Special Elite", "Courier New", monospace;
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b5a3d;
   }
   .cards-quote-author::before { content: "— "; }
   .cards-quote-date {
@@ -626,7 +629,7 @@ export const cardsStyles = `
     font-size: 0.78rem; color: #6b5a3d; text-align: right; letter-spacing: 0.02em;
   }
   .cards-detail-header--quote .cards-quote-card { padding: 2.5rem 2rem 1.75rem; border-radius: 8px; }
-  .cards-detail-header--quote .cards-quote-text { font-size: clamp(1.6rem, 3.4vw, 2.1rem); }
+  .cards-detail-header--quote .cards-quote-text { font-size: clamp(1.15rem, 2.4vw, 1.5rem); }
 
   /* Photo card: the one card in this theme where the image itself is the
      whole point rather than a backdrop carrying overlaid text, so it skips
