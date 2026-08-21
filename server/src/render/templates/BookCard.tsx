@@ -90,6 +90,7 @@ export function BookCard({
           eyebrow={t(locale, "books")}
           title={object.title}
           subtitle={metadata.author}
+          type={object.type}
           hero={hero}
         />
       );
@@ -124,6 +125,7 @@ export function BookCard({
           title={object.title}
           subtitle={metadata.author}
           dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
           hero={hero}
           backHref={backHref!}
           backLabel={backLabel!}
