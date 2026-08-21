@@ -18,7 +18,18 @@ export const bookMetadataSchema = z.object({
   links: z
     .object({
       bookshop: z.string().url().optional(),
-      amazon: z.string().url().optional(),
+      amazon: z
+        .object({
+          us: z.string().url().optional(),
+          uk: z.string().url().optional(),
+          de: z.string().url().optional(),
+          fr: z.string().url().optional(),
+          it: z.string().url().optional(),
+          es: z.string().url().optional(),
+          ca: z.string().url().optional(),
+          jp: z.string().url().optional(),
+        })
+        .optional(),
       kobo: z.string().url().optional(),
       appleBooks: z.string().url().optional(),
     })

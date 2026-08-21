@@ -98,6 +98,13 @@ public struct UploadedAsset: Codable, Sendable {
     public let height: Int?
 }
 
+public struct BookLinks: Codable, Sendable {
+    public let amazon: [String: String]
+    public let bookshop: String?
+    public let kobo: String?
+    public let appleBooks: String?
+}
+
 public struct BookCandidate: Codable, Sendable, Identifiable {
     public var id: String { isbn13 ?? isbn10 ?? title }
     public let title: String
@@ -106,7 +113,7 @@ public struct BookCandidate: Codable, Sendable, Identifiable {
     public let isbn10: String?
     public let coverUrl: String?
     public let source: String
-    public let links: [String: String]
+    public let links: BookLinks
 }
 
 public struct BookResolveResponse: Codable, Sendable {

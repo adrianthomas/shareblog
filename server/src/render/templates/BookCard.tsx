@@ -7,11 +7,61 @@ import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
 
 // Retailer brand names — proper nouns, not translated per locale.
 const STORE_LABELS: Record<string, string> = {
-  amazon: "Amazon",
   bookshop: "Bookshop.org",
   kobo: "Kobo",
   appleBooks: "Apple Books",
 };
+
+const AMAZON_REGION_ORDER = ["us", "de", "uk", "fr", "it", "es", "ca", "jp"] as const;
+const AMAZON_REGION_LABELS: Record<(typeof AMAZON_REGION_ORDER)[number], string> = {
+  us: "Amazon (US)",
+  de: "Amazon (DE)",
+  uk: "Amazon (UK)",
+  fr: "Amazon (FR)",
+  it: "Amazon (IT)",
+  es: "Amazon (ES)",
+  ca: "Amazon (CA)",
+  jp: "Amazon (JP)",
+};
+
+interface BookLink {
+  key: string;
+  label: string;
+  url: string;
+  amazonRegion?: string;
+}
+
+// Flattens the amazon region map alongside the other single-URL retailer
+// links so both theme branches can render one uniform list. Amazon entries
+// carry an `amazonRegion` so the client can promote the visitor's likely
+// storefront (see the script in Layout.tsx) without any server-side
+// geolocation or header sniffing.
+function flattenLinks(links: NonNullable<BookMetadata["links"]>): BookLink[] {
+  const entries: BookLink[] = [];
+  for (const region of AMAZON_REGION_ORDER) {
+    const url = links.amazon?.[region];
+    if (url) entries.push({ key: `amazon-${region}`, label: AMAZON_REGION_LABELS[region], url, amazonRegion: region });
+  }
+  for (const key of ["bookshop", "kobo", "appleBooks"] as const) {
+    const url = links[key];
+    if (url) entries.push({ key, label: STORE_LABELS[key], url });
+  }
+  return entries;
+}
+
+function BookLinks({ links }: { links?: BookMetadata["links"] }) {
+  const entries = links ? flattenLinks(links) : [];
+  if (entries.length === 0) return null;
+  return (
+    <p className="meta">
+      {entries.map(({ key, label, url, amazonRegion }) => (
+        <a key={key} href={url} data-amazon-region={amazonRegion} style={{ marginRight: "0.75rem" }}>
+          {label}
+        </a>
+      ))}
+    </p>
+  );
+}
 
 export function BookCard({
   object,
@@ -64,17 +114,7 @@ export function BookCard({
             </p>
           ) : null}
           {object.body ? <p>{object.body}</p> : null}
-          {metadata.links && Object.values(metadata.links).some(Boolean) ? (
-            <p className="meta">
-              {Object.entries(metadata.links)
-                .filter(([, url]) => url)
-                .map(([label, url]) => (
-                  <a key={label} href={url} style={{ marginRight: "0.75rem" }}>
-                    {STORE_LABELS[label] ?? label}
-                  </a>
-                ))}
-            </p>
-          ) : null}
+          <BookLinks links={metadata.links} />
         </div>
       </>
     );
@@ -103,17 +143,7 @@ export function BookCard({
           </p>
         ) : null}
         {object.body ? <p>{object.body}</p> : null}
-        {variant === "page" && metadata.links && Object.values(metadata.links).some(Boolean) ? (
-          <p className="meta">
-            {Object.entries(metadata.links)
-              .filter(([, url]) => url)
-              .map(([label, url]) => (
-                <a key={label} href={url} style={{ marginRight: "0.75rem" }}>
-                  {label}
-                </a>
-              ))}
-          </p>
-        ) : null}
+        {variant === "page" ? <BookLinks links={metadata.links} /> : null}
         <p className="meta">{formatDate(object.publishedAt, locale)}</p>
       </div>
     </article>

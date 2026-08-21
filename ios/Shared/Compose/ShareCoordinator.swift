@@ -163,8 +163,12 @@ final class ShareCoordinator: ObservableObject {
     }
 
     func publishBook(candidate: BookCandidate, note: String, rating: Int?, status: ObjectStatus) async {
-        var links: [String: AnyCodable] = [:]
-        for (store, url) in candidate.links { links[store] = .string(url) }
+        var amazonLinks: [String: AnyCodable] = [:]
+        for (region, url) in candidate.links.amazon { amazonLinks[region] = .string(url) }
+        var links: [String: AnyCodable] = ["amazon": .object(amazonLinks)]
+        if let bookshop = candidate.links.bookshop { links["bookshop"] = .string(bookshop) }
+        if let kobo = candidate.links.kobo { links["kobo"] = .string(kobo) }
+        if let appleBooks = candidate.links.appleBooks { links["appleBooks"] = .string(appleBooks) }
         var metadata: [String: AnyCodable] = [
             "author": .string(candidate.author),
             "source": .string(candidate.source),
