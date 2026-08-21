@@ -8,6 +8,10 @@ final class ShareCoordinator: ObservableObject {
     @Published var sharedURL: URL?
     @Published var sharedText: String?
     @Published var sharedImage: UIImage?
+    /// The original file bytes behind `sharedImage`, kept alongside it so a
+    /// publish can upload them as-is instead of round-tripping through
+    /// `UIImage`/`jpegData`, which decodes to raw pixels and drops EXIF.
+    @Published var sharedImageData: Data?
 
     @Published var selectedType: ContentType = .thought
     @Published var isPublishing = false
@@ -64,15 +68,18 @@ final class ShareCoordinator: ObservableObject {
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
                     provider.loadItem(forTypeIdentifier: UTType.image.identifier) { [weak self] value, _ in
                         let image: UIImage?
-                        if let url = value as? URL, let data = try? Data(contentsOf: url) {
-                            image = UIImage(data: data)
-                        } else if let data = value as? Data {
-                            image = UIImage(data: data)
+                        var data: Data?
+                        if let url = value as? URL, let fileData = try? Data(contentsOf: url) {
+                            data = fileData
+                            image = UIImage(data: fileData)
+                        } else if let itemData = value as? Data {
+                            data = itemData
+                            image = UIImage(data: itemData)
                         } else {
                             image = value as? UIImage
                         }
                         guard let image else { return }
-                        Task { @MainActor in self?.applyImage(image) }
+                        Task { @MainActor in self?.applyImage(image, data: data) }
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                     provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) { [weak self] value, _ in
@@ -89,8 +96,9 @@ final class ShareCoordinator: ObservableObject {
         selectedType = Self.suggestedType(for: url)
     }
 
-    private func applyImage(_ image: UIImage) {
+    private func applyImage(_ image: UIImage, data: Data? = nil) {
         sharedImage = image
+        sharedImageData = data
         if sharedURL == nil { selectedType = .photo }
     }
 
@@ -143,7 +151,11 @@ final class ShareCoordinator: ObservableObject {
     }
 
     func publishPhoto(image: UIImage, caption: String, status: ObjectStatus) async {
-        guard let data = image.jpegData(compressionQuality: 0.9) else {
+        // Prefer the original file bytes (still carrying EXIF) over
+        // re-encoding `image`, which would strip it. Only images applied
+        // without source data (e.g. an `NSItemProvider` that handed back a
+        // bare `UIImage`) fall back to a fresh JPEG here.
+        guard let data = sharedImageData ?? image.jpegData(compressionQuality: 0.9) else {
             errorMessage = APIError.decoding(NSError(domain: "Shareblog", code: 0)).errorDescription
             return
         }

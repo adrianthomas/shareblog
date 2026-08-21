@@ -44,6 +44,7 @@ struct PhotoComposeView: View {
                       let image = UIImage(data: data)
                 else { return }
                 coordinator.sharedImage = image
+                coordinator.sharedImageData = data
             }
         }
     }
