@@ -8,6 +8,7 @@ public final class PendingUploadStore: @unchecked Sendable {
     public static let shared = PendingUploadStore()
 
     private let queueURL: URL
+    private let editsQueueURL: URL
     private let assetsDirectory: URL
     private let syncQueue = DispatchQueue(label: "com.adrianthomas.shareblog.pendinguploads")
 
@@ -28,6 +29,7 @@ public final class PendingUploadStore: @unchecked Sendable {
             ?? FileManager.default.temporaryDirectory
         let root = container.appendingPathComponent("PendingUploads", isDirectory: true)
         queueURL = root.appendingPathComponent("queue.json")
+        editsQueueURL = root.appendingPathComponent("edits.json")
         assetsDirectory = root.appendingPathComponent("Assets", isDirectory: true)
         try? FileManager.default.createDirectory(at: assetsDirectory, withIntermediateDirectories: true)
     }
@@ -89,5 +91,44 @@ public final class PendingUploadStore: @unchecked Sendable {
         if let imageFilename = item.imageFilename {
             try? FileManager.default.removeItem(at: assetsDirectory.appendingPathComponent(imageFilename))
         }
+    }
+
+    // MARK: - Pending edits
+
+    public func loadEdits() -> [PendingEdit] {
+        syncQueue.sync {
+            guard let data = try? Data(contentsOf: editsQueueURL) else { return [] }
+            return (try? Self.decoder.decode([PendingEdit].self, from: data)) ?? []
+        }
+    }
+
+    private func saveEdits(_ items: [PendingEdit]) {
+        syncQueue.sync {
+            guard let data = try? Self.encoder.encode(items) else { return }
+            try? data.write(to: editsQueueURL, options: .atomic)
+        }
+    }
+
+    /// Queues a change to an existing post for later upload, mirroring
+    /// `enqueue(type:title:...)` above but for edits instead of new posts.
+    @discardableResult
+    public func enqueueEdit(
+        objectId: String,
+        title: String?,
+        body: String?,
+        status: ObjectStatus?,
+        metadata: [String: AnyCodable]?
+    ) -> PendingEdit {
+        let item = PendingEdit(objectId: objectId, title: title, body: body, status: status, metadata: metadata)
+        var items = loadEdits()
+        items.append(item)
+        saveEdits(items)
+        return item
+    }
+
+    public func removeEdit(id: String) {
+        var items = loadEdits()
+        items.removeAll { $0.id == id }
+        saveEdits(items)
     }
 }

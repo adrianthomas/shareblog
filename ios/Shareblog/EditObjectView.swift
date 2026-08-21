@@ -118,6 +118,7 @@ private struct PhotoObjectView: View {
     @State private var isLoadingImage = true
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
     init(object: ContentObject, onDeleted: @escaping () -> Void) {
@@ -158,7 +159,9 @@ private struct PhotoObjectView: View {
                 TextField("Caption", text: $caption)
             }
 
-            if let errorMessage {
+            if offlineSaveAvailable {
+                OfflineNotice(actionTitle: "Finish this later") { saveForLater() }
+            } else if let errorMessage {
                 Text(errorMessage).foregroundStyle(.red)
             }
 
@@ -189,22 +192,36 @@ private struct PhotoObjectView: View {
         }
     }
 
+    private var updatedStatus: ObjectStatus? { object.status == .draft ? .published : nil }
+    private var updatedMetadata: [String: AnyCodable] {
+        var metadata = object.metadata
+        metadata["caption"] = .string(caption)
+        return metadata
+    }
+
     private func save() async {
         isSaving = true
         errorMessage = nil
+        offlineSaveAvailable = false
         defer { isSaving = false }
         do {
-            var metadata = object.metadata
-            metadata["caption"] = .string(caption)
             _ = try await APIClient.shared.updateObject(
-                id: object.id,
-                status: object.status == .draft ? .published : nil,
-                metadata: metadata
+                id: object.id, status: updatedStatus, metadata: updatedMetadata
             )
             dismiss()
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+            if case .network = error { offlineSaveAvailable = true }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func saveForLater() {
+        PendingUploadStore.shared.enqueueEdit(
+            objectId: object.id, title: nil, body: nil, status: updatedStatus, metadata: updatedMetadata
+        )
+        dismiss()
     }
 }
 
@@ -216,6 +233,7 @@ private struct GenericObjectView: View {
     @State private var bodyText: String
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
     init(object: ContentObject, onDeleted: @escaping () -> Void) {
@@ -239,7 +257,9 @@ private struct GenericObjectView: View {
                     .frame(minHeight: 120)
             }
 
-            if let errorMessage {
+            if offlineSaveAvailable {
+                OfflineNotice(actionTitle: "Finish this later") { saveForLater() }
+            } else if let errorMessage {
                 Text(errorMessage).foregroundStyle(.red)
             }
 
@@ -255,21 +275,33 @@ private struct GenericObjectView: View {
         .navigationTitle(object.status == .draft ? "Draft" : "Published")
     }
 
+    private var updatedTitle: String? { title.isEmpty ? nil : title }
+    private var updatedBody: String? { bodyText.isEmpty ? nil : bodyText }
+    private var updatedStatus: ObjectStatus? { object.status == .draft ? .published : nil }
+
     private func save() async {
         isSaving = true
         errorMessage = nil
+        offlineSaveAvailable = false
         defer { isSaving = false }
         do {
             _ = try await APIClient.shared.updateObject(
-                id: object.id,
-                title: title.isEmpty ? nil : title,
-                body: bodyText.isEmpty ? nil : bodyText,
-                status: object.status == .draft ? .published : nil
+                id: object.id, title: updatedTitle, body: updatedBody, status: updatedStatus
             )
             dismiss()
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+            if case .network = error { offlineSaveAvailable = true }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func saveForLater() {
+        PendingUploadStore.shared.enqueueEdit(
+            objectId: object.id, title: updatedTitle, body: updatedBody, status: updatedStatus, metadata: nil
+        )
+        dismiss()
     }
 }
 
@@ -285,6 +317,7 @@ private struct QuoteObjectView: View {
     @State private var comment: String
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
     init(object: ContentObject, onDeleted: @escaping () -> Void) {
@@ -313,7 +346,9 @@ private struct QuoteObjectView: View {
                     .frame(minHeight: 80)
             }
 
-            if let errorMessage {
+            if offlineSaveAvailable {
+                OfflineNotice(actionTitle: "Finish this later") { saveForLater() }
+            } else if let errorMessage {
                 Text(errorMessage).foregroundStyle(.red)
             }
 
@@ -329,22 +364,36 @@ private struct QuoteObjectView: View {
         .navigationTitle(object.status == .draft ? "Draft" : "Published")
     }
 
+    private var updatedBody: String? { bodyText.isEmpty ? nil : bodyText }
+    private var updatedStatus: ObjectStatus? { object.status == .draft ? .published : nil }
+    private var updatedMetadata: [String: AnyCodable] {
+        var metadata: [String: AnyCodable] = ["author": .string(author)]
+        if !comment.isEmpty { metadata["comment"] = .string(comment) }
+        return metadata
+    }
+
     private func save() async {
         isSaving = true
         errorMessage = nil
+        offlineSaveAvailable = false
         defer { isSaving = false }
         do {
-            var metadata: [String: AnyCodable] = ["author": .string(author)]
-            if !comment.isEmpty { metadata["comment"] = .string(comment) }
             _ = try await APIClient.shared.updateObject(
-                id: object.id,
-                body: bodyText.isEmpty ? nil : bodyText,
-                status: object.status == .draft ? .published : nil,
-                metadata: metadata
+                id: object.id, body: updatedBody, status: updatedStatus, metadata: updatedMetadata
             )
             dismiss()
+        } catch let error as APIError {
+            errorMessage = error.errorDescription
+            if case .network = error { offlineSaveAvailable = true }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func saveForLater() {
+        PendingUploadStore.shared.enqueueEdit(
+            objectId: object.id, title: nil, body: updatedBody, status: updatedStatus, metadata: updatedMetadata
+        )
+        dismiss()
     }
 }

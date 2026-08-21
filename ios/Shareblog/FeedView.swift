@@ -5,6 +5,7 @@ struct FeedView: View {
     @EnvironmentObject private var auth: AuthCoordinator
     @State private var objects: [ContentObject] = []
     @State private var pendingUploads: [PendingUpload] = []
+    @State private var pendingEdits: [PendingEdit] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var isOffline = false
@@ -18,6 +19,13 @@ struct FeedView: View {
                     Section("Waiting to upload") {
                         ForEach(pendingUploads) { item in
                             PendingRow(item: item)
+                        }
+                    }
+                }
+                if !pendingEdits.isEmpty {
+                    Section("Waiting to update") {
+                        ForEach(pendingEdits) { item in
+                            PendingEditRow(item: item, object: objects.first { $0.id == item.objectId })
                         }
                     }
                 }
@@ -67,7 +75,7 @@ struct FeedView: View {
             .overlay {
                 if isLoading && objects.isEmpty {
                     ProgressView()
-                } else if !isLoading && objects.isEmpty && pendingUploads.isEmpty {
+                } else if !isLoading && objects.isEmpty && pendingUploads.isEmpty && pendingEdits.isEmpty {
                     ContentUnavailableView(
                         "No posts yet",
                         systemImage: "square.and.pencil",
@@ -100,6 +108,7 @@ struct FeedView: View {
         // published rather than lingering under "Waiting to upload".
         _ = await PendingUploadSyncer.syncAll()
         pendingUploads = PendingUploadStore.shared.load()
+        pendingEdits = PendingUploadStore.shared.loadEdits()
 
         do {
             objects = try await APIClient.shared.listObjects()
@@ -130,6 +139,34 @@ private struct PendingRow: View {
                 StatusBadge(text: "Queued", color: .orange)
             }
             Text(item.title ?? item.body ?? item.type.displayName)
+                .lineLimit(2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+private struct PendingEditRow: View {
+    let item: PendingEdit
+    /// The object being edited, if it's already loaded in the feed — used
+    /// just to show its type icon and a title/body preview, since the queued
+    /// edit itself only carries the fields that actually changed.
+    let object: ContentObject?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                if let type = object?.type {
+                    Image(systemName: type.symbolName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(type.displayName)
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                }
+                StatusBadge(text: "Queued", color: .orange)
+            }
+            Text(item.title ?? item.body ?? object?.title ?? object?.body ?? "Update")
                 .lineLimit(2)
                 .foregroundStyle(.secondary)
         }
