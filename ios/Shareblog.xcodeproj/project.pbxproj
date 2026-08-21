@@ -80,14 +80,14 @@
 		27A20432D9CFE54848904EB0 /* PhotoComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoComposeView.swift; sourceTree = "<group>"; };
 		2C245BE1ABED539CA58802EE /* SiteSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteSetupView.swift; sourceTree = "<group>"; };
 		31E0C253FEBFBDCFC7919A93 /* QuoteComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteComposeView.swift; sourceTree = "<group>"; };
-		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B8D4323366CE7A3CA498897 /* Shareblog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shareblog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DF6E49CBBDC05D970A3D45A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		622258AD57A447FF4F1760C9 /* HowToSetUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToSetUpView.swift; sourceTree = "<group>"; };
 		67B53B928F226F8D4A9B5EC2 /* ThoughtComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtComposeView.swift; sourceTree = "<group>"; };
 		6A9345FA4CF6A4DB5C2B58C2 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		6BF38E3755B1F509CFA5FD02 /* CreatePostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePostView.swift; sourceTree = "<group>"; };
 		742B693BF8392EE8E21EA5A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E12DC63E55754E0FF57DC3B /* ShareblogShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareblogShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A1CD24CD93EEDBD231FB92D /* TypePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypePickerView.swift; sourceTree = "<group>"; };
 		A13EF172D6573EF670A34016 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		A4327D7BD2BBAB6213C08F7A /* BrandMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandMark.swift; sourceTree = "<group>"; };
@@ -97,7 +97,7 @@
 		C058E82A1F2F0D8AF7B3EDCC /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
 		C205C1E2734AD2500C78D07C /* MusicComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicComposeView.swift; sourceTree = "<group>"; };
 		CD351AAC9596074785F6095B /* VerifyCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyCodeView.swift; sourceTree = "<group>"; };
-		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ShareblogKit; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
+		D5107989966107929ACBBCE4 /* ShareblogKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ShareblogKit; sourceTree = SOURCE_ROOT; };
 		DF6B46A261004A2D3ECE532B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E92435F7BD00E74ACE366B7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		EDADFFC2E407C6F09849D393 /* Shareblog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Shareblog.entitlements; sourceTree = "<group>"; };
@@ -456,7 +456,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.adrianthomas.shareblog;
 				PRODUCT_NAME = Shareblog;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -540,7 +540,7 @@
 				PRODUCT_NAME = ShareblogShareExtension;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -558,7 +558,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.adrianthomas.shareblog;
 				PRODUCT_NAME = Shareblog;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -576,7 +576,7 @@
 				PRODUCT_NAME = ShareblogShareExtension;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
