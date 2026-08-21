@@ -51,7 +51,7 @@ struct ArticleComposeView: View {
                 Task { await coordinator.publishArticle(resolved: resolved, title: title, note: note, status: status) }
             }
         }
-        .navigationTitle("Article")
+        .navigationTitle("Link")
         // Keyed to sharedURL, not just run-once: the item provider loads the
         // shared link asynchronously, so it may still be nil the moment this
         // view first appears. Re-running when it changes avoids a race where
@@ -73,10 +73,38 @@ struct ArticleComposeView: View {
     private func loadURL() {
         let trimmed = urlText.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        guard let url = URL(string: trimmed), url.scheme != nil else {
+        let candidates = Self.candidateURLs(for: trimmed)
+        guard !candidates.isEmpty else {
             resolveError = "That doesn't look like a valid link."
             return
         }
-        coordinator.sharedURL = url
+        resolveError = nil
+        Task {
+            isResolving = true
+            defer { isResolving = false }
+            var lastError: Error?
+            for url in candidates {
+                do {
+                    let result = try await APIClient.shared.resolveArticle(url: url.absoluteString)
+                    resolved = result
+                    title = result.title ?? ""
+                    return
+                } catch {
+                    lastError = error
+                }
+            }
+            resolveError = lastError?.localizedDescription
+        }
+    }
+
+    /// URLs pasted or typed in by hand often omit the scheme (e.g.
+    /// "example.com/post") — assume https first, since that's what almost
+    /// every site serves today, then fall back to http for the handful that
+    /// don't. A URL that already has a scheme is tried as-is.
+    private static func candidateURLs(for trimmed: String) -> [URL] {
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return [url]
+        }
+        return ["https://\(trimmed)", "http://\(trimmed)"].compactMap(URL.init(string:))
     }
 }

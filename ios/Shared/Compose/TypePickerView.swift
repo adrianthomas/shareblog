@@ -13,7 +13,7 @@ struct TypePickerView: View {
                     Image(systemName: type.symbolName)
                         .foregroundStyle(.tint)
                         .frame(width: 28)
-                    Text(type.displayName)
+                    Text(type.pluralDisplayName)
                     Spacer()
                     if type == coordinator.selectedType {
                         Image(systemName: "checkmark").foregroundStyle(.tint)

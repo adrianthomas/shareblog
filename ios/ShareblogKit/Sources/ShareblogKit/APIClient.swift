@@ -145,10 +145,17 @@ public final class APIClient: @unchecked Sendable {
         return wrapper.site
     }
 
-    public func updateSite(theme: SiteTheme) async throws -> Site {
-        struct Body: Encodable { let theme: SiteTheme }
+    /// Both parameters are optional so a caller can PATCH just the one
+    /// field it's changing — the theme picker and the About editor are
+    /// separate screens (see SettingsView/AboutEditorView) and each only
+    /// wants to send its own field. `about: ""` clears an existing About
+    /// page; `about: nil` (the default) leaves it untouched, since a nil
+    /// Optional is omitted from the request body entirely rather than sent
+    /// as an explicit null (see Body's synthesized Encodable conformance).
+    public func updateSite(theme: SiteTheme? = nil, about: String? = nil) async throws -> Site {
+        struct Body: Encodable { let theme: SiteTheme?; let about: String? }
         struct Wrapper: Decodable { let site: Site }
-        let wrapper: Wrapper = try await request("/sites", method: "PATCH", body: Body(theme: theme))
+        let wrapper: Wrapper = try await request("/sites", method: "PATCH", body: Body(theme: theme, about: about))
         return wrapper.site
     }
 

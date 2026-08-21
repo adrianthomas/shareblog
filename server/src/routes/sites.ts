@@ -23,9 +23,19 @@ const createSiteSchema = z.object({
 
 const RESERVED_SUBDOMAINS = new Set(["api", "www", "app", "admin", "mail", "ftp"]);
 
-const updateSiteSchema = z.object({
-  theme: z.enum(themeValues),
-});
+// Both fields are optional so the iOS app can PATCH just the one it's
+// changing (the theme picker and the About editor are separate screens);
+// `about` accepts "" to clear an existing About page rather than requiring
+// an explicit null, since the client can't distinguish "omit" from "set to
+// null" once encodeIfPresent drops nil fields from the request body.
+const updateSiteSchema = z
+  .object({
+    theme: z.enum(themeValues).optional(),
+    about: z.string().max(20_000).optional(),
+  })
+  .refine((body) => body.theme !== undefined || body.about !== undefined, {
+    message: "Provide at least one field to update.",
+  });
 
 export async function siteRoutes(app: FastifyInstance) {
   app.post("/sites", { preHandler: authGuard }, async (request, reply) => {
@@ -53,9 +63,9 @@ export async function siteRoutes(app: FastifyInstance) {
     return reply.code(201).send({ site });
   });
 
-  // Theme is the only thing settable here today — the iOS app's theme
-  // picker is the only caller. Broaden the schema if site settings grow a
-  // web dashboard later.
+  // Theme and About text are the only things settable here today — the iOS
+  // app's theme picker and About editor are the only callers. Broaden the
+  // schema if site settings grow a web dashboard later.
   app.patch("/sites", { preHandler: authGuard }, async (request, reply) => {
     const site = request.authSite;
     if (!site) {
@@ -66,7 +76,11 @@ export async function siteRoutes(app: FastifyInstance) {
 
     const [updated] = await db
       .update(sites)
-      .set({ theme: body.theme, updatedAt: new Date() })
+      .set({
+        ...(body.theme !== undefined ? { theme: body.theme } : {}),
+        ...(body.about !== undefined ? { about: body.about || null } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(sites.id, site.id))
       .returning();
 

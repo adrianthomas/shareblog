@@ -49,7 +49,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.adrianthomas.shareblog
         PRODUCT_NAME: Shareblog
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
 
   ShareblogShareExtension:
     type: app-extension
@@ -82,5 +82,5 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.adrianthomas.shareblog.ShareExtension
         PRODUCT_NAME: ShareblogShareExtension
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
         SKIP_INSTALL: true

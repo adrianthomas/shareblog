@@ -8,9 +8,23 @@ public enum ContentType: String, Codable, CaseIterable, Sendable {
         case .thought: return "Thought"
         case .photo: return "Photo"
         case .book: return "Book"
-        case .article: return "Article"
+        case .article: return "Link"
         case .music: return "Music"
         case .quote: return "Quote"
+        }
+    }
+
+    /// Plural form, used only by the type-picker menu — every other surface
+    /// (compose screen titles, feed rows, badges) shows a single item at a
+    /// time and uses `displayName` instead.
+    public var pluralDisplayName: String {
+        switch self {
+        case .thought: return "Thoughts"
+        case .photo: return "Photos"
+        case .book: return "Books"
+        case .article: return "Links"
+        case .music: return "Music"
+        case .quote: return "Quotes"
         }
     }
 
@@ -57,6 +71,18 @@ public struct Site: Codable, Sendable {
     public let title: String
     public let tagline: String?
     public let theme: SiteTheme
+    /// Free-text About page, editable in Settings and linked from the site
+    /// footer; nil/empty means the site has no About page.
+    public let about: String?
+
+    /// The site's public URL (e.g. `https://mysite.example.com`), derived
+    /// from the configured server domain. Reuses the API's scheme so local
+    /// dev setups (`http://`, a LAN IP) still resolve.
+    public var liveURL: URL? {
+        guard let domain = ServerConfig.domain else { return nil }
+        let scheme = ServerConfig.apiBaseURL?.scheme ?? "https"
+        return URL(string: "\(scheme)://\(subdomain).\(domain)")
+    }
 }
 
 public struct AuthVerifyResponse: Codable, Sendable {

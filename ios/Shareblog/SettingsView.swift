@@ -42,6 +42,15 @@ struct SettingsView: View {
                     } footer: {
                         Text("Changes how your site looks to visitors. \(SiteTheme.cards.displayName) shows posts as full-bleed cards that expand into the post when tapped.")
                     }
+                    Section {
+                        NavigationLink {
+                            AboutEditorView(site: site)
+                        } label: {
+                            Label("About Page", systemImage: "doc.text")
+                        }
+                    } footer: {
+                        Text("A free-text page about you or your site, linked from its footer.")
+                    }
                 }
                 Section("Server") {
                     Text(ServerConfig.domain ?? "—")

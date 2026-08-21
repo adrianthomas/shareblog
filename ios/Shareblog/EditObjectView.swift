@@ -3,23 +3,25 @@ import ShareblogKit
 
 struct EditObjectView: View {
     let object: ContentObject
-    /// Called after the object is successfully deleted (whether that's
-    /// unpublishing a live post or deleting a draft), so the caller can drop
-    /// it from whatever list it's showing.
-    let onDeleted: () -> Void
+    /// Called after the object changes as a result of the destructive
+    /// action: with the updated object when a published post is unpublished
+    /// (it becomes a draft, not gone), or with `nil` when a draft is
+    /// actually deleted, so the caller knows whether to update or drop it
+    /// from whatever list it's showing.
+    let onChange: (ContentObject?) -> Void
 
     var body: some View {
         switch object.type {
         case .photo:
-            PhotoObjectView(object: object, onDeleted: onDeleted)
+            PhotoObjectView(object: object, onChange: onChange)
         case .quote:
-            QuoteObjectView(object: object, onDeleted: onDeleted)
+            QuoteObjectView(object: object, onChange: onChange)
         case .music:
-            MusicObjectView(object: object, onDeleted: onDeleted)
+            MusicObjectView(object: object, onChange: onChange)
         case .book:
-            BookObjectView(object: object, onDeleted: onDeleted)
+            BookObjectView(object: object, onChange: onChange)
         default:
-            GenericObjectView(object: object, onDeleted: onDeleted)
+            GenericObjectView(object: object, onChange: onChange)
         }
     }
 }
@@ -50,12 +52,13 @@ private struct SaveButton: View {
 }
 
 /// Destructive delete action shared by every object-editing screen. Labeled
-/// "Unpublish" for a live post (deleting it takes the post down) versus
-/// "Delete draft" for one that was never public — same underlying request,
-/// different framing for what the user is actually giving up.
+/// "Unpublish" for a live post versus "Delete draft" for one that was never
+/// public — different requests, though: unpublishing takes the post down
+/// from the site but keeps it around as a draft, while deleting a draft
+/// removes it (and any uploaded content) for good.
 private struct DeleteObjectButton: View {
     let object: ContentObject
-    let onDeleted: () -> Void
+    let onChange: (ContentObject?) -> Void
 
     @State private var isDeleting = false
     @State private var showConfirmation = false
@@ -92,7 +95,7 @@ private struct DeleteObjectButton: View {
         } message: {
             Text(
                 isPublished
-                    ? "This removes the post and its content from your site. This can't be undone."
+                    ? "This takes the post down from your site. It's kept as a draft, so you can publish it again later."
                     : "This can't be undone."
             )
         }
@@ -103,8 +106,13 @@ private struct DeleteObjectButton: View {
         errorMessage = nil
         defer { isDeleting = false }
         do {
-            try await APIClient.shared.deleteObject(id: object.id)
-            onDeleted()
+            if isPublished {
+                let updated = try await APIClient.shared.updateObject(id: object.id, status: .draft)
+                onChange(updated)
+            } else {
+                try await APIClient.shared.deleteObject(id: object.id)
+                onChange(nil)
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -115,7 +123,7 @@ private struct DeleteObjectButton: View {
 /// image has to be resolved via a lookup before it can be displayed.
 private struct PhotoObjectView: View {
     let object: ContentObject
-    let onDeleted: () -> Void
+    let onChange: (ContentObject?) -> Void
 
     @State private var caption: String
     @State private var imageURL: URL?
@@ -125,9 +133,9 @@ private struct PhotoObjectView: View {
     @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+    init(object: ContentObject, onChange: @escaping (ContentObject?) -> Void) {
         self.object = object
-        self.onDeleted = onDeleted
+        self.onChange = onChange
         _caption = State(initialValue: object.metadata.stringValue("caption") ?? "")
     }
 
@@ -173,8 +181,8 @@ private struct PhotoObjectView: View {
                 Task { await save() }
             }
 
-            DeleteObjectButton(object: object) {
-                onDeleted()
+            DeleteObjectButton(object: object) { updated in
+                onChange(updated)
                 dismiss()
             }
         }
@@ -237,7 +245,7 @@ private struct PhotoObjectView: View {
 /// than reconstructing it and losing them.
 private struct MusicObjectView: View {
     let object: ContentObject
-    let onDeleted: () -> Void
+    let onChange: (ContentObject?) -> Void
 
     @State private var artist: String
     @State private var releaseTitle: String
@@ -247,9 +255,9 @@ private struct MusicObjectView: View {
     @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+    init(object: ContentObject, onChange: @escaping (ContentObject?) -> Void) {
         self.object = object
-        self.onDeleted = onDeleted
+        self.onChange = onChange
         _artist = State(initialValue: object.metadata.stringValue("artist") ?? "")
         _releaseTitle = State(initialValue: object.metadata.stringValue("releaseTitle") ?? "")
         _note = State(initialValue: object.body ?? "")
@@ -288,8 +296,8 @@ private struct MusicObjectView: View {
                 Task { await save() }
             }
 
-            DeleteObjectButton(object: object) {
-                onDeleted()
+            DeleteObjectButton(object: object) { updated in
+                onChange(updated)
                 dismiss()
             }
         }
@@ -339,7 +347,7 @@ private struct MusicObjectView: View {
 /// original metadata dict and patch just author/rating, leaving those alone.
 private struct BookObjectView: View {
     let object: ContentObject
-    let onDeleted: () -> Void
+    let onChange: (ContentObject?) -> Void
 
     @State private var title: String
     @State private var author: String
@@ -350,9 +358,9 @@ private struct BookObjectView: View {
     @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+    init(object: ContentObject, onChange: @escaping (ContentObject?) -> Void) {
         self.object = object
-        self.onDeleted = onDeleted
+        self.onChange = onChange
         _title = State(initialValue: object.title ?? "")
         _author = State(initialValue: object.metadata.stringValue("author") ?? "")
         _rating = State(initialValue: Int(object.metadata.numberValue("rating") ?? 0))
@@ -393,8 +401,8 @@ private struct BookObjectView: View {
                 Task { await save() }
             }
 
-            DeleteObjectButton(object: object) {
-                onDeleted()
+            DeleteObjectButton(object: object) { updated in
+                onChange(updated)
                 dismiss()
             }
         }
@@ -443,7 +451,7 @@ private struct BookObjectView: View {
 
 private struct GenericObjectView: View {
     let object: ContentObject
-    let onDeleted: () -> Void
+    let onChange: (ContentObject?) -> Void
 
     @State private var title: String
     @State private var bodyText: String
@@ -452,9 +460,9 @@ private struct GenericObjectView: View {
     @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+    init(object: ContentObject, onChange: @escaping (ContentObject?) -> Void) {
         self.object = object
-        self.onDeleted = onDeleted
+        self.onChange = onChange
         _title = State(initialValue: object.title ?? "")
         _bodyText = State(initialValue: object.body ?? "")
     }
@@ -465,7 +473,7 @@ private struct GenericObjectView: View {
 
     var body: some View {
         Form {
-            Section(object.type.rawValue.capitalized) {
+            Section(object.type.displayName) {
                 if object.title != nil {
                     TextField("Title", text: $title)
                 }
@@ -483,8 +491,8 @@ private struct GenericObjectView: View {
                 Task { await save() }
             }
 
-            DeleteObjectButton(object: object) {
-                onDeleted()
+            DeleteObjectButton(object: object) { updated in
+                onChange(updated)
                 dismiss()
             }
         }
@@ -526,7 +534,7 @@ private struct GenericObjectView: View {
 /// it needs the same kind of dedicated screen Photo gets.
 private struct QuoteObjectView: View {
     let object: ContentObject
-    let onDeleted: () -> Void
+    let onChange: (ContentObject?) -> Void
 
     @State private var bodyText: String
     @State private var author: String
@@ -536,9 +544,9 @@ private struct QuoteObjectView: View {
     @State private var offlineSaveAvailable = false
     @Environment(\.dismiss) private var dismiss
 
-    init(object: ContentObject, onDeleted: @escaping () -> Void) {
+    init(object: ContentObject, onChange: @escaping (ContentObject?) -> Void) {
         self.object = object
-        self.onDeleted = onDeleted
+        self.onChange = onChange
         _bodyText = State(initialValue: object.body ?? "")
         _author = State(initialValue: object.metadata.stringValue("author") ?? "")
         _comment = State(initialValue: object.metadata.stringValue("comment") ?? "")
@@ -572,8 +580,8 @@ private struct QuoteObjectView: View {
                 Task { await save() }
             }
 
-            DeleteObjectButton(object: object) {
-                onDeleted()
+            DeleteObjectButton(object: object) { updated in
+                onChange(updated)
                 dismiss()
             }
         }

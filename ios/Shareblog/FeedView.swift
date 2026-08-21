@@ -44,13 +44,25 @@ struct FeedView: View {
             }
             .navigationDestination(for: String.self) { id in
                 if let object = objects.first(where: { $0.id == id }) {
-                    EditObjectView(object: object) {
-                        objects.removeAll { $0.id == id }
+                    EditObjectView(object: object) { updated in
+                        if let updated, let index = objects.firstIndex(where: { $0.id == id }) {
+                            objects[index] = updated
+                        } else {
+                            objects.removeAll { $0.id == id }
+                        }
                     }
                 }
             }
             .navigationTitle(auth.site?.title ?? "Feed")
             .toolbar {
+                if let liveURL = auth.site?.liveURL {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Link(destination: liveURL) {
+                            Image(systemName: "safari")
+                        }
+                        .accessibilityLabel("Open live site")
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         createCoordinator = ShareCoordinator(extensionItems: []) {
