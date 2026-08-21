@@ -27,7 +27,7 @@ function wrap(
   site: Site,
   title: string | undefined,
   node: React.ReactNode,
-  opts: { currentPath?: string; cardsDetail?: boolean } = {},
+  opts: { currentPath?: string; cardsDetail?: boolean; availablePaths?: string[] } = {},
 ): string {
   return (
     "<!doctype html>" +
@@ -38,6 +38,7 @@ function wrap(
         children: node,
         currentPath: opts.currentPath,
         cardsDetail: opts.cardsDetail,
+        availablePaths: opts.availablePaths,
       }),
     )
   );
@@ -61,7 +62,7 @@ async function articleImageUrl(object: ContentObject): Promise<string | undefine
   return assetImageUrl(metadata.coverAssetId);
 }
 
-const PATH_PREFIX: Record<ContentObject["type"], string> = {
+export const PATH_PREFIX: Record<ContentObject["type"], string> = {
   thought: "posts",
   photo: "photos",
   book: "books",
@@ -142,9 +143,10 @@ export async function renderList(
   title: string,
   objects: ContentObject[],
   currentPath = "/",
+  availablePaths?: string[],
 ): Promise<string> {
   const cards = await Promise.all(objects.map((object) => renderCard(object, site.locale, site.theme)));
-  const wrapOpts = { currentPath };
+  const wrapOpts = { currentPath, availablePaths };
   if (cards.length === 0) {
     return wrap(
       site,
@@ -160,11 +162,17 @@ export async function renderList(
   return wrap(site, title, list, wrapOpts);
 }
 
-export async function renderObjectPage(site: Site, object: ContentObject, currentPath?: string): Promise<string> {
+export async function renderObjectPage(
+  site: Site,
+  object: ContentObject,
+  currentPath?: string,
+  availablePaths?: string[],
+): Promise<string> {
   const detail = await renderDetail(object, site.locale, site.theme);
   return wrap(site, object.title ?? undefined, detail, {
     currentPath: currentPath ?? `/${PATH_PREFIX[object.type]}/${object.slug}`,
     cardsDetail: site.theme === "cards",
+    availablePaths,
   });
 }
 

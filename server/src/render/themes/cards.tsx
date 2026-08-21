@@ -265,10 +265,22 @@ const TAB_PATHS: Array<{ href: string; key: MessageKey }> = [
 // it's the one piece of the reference chrome that's a bottom bar rather
 // than a top one, and it reads as much more native to the full-bleed card
 // feed than squeezing the classic top nav row above it would.
-export function CardsTabBar({ locale, currentPath }: { locale: string; currentPath: string }) {
+export function CardsTabBar({
+  locale,
+  currentPath,
+  availablePaths,
+}: {
+  locale: string;
+  currentPath: string;
+  /** Nav paths (e.g. "/posts") that have at least one published post. When omitted, all tabs are shown. */
+  availablePaths?: string[];
+}) {
+  const tabs = availablePaths
+    ? TAB_PATHS.filter((tab) => tab.href === "/" || availablePaths.includes(tab.href))
+    : TAB_PATHS;
   return (
     <nav className="cards-tabbar" aria-label={t(locale, "primaryNavigation")}>
-      {TAB_PATHS.map((tab) => {
+      {tabs.map((tab) => {
         const active = tab.href === "/" ? currentPath === "/" : currentPath.startsWith(tab.href);
         return (
           <a key={tab.href} href={tab.href} aria-current={active ? "page" : undefined}>
