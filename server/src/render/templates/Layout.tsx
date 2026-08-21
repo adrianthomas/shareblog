@@ -126,6 +126,9 @@ export function Layout({
                        flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-bottom: 2rem; }
               header.site-header h1 { font-size: 1.1rem; margin: 0; }
               header.site-header h1 a { text-decoration: none; color: inherit; }
+              .site-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
+              .rss-link { font-size: 0.7rem; color: var(--muted); text-decoration: none; }
+              .rss-link:hover, .rss-link:focus-visible { color: var(--fg); }
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
@@ -192,13 +195,18 @@ export function Layout({
           <h1>
             <a href="/">{site.title}</a>
           </h1>
-          <nav aria-label={t(site.locale, "primaryNavigation")}>
-            {navItems(site, availablePaths).map((item) => (
-              <a key={item.href} href={item.href}>
-                {item.label}
-              </a>
-            ))}
-          </nav>
+          <div className="site-header-right">
+            <a className="rss-link" href="/feed.xml">
+              {t(site.locale, "followRss")}
+            </a>
+            <nav aria-label={t(site.locale, "primaryNavigation")}>
+              {navItems(site, availablePaths).map((item) => (
+                <a key={item.href} href={item.href}>
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
         </header>
         <main id="main-content">{children}</main>
         {hasAbout && !(theme === "cards" && cardsDetail) ? (

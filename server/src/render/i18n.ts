@@ -7,6 +7,7 @@ export type MessageKey =
   | "photos"
   | "quotes"
   | "about"
+  | "followRss"
   | "skipToContent"
   | "nothingHereYet"
   | "ratingLabel"
@@ -33,6 +34,7 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Photos",
     quotes: "Quotes",
     about: "About",
+    followRss: "Follow RSS",
     skipToContent: "Skip to content",
     nothingHereYet: "Nothing here yet.",
     ratingLabel: "Rating: {rating} out of 5 stars",
@@ -56,6 +58,7 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Fotos",
     quotes: "Zitate",
     about: "Über",
+    followRss: "RSS abonnieren",
     skipToContent: "Zum Inhalt springen",
     nothingHereYet: "Hier gibt es noch nichts.",
     ratingLabel: "Bewertung: {rating} von 5 Sternen",
@@ -79,6 +82,7 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Photos",
     quotes: "Citations",
     about: "À propos",
+    followRss: "Suivre en RSS",
     skipToContent: "Aller au contenu",
     nothingHereYet: "Rien ici pour l'instant.",
     ratingLabel: "Note : {rating} étoiles sur 5",
@@ -102,6 +106,7 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Fotos",
     quotes: "Citas",
     about: "Acerca de",
+    followRss: "Seguir por RSS",
     skipToContent: "Saltar al contenido",
     nothingHereYet: "Todavía no hay nada aquí.",
     ratingLabel: "Valoración: {rating} de 5 estrellas",
@@ -125,6 +130,7 @@ const MESSAGES: Record<string, Messages> = {
     photos: "写真",
     quotes: "引用",
     about: "このサイトについて",
+    followRss: "RSSで購読",
     skipToContent: "コンテンツへスキップ",
     nothingHereYet: "まだ何もありません。",
     ratingLabel: "評価: 5つ星中{rating}つ",
