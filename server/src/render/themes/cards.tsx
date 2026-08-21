@@ -745,6 +745,13 @@ export const cardsStyles = `
   .cards-panel-scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .cards-panel-scroll:focus { outline: none; }
   .cards-panel-scroll main { padding-bottom: 4rem; }
+  /* The open-card script moves focus to the detail heading purely so a
+     screen reader announces the new page (see the \`heading.focus()\` call
+     below) — the heading has tabindex="-1", so it's never reachable by an
+     actual keyboard Tab press, meaning any focus ring on it can only come
+     from that scripted call, never a real keyboard user it would need to
+     stay visible for. */
+  .cards-panel-scroll h1:focus-visible { outline: none; }
 
   @media (prefers-reduced-motion: reduce) {
     .cards-item, .cards-item:hover { transition: none; transform: none; }
