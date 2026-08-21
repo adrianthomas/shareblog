@@ -2,7 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { assets } from "../db/schema.js";
+import { assets, type AssetExif } from "../db/schema.js";
 import { storage } from "../storage/index.js";
 import { Layout } from "./templates/Layout.js";
 import { LandingPage } from "./templates/LandingPage.js";
@@ -57,6 +57,16 @@ async function photoImageUrl(object: ContentObject): Promise<string> {
   return (await assetImageUrl(metadata.assetId)) ?? "";
 }
 
+// EXIF only exists for assets uploaded after that capture was added (see
+// image/worker.ts) — older photos simply have no `exif` row and this
+// resolves to undefined, which every renderer treats as "omit the panel."
+async function photoExif(object: ContentObject): Promise<AssetExif | undefined> {
+  const metadata = object.metadata as PhotoMetadata;
+  if (!metadata.assetId) return undefined;
+  const [asset] = await db.select().from(assets).where(eq(assets.id, metadata.assetId)).limit(1);
+  return (asset?.exif as AssetExif | null) ?? undefined;
+}
+
 async function articleImageUrl(object: ContentObject): Promise<string | undefined> {
   const metadata = object.metadata as ArticleMetadata;
   return assetImageUrl(metadata.coverAssetId);
@@ -85,7 +95,13 @@ async function renderCard(object: ContentObject, locale: string, theme: Site["th
     case "thought":
       return React.createElement(ThoughtPost, { object, locale, theme });
     case "photo":
-      return React.createElement(PhotoPost, { object, imageUrl: await photoImageUrl(object), locale, theme });
+      return React.createElement(PhotoPost, {
+        object,
+        imageUrl: await photoImageUrl(object),
+        exif: await photoExif(object),
+        locale,
+        theme,
+      });
     case "book":
       return React.createElement(BookCard, { object, locale, theme });
     case "music":
@@ -114,6 +130,7 @@ async function renderDetail(object: ContentObject, locale: string, theme: Site["
       return React.createElement(PhotoPost, {
         object,
         imageUrl: await photoImageUrl(object),
+        exif: await photoExif(object),
         linked: false,
         locale,
         ...detailProps,

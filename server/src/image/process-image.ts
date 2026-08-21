@@ -1,6 +1,7 @@
 import { fork, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import type { AssetExif } from "../db/schema.js";
 
 export interface ImageVariantSpec {
   name: string;
@@ -11,6 +12,7 @@ export interface ProcessedImage {
   width?: number;
   height?: number;
   variants: Record<string, Buffer>;
+  exif?: AssetExif;
 }
 
 const here = fileURLToPath(import.meta.url);
@@ -38,13 +40,13 @@ export function processImage(buffer: Buffer, variants: ImageVariantSpec[]): Prom
       reject(new Error("Image processing timed out."));
     }, 30_000);
 
-    child.once("message", (msg: { type: "result" | "error"; message?: string; width?: number; height?: number; variants?: Record<string, Buffer> }) => {
+    child.once("message", (msg: { type: "result" | "error"; message?: string; width?: number; height?: number; variants?: Record<string, Buffer>; exif?: AssetExif }) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       child.kill();
       if (msg?.type === "result") {
-        resolve({ width: msg.width, height: msg.height, variants: msg.variants ?? {} });
+        resolve({ width: msg.width, height: msg.height, variants: msg.variants ?? {}, exif: msg.exif });
       } else {
         reject(new Error(msg?.message ?? "Image processing failed."));
       }

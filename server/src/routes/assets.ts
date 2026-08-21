@@ -48,6 +48,7 @@ export async function assetRoutes(app: FastifyInstance) {
         width: processed.width,
         height: processed.height,
         variants: {},
+        exif: processed.exif ?? null,
       })
       .returning();
 

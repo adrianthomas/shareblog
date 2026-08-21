@@ -12,7 +12,13 @@ export type MessageKey =
   | "primaryNavigation"
   | "listenOn"
   | "closePost"
-  | "backTo";
+  | "backTo"
+  | "exifCamera"
+  | "exifLens"
+  | "exifAperture"
+  | "exifShutterSpeed"
+  | "exifIso"
+  | "exifFocalLength";
 
 type Messages = Record<MessageKey, string>;
 
@@ -32,6 +38,12 @@ const MESSAGES: Record<string, Messages> = {
     listenOn: "Listen on {platform}",
     closePost: "Close",
     backTo: "Back to {section}",
+    exifCamera: "Camera",
+    exifLens: "Lens",
+    exifAperture: "Aperture",
+    exifShutterSpeed: "Shutter speed",
+    exifIso: "ISO",
+    exifFocalLength: "Focal length",
   },
   de: {
     home: "Start",
@@ -48,6 +60,12 @@ const MESSAGES: Record<string, Messages> = {
     listenOn: "Hören auf {platform}",
     closePost: "Schließen",
     backTo: "Zurück zu {section}",
+    exifCamera: "Kamera",
+    exifLens: "Objektiv",
+    exifAperture: "Blende",
+    exifShutterSpeed: "Belichtungszeit",
+    exifIso: "ISO",
+    exifFocalLength: "Brennweite",
   },
   fr: {
     home: "Accueil",
@@ -64,6 +82,12 @@ const MESSAGES: Record<string, Messages> = {
     listenOn: "Écouter sur {platform}",
     closePost: "Fermer",
     backTo: "Retour à {section}",
+    exifCamera: "Appareil photo",
+    exifLens: "Objectif",
+    exifAperture: "Ouverture",
+    exifShutterSpeed: "Vitesse d'obturation",
+    exifIso: "ISO",
+    exifFocalLength: "Focale",
   },
   es: {
     home: "Inicio",
@@ -80,6 +104,12 @@ const MESSAGES: Record<string, Messages> = {
     listenOn: "Escuchar en {platform}",
     closePost: "Cerrar",
     backTo: "Volver a {section}",
+    exifCamera: "Cámara",
+    exifLens: "Objetivo",
+    exifAperture: "Apertura",
+    exifShutterSpeed: "Velocidad de obturación",
+    exifIso: "ISO",
+    exifFocalLength: "Distancia focal",
   },
   ja: {
     home: "ホーム",
@@ -96,6 +126,12 @@ const MESSAGES: Record<string, Messages> = {
     listenOn: "{platform}で聴く",
     closePost: "閉じる",
     backTo: "{section}に戻る",
+    exifCamera: "カメラ",
+    exifLens: "レンズ",
+    exifAperture: "絞り",
+    exifShutterSpeed: "シャッタースピード",
+    exifIso: "ISO",
+    exifFocalLength: "焦点距離",
   },
 };
 

@@ -116,6 +116,23 @@ export function Layout({
               .card:last-child { border-bottom: none; }
               .card img { max-width: 100%; height: auto; border-radius: 6px; }
               .meta { font-size: 0.85rem; color: var(--muted); }
+              /* EXIF strip on a photo's detail page. The system's monospace
+                 stack resolves to San Francisco Mono on Apple's own platforms —
+                 the same face its Camera/Photos apps use for exposure readouts —
+                 while still falling back cleanly elsewhere, without this site
+                 hosting a font of its own. */
+              .exif {
+                margin: 0.75rem 0 0; padding-top: 0.6rem; border-top: 1px solid var(--border);
+                display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
+                font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+              }
+              .exif-row { margin: 0; }
+              .exif-row dt {
+                margin: 0 0 0.1rem; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em;
+                text-transform: uppercase; color: var(--muted);
+              }
+              .exif-row dd { margin: 0; font-size: 0.82rem; color: var(--fg); letter-spacing: 0.01em; }
               .book, .music { display: flex; gap: 1rem; flex-wrap: wrap; }
               .book img { width: 90px; max-width: 100%; height: auto; border-radius: 4px; flex-shrink: 0; }
               .music img.artwork {
