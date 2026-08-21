@@ -52,7 +52,7 @@ export interface CardsItemData {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   hero: CardsHero;
-  /** "quote" renders the letter-card treatment (cursive type on paper); "photo" renders the caption-above/plain-image-below treatment. Only meaningful when `hero.imageUrl` is unset for "quote", or set for "photo". */
+  /** "quote" renders the letter-card treatment (cursive type on paper), on both feed and detail; "photo" renders the caption-above/plain-image-below treatment on the *detail* page only — the feed card stays the full-bleed Hero every other cover-image type uses. Only meaningful when `hero.imageUrl` is unset for "quote", or set for "photo". */
   variant?: "quote" | "photo";
   /** Only shown on the detail page (see PhotoCard's `full`); ignored for any variant other than "photo". */
   exif?: CardsExifRow[];
@@ -246,9 +246,7 @@ function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: str
 export function CardsFeedItem({ href, eyebrow, title, subtitle, hero, variant }: CardsItemData) {
   return (
     <a className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`} href={href} data-cards-card>
-      {variant === "photo" ? (
-        <PhotoCard eyebrow={eyebrow} title={title} subtitle={subtitle} hero={hero} />
-      ) : hero.imageUrl ? (
+      {hero.imageUrl ? (
         <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
       ) : variant === "quote" ? (
         <QuoteCard title={title} subtitle={subtitle} seed={hero.gradientSeed} />
@@ -863,7 +861,7 @@ export const cardsScript = `
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var heroEl = link.querySelector('.cards-hero');
-    var textEl = link.querySelector('.cards-text-card, .cards-quote-card, .cards-photo-card');
+    var textEl = link.querySelector('.cards-text-card, .cards-quote-card');
 
     document.documentElement.classList.add('cards-lock-scroll');
 
