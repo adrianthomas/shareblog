@@ -8,6 +8,23 @@ interface ProcessMessage {
   variants: { name: string; width: number }[];
 }
 
+type ResultMessage = { type: "result"; width?: number; height?: number; variants: Record<string, Buffer>; exif?: AssetExif };
+type ErrorMessage = { type: "error"; message: string };
+
+// process.send() only queues the message for an async write to the IPC
+// pipe — it doesn't wait for that write to land. Calling process.exit()
+// right after it is a race: on an idle machine the write usually wins, but
+// under load the process can tear down (closing the IPC channel) before the
+// message is flushed, and it's silently dropped — the parent then sees the
+// child exit with no result. Awaiting send's own callback, which only fires
+// once the write has actually gone out, closes that race.
+function send(message: ResultMessage | ErrorMessage): Promise<void> {
+  return new Promise((resolve) => {
+    if (!process.send) return resolve();
+    process.send(message, () => resolve());
+  });
+}
+
 // Reads the same curated tags exifr can pull straight from the *original*
 // buffer's EXIF/TIFF block. Done before sharp's rotate() below, which
 // normalizes orientation into the pixels and then strips the EXIF block
@@ -61,9 +78,9 @@ process.on("message", async (msg: ProcessMessage) => {
         .toBuffer();
     }
 
-    process.send?.({ type: "result", width: meta.width, height: meta.height, variants, exif });
+    await send({ type: "result", width: meta.width, height: meta.height, variants, exif });
   } catch (err) {
-    process.send?.({ type: "error", message: err instanceof Error ? err.message : String(err) });
+    await send({ type: "error", message: err instanceof Error ? err.message : String(err) });
   } finally {
     process.exit(0);
   }
