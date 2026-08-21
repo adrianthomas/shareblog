@@ -124,6 +124,37 @@ struct FeedView: View {
     }
 }
 
+/// A one-line summary of a post's content for row previews. Falls back to
+/// the type name only as an absolute last resort — most types keep their
+/// content in metadata rather than title/body (a Photo's caption, a Music
+/// post's artist and release), so falling back straight to title/body would
+/// otherwise leave every Photo and Music row reading as just "Photo"/"Music".
+private func previewText(type: ContentType, title: String?, body: String?, metadata: [String: AnyCodable]) -> String {
+    if let title, !title.isEmpty { return title }
+    if let body, !body.isEmpty { return body }
+    switch type {
+    case .photo:
+        return metadata.stringValue("caption") ?? type.displayName
+    case .music:
+        let artist = metadata.stringValue("artist")
+        let releaseTitle = metadata.stringValue("releaseTitle")
+        switch (artist, releaseTitle) {
+        case let (artist?, releaseTitle?): return "\(artist) — \(releaseTitle)"
+        case let (artist?, nil): return artist
+        case let (nil, releaseTitle?): return releaseTitle
+        case (nil, nil): return type.displayName
+        }
+    default:
+        return type.displayName
+    }
+}
+
+private let relativeDateFormatter: RelativeDateTimeFormatter = {
+    let formatter = RelativeDateTimeFormatter()
+    formatter.unitsStyle = .abbreviated
+    return formatter
+}()
+
 private struct PendingRow: View {
     let item: PendingUpload
 
@@ -138,7 +169,7 @@ private struct PendingRow: View {
                     .foregroundStyle(.secondary)
                 StatusBadge(text: "Queued", color: .orange)
             }
-            Text(item.title ?? item.body ?? item.type.displayName)
+            Text(previewText(type: item.type, title: item.title, body: item.body, metadata: item.metadata))
                 .lineLimit(2)
                 .foregroundStyle(.secondary)
         }
@@ -166,9 +197,16 @@ private struct PendingEditRow: View {
                 }
                 StatusBadge(text: "Queued", color: .orange)
             }
-            Text(item.title ?? item.body ?? object?.title ?? object?.body ?? "Update")
-                .lineLimit(2)
-                .foregroundStyle(.secondary)
+            Text(
+                previewText(
+                    type: object?.type ?? .thought,
+                    title: item.title ?? object?.title,
+                    body: item.body ?? object?.body,
+                    metadata: item.metadata ?? object?.metadata ?? [:]
+                )
+            )
+            .lineLimit(2)
+            .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
     }
@@ -176,6 +214,26 @@ private struct PendingEditRow: View {
 
 private struct FeedRow: View {
     let object: ContentObject
+
+    private var statusText: String { object.status == .draft ? "Draft" : "Published" }
+    private var statusColor: Color { object.status == .draft ? .yellow : .green }
+
+    /// "Saved 2h ago" for a draft (its most recent edit), "Published 3d ago"
+    /// for a live post (when it first went out, not its last edit) — the
+    /// distinction that actually matters to the person deciding what to do
+    /// with it next.
+    private var timestampText: String {
+        let verb: String
+        let date: Date
+        if object.status == .draft {
+            verb = "Saved"
+            date = object.updatedAt
+        } else {
+            verb = "Published"
+            date = object.publishedAt ?? object.createdAt
+        }
+        return "\(verb) \(relativeDateFormatter.localizedString(for: date, relativeTo: Date()))"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -186,12 +244,13 @@ private struct FeedRow: View {
                 Text(object.type.displayName)
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
-                if object.status == .draft {
-                    StatusBadge(text: "Draft", color: .yellow)
-                }
+                StatusBadge(text: statusText, color: statusColor)
             }
-            Text(object.title ?? object.body ?? object.type.displayName)
+            Text(previewText(type: object.type, title: object.title, body: object.body, metadata: object.metadata))
                 .lineLimit(2)
+            Text(timestampText)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
     }
