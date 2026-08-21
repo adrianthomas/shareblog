@@ -22,6 +22,7 @@
     "better-sqlite3": "^13.0.3",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "exifr": "^7.1.3",
     "fastify": "^5.2.0",
     "got": "^14.4.5",
     "metascraper": "^5.45.21",

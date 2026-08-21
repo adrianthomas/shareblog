@@ -8,6 +8,13 @@
       "when": 1787208346200,
       "tag": "0000_spooky_doctor_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787291505562,
+      "tag": "0001_thin_bullseye",
+      "breakpoints": true
     }
   ]
 }

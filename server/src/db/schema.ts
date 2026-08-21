@@ -1,6 +1,20 @@
 import { sqliteTable, text, integer, uniqueIndex, index } from "drizzle-orm/sqlite-core";
 import { randomUUID } from "node:crypto";
 
+// Curated subset of EXIF tags worth showing on a photo post — camera/lens
+// identity plus the standard "exposure triangle" (aperture, shutter, ISO)
+// and focal length, the same handful a camera's own info screen leads with.
+export interface AssetExif {
+  make?: string;
+  model?: string;
+  lensModel?: string;
+  fNumber?: number;
+  exposureTime?: number;
+  iso?: number;
+  focalLength?: number;
+  takenAt?: string;
+}
+
 const id = () =>
   text("id")
     .primaryKey()
@@ -119,6 +133,10 @@ export const assets = sqliteTable(
     variants: text("variants", { mode: "json" })
       .notNull()
       .$defaultFn(() => ({})),
+    // Populated at upload time from the original file's EXIF tags (see
+    // image/worker.ts); null for assets uploaded before this existed and for
+    // any file that simply has no EXIF (e.g. a screenshot or a scan).
+    exif: text("exif", { mode: "json" }).$type<AssetExif | null>(),
     createdAt: createdAt(),
   },
   (table) => [index("assets_site_idx").on(table.siteId)],

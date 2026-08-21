@@ -37,14 +37,25 @@ export interface CardsHero {
   gradientSeed: string;
 }
 
+// One already-translated, already-formatted EXIF fact ("Aperture" /
+// "ƒ/1.8"). Built entirely by the caller (see PhotoPost.tsx) — this
+// component stays free of i18n lookups and camera-notation formatting, the
+// same division of labor as `eyebrow`/`ratingLabel` elsewhere in this file.
+export interface CardsExifRow {
+  label: string;
+  value: string;
+}
+
 export interface CardsItemData {
   href: string;
   eyebrow: string;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   hero: CardsHero;
-  /** "quote" renders the letter-card treatment (cursive type on paper) instead of the generic text card. Only meaningful when `hero.imageUrl` is unset. */
-  variant?: "quote";
+  /** "quote" renders the letter-card treatment (cursive type on paper); "photo" renders the caption-above/plain-image-below treatment. Only meaningful when `hero.imageUrl` is unset for "quote", or set for "photo". */
+  variant?: "quote" | "photo";
+  /** Only shown on the detail page (see PhotoCard's `full`); ignored for any variant other than "photo". */
+  exif?: CardsExifRow[];
 }
 
 // The caption (eyebrow/title/subtitle) is a child of the hero, absolutely
@@ -165,6 +176,59 @@ function QuoteCard({
   );
 }
 
+// A dedicated treatment for photos: unlike every other card, the photo
+// itself is the whole point rather than a backdrop for text, so it doesn't
+// get the Hero's dark scrim + overlaid caption — that treatment exists to
+// keep light-colored text legible over an arbitrary image, which just
+// muddies the photo when the image *is* the content. Caption sits in normal
+// flow above instead, and the image renders uncropped and unobscured below.
+// The EXIF strip (only present once `full`, i.e. only on the detail page —
+// a compact feed tile has no room for it) is set in the system's monospace
+// stack, which resolves to San Francisco Mono on Apple's own platforms —
+// the same face its Camera/Photos apps use for exposure readouts — while
+// still falling back cleanly elsewhere, without hosting a font of our own.
+function PhotoCard({
+  eyebrow,
+  title,
+  subtitle,
+  dateLabel,
+  hero,
+  exif,
+  titleTag: TitleTag = "h2",
+  full = false,
+}: {
+  eyebrow: React.ReactNode;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  dateLabel?: string;
+  hero: CardsHero;
+  exif?: CardsExifRow[];
+  titleTag?: "h1" | "h2";
+  full?: boolean;
+}) {
+  return (
+    <div className={`cards-photo-card${full ? " cards-photo-card--full" : ""}`}>
+      <div className="cards-photo-caption">
+        <p className="cards-photo-eyebrow">{eyebrow}</p>
+        <TitleTag className="cards-photo-title">{title}</TitleTag>
+        {subtitle ? <p className="cards-photo-subtitle">{subtitle}</p> : null}
+        {dateLabel ? <p className="cards-photo-date">{dateLabel}</p> : null}
+      </div>
+      <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+      {full && exif && exif.length > 0 ? (
+        <dl className="cards-photo-exif">
+          {exif.map((row) => (
+            <div className="cards-photo-exif-row" key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </div>
+  );
+}
+
 function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: string }) {
   return (
     <a className="cards-close" href={backHref} aria-label={backLabel}>
@@ -182,7 +246,9 @@ function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: str
 export function CardsFeedItem({ href, eyebrow, title, subtitle, hero, variant }: CardsItemData) {
   return (
     <a className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`} href={href} data-cards-card>
-      {hero.imageUrl ? (
+      {variant === "photo" ? (
+        <PhotoCard eyebrow={eyebrow} title={title} subtitle={subtitle} hero={hero} />
+      ) : hero.imageUrl ? (
         <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
       ) : variant === "quote" ? (
         <QuoteCard title={title} subtitle={subtitle} seed={hero.gradientSeed} />
@@ -213,7 +279,27 @@ export function CardsDetailHeader({
   backHref,
   backLabel,
   variant,
+  exif,
 }: CardsItemData & { dateLabel: string; backHref: string; backLabel: string }) {
+  if (variant === "photo") {
+    return (
+      <>
+        <CloseButton backHref={backHref} backLabel={backLabel} />
+        <header className="cards-detail-header cards-detail-header--photo">
+          <PhotoCard
+            eyebrow={eyebrow}
+            title={title}
+            subtitle={subtitle}
+            dateLabel={dateLabel}
+            hero={hero}
+            exif={exif}
+            titleTag="h1"
+            full
+          />
+        </header>
+      </>
+    );
+  }
   if (!hero.imageUrl) {
     const headerClass = `cards-detail-header cards-detail-header--text${variant === "quote" ? " cards-detail-header--quote" : ""}`;
     return (
@@ -413,13 +499,13 @@ export const cardsStyles = `
      hero+caption as a large centered card instead, closer to how the App
      Store itself renders an expanded card on a bigger screen. */
   @media (min-width: 720px) {
-    .cards-detail-header:not(.cards-detail-header--text) {
+    .cards-detail-header:not(.cards-detail-header--text):not(.cards-detail-header--photo) {
       width: auto; max-width: 640px;
       margin: max(2.5rem, calc(env(safe-area-inset-top) + 1.5rem)) auto 0;
       border-radius: 24px; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.12);
     }
-    .cards-detail-header:not(.cards-detail-header--text) .cards-detail-hero {
+    .cards-detail-header:not(.cards-detail-header--text):not(.cards-detail-header--photo) .cards-detail-hero {
       min-height: 0; aspect-ratio: 4 / 3;
     }
   }
@@ -541,6 +627,67 @@ export const cardsStyles = `
   }
   .cards-detail-header--quote .cards-quote-card { padding: 2.5rem 2rem 1.75rem; border-radius: 8px; }
   .cards-detail-header--quote .cards-quote-text { font-size: clamp(1.6rem, 3.4vw, 2.1rem); }
+
+  /* Photo card: the one card in this theme where the image itself is the
+     whole point rather than a backdrop carrying overlaid text, so it skips
+     the Hero's dark scrim entirely — caption sits in normal document flow
+     above a plain, unobscured photo instead of fighting it for contrast. */
+  .cards-photo-caption { padding: 1.1rem 1.25rem 0; }
+  .cards-photo-eyebrow {
+    margin: 0 0 0.25rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .cards-photo-title {
+    margin: 0; font-size: 1.15rem; line-height: 1.3; font-weight: 700; color: var(--fg);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cards-photo-subtitle {
+    margin: 0.35rem 0 0; font-size: 0.9rem; color: var(--muted);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cards-photo-date { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  .cards-photo-card--full .cards-photo-title,
+  .cards-photo-card--full .cards-photo-subtitle { -webkit-line-clamp: unset; }
+  .cards-photo-card--full .cards-photo-title { font-size: clamp(1.4rem, 3.4vw, 1.9rem); }
+
+  .cards-photo-image { display: block; width: 100%; height: auto; margin-top: 1rem; }
+  /* The feed grid needs a predictable tile height, so the compact card
+     still crops to the same 4:3 every other tile uses — just without a
+     scrim, since no text rides on top of it here. The detail page has no
+     such constraint and shows the photo at its own natural aspect ratio. */
+  .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image { aspect-ratio: 4 / 3; object-fit: cover; }
+  .cards-photo-card--full .cards-photo-image { border-radius: 12px; }
+
+  /* EXIF strip: detail page only (see PhotoCard's \`full\` guard) — a compact
+     feed tile has no room for it. Set in the system's monospace stack,
+     which resolves to San Francisco Mono on Apple's own platforms (the same
+     face its Camera/Photos apps use for exposure readouts) while still
+     falling back cleanly elsewhere, without this site hosting a font of its
+     own. Tabular figures and tracked-out uppercase labels read as a
+     technical instrument readout rather than more page prose. */
+  .cards-photo-exif {
+    margin: 1.25rem 0 0; padding: 0.9rem 0 0; border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 0.7rem 1.75rem;
+    font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .cards-photo-exif-row { margin: 0; }
+  .cards-photo-exif-row dt {
+    margin: 0 0 0.15rem; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .cards-photo-exif-row dd { margin: 0; font-size: 0.85rem; color: var(--fg); letter-spacing: 0.01em; }
+
+  /* Detail page: same centered-column treatment as a text-only post (see
+     .cards-detail-header--text above) rather than the full-bleed immersive
+     banner a cover-image post gets — the caption/EXIF flow in this card
+     needs real padding around it, which a 100vw bleed doesn't leave room
+     for on mobile. */
+  .cards-detail-header--photo {
+    width: auto; max-width: 640px; margin: 0 auto;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
+  }
+  .cards-detail-header--photo .cards-photo-caption { padding: 0; }
 
   /* Body content beneath a detail header — the "content beneath" the App
      Store's expanded card falls back to a normal readable text column
@@ -713,7 +860,7 @@ export const cardsScript = `
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var heroEl = link.querySelector('.cards-hero');
-    var textEl = link.querySelector('.cards-text-card, .cards-quote-card');
+    var textEl = link.querySelector('.cards-text-card, .cards-quote-card, .cards-photo-card');
 
     document.documentElement.classList.add('cards-lock-scroll');
 
