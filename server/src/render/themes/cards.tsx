@@ -413,6 +413,13 @@ export const cardsStyles = `
      dark mode: it's a physical object sitting on the page, not chrome. */
   .cards-item--quote { background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
   .cards-item--quote:hover { box-shadow: none; }
+  /* The outer link's outline draws on its own unrotated box, which no
+     longer matches the visible (rotated) paper surface, so the focus
+     ring is moved onto .cards-quote-card itself instead — see the note
+     above on why the paper is a child div rather than the link's own
+     surface. */
+  .cards-item--quote:focus-visible { outline: none; }
+  .cards-item--quote:focus-visible .cards-quote-card { outline: 3px solid var(--focus); outline-offset: 3px; }
   .cards-quote-card {
     position: relative;
     background:
