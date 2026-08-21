@@ -657,7 +657,17 @@ export const cardsStyles = `
      scrim, since no text rides on top of it here. The detail page has no
      such constraint and shows the photo at its own natural aspect ratio. */
   .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image { aspect-ratio: 4 / 3; object-fit: cover; }
-  .cards-photo-card--full .cards-photo-image { border-radius: 12px; }
+  /* Detail page: give the photo a fixed display frame instead of just
+     however tall its own aspect ratio happens to make it — a black
+     letterbox (the same idea as a Photos/Lightroom viewer) + object-fit:
+     contain shows the whole image at the largest size that fits the frame,
+     for any aspect ratio, landscape or portrait, without ever cropping it
+     the way object-fit: cover would. */
+  .cards-photo-card--full .cards-photo-image {
+    height: min(70vh, 640px); width: 100%;
+    object-fit: contain; background: #000;
+    border-radius: 12px;
+  }
 
   /* EXIF strip: detail page only (see PhotoCard's \`full\` guard) — a compact
      feed tile has no room for it. Set in the system's monospace stack,
@@ -683,12 +693,19 @@ export const cardsStyles = `
      .cards-detail-header--text above) rather than the full-bleed immersive
      banner a cover-image post gets — the caption/EXIF flow in this card
      needs real padding around it, which a 100vw bleed doesn't leave room
-     for on mobile. */
+     for on mobile. Widens past that column on desktop (see the media query
+     below) since there the photo itself should be the large, dominant
+     element rather than stopping at the same width a couple of sentences
+     of body text gets. */
   .cards-detail-header--photo {
     width: auto; max-width: 640px; margin: 0 auto;
     padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
   }
   .cards-detail-header--photo .cards-photo-caption { padding: 0; }
+  @media (min-width: 720px) {
+    .cards-detail-header--photo { max-width: min(92vw, 1080px); }
+    .cards-photo-card--full .cards-photo-image { height: min(78vh, 820px); }
+  }
 
   /* Body content beneath a detail header — the "content beneath" the App
      Store's expanded card falls back to a normal readable text column
