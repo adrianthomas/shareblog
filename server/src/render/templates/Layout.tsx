@@ -3,15 +3,18 @@ import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
 
-function navItems(site: Site) {
-  return [
-    { href: "/", label: t(site.locale, "home") },
+function navItems(site: Site, availablePaths?: string[]) {
+  const items = [
     { href: "/posts", label: t(site.locale, "posts") },
     { href: "/articles", label: t(site.locale, "articles") },
     { href: "/books", label: t(site.locale, "books") },
     { href: "/music", label: t(site.locale, "music") },
     { href: "/photos", label: t(site.locale, "photos") },
     { href: "/quotes", label: t(site.locale, "quotes") },
+  ];
+  return [
+    { href: "/", label: t(site.locale, "home") },
+    ...(availablePaths ? items.filter((item) => availablePaths.includes(item.href)) : items),
   ];
 }
 
@@ -21,6 +24,7 @@ export function Layout({
   children,
   currentPath = "/",
   cardsDetail = false,
+  availablePaths,
 }: {
   site: Site;
   title?: string;
@@ -29,6 +33,8 @@ export function Layout({
   currentPath?: string;
   /** True on a single-post detail page in the cards theme — hides the normal header/tab bar for an immersive, edge-to-edge layout. */
   cardsDetail?: boolean;
+  /** Nav paths (e.g. "/posts") that have at least one published post. When omitted, all category links are shown. */
+  availablePaths?: string[];
 }) {
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
@@ -122,7 +128,7 @@ export function Layout({
             <a href="/">{site.title}</a>
           </h1>
           <nav aria-label={t(site.locale, "primaryNavigation")}>
-            {navItems(site).map((item) => (
+            {navItems(site, availablePaths).map((item) => (
               <a key={item.href} href={item.href}>
                 {item.label}
               </a>
@@ -130,7 +136,9 @@ export function Layout({
           </nav>
         </header>
         <main id="main-content">{children}</main>
-        {theme === "cards" && !cardsDetail ? <CardsTabBar locale={site.locale} currentPath={currentPath} /> : null}
+        {theme === "cards" && !cardsDetail ? (
+          <CardsTabBar locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
+        ) : null}
         {theme === "cards" ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
       </body>
     </html>

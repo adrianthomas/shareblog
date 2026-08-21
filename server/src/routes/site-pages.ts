@@ -4,7 +4,7 @@ import { db } from "../db/client.js";
 import { contentObjects } from "../db/schema.js";
 import type { ContentType } from "../db/schema.js";
 import { resolveTenant } from "../middleware/tenant.js";
-import { renderList, renderObjectPage, renderFeed, renderLandingPage } from "../render/render.js";
+import { renderList, renderObjectPage, renderFeed, renderLandingPage, PATH_PREFIX } from "../render/render.js";
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
 import { t, type MessageKey } from "../render/i18n.js";
 
@@ -16,6 +16,17 @@ async function publishedObjects(siteId: string, type?: ContentType) {
     .from(contentObjects)
     .where(and(...conditions))
     .orderBy(desc(contentObjects.publishedAt));
+}
+
+// Nav paths (e.g. "/posts") for categories that have at least one published
+// post, so the site nav can hide empty categories instead of linking to a
+// "nothing here yet" page.
+async function publishedNavPaths(siteId: string): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ type: contentObjects.type })
+    .from(contentObjects)
+    .where(and(eq(contentObjects.siteId, siteId), eq(contentObjects.status, "published")));
+  return rows.map((row) => `/${PATH_PREFIX[row.type]}`);
 }
 
 function sendHtml(reply: import("fastify").FastifyReply, html: string) {
@@ -90,8 +101,8 @@ export async function sitePageRoutes(app: FastifyInstance) {
     if (reply.sent) return;
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => {
-      const objects = await publishedObjects(site.id);
-      return renderList(site, site.title, objects.slice(0, 20), "/");
+      const [objects, availablePaths] = await Promise.all([publishedObjects(site.id), publishedNavPaths(site.id)]);
+      return renderList(site, site.title, objects.slice(0, 20), "/", availablePaths);
     });
   });
 
@@ -107,8 +118,11 @@ export async function sitePageRoutes(app: FastifyInstance) {
     app.get(listing.path, { preHandler: resolveTenant }, async (request, reply) => {
       const site = request.site!;
       return sendCachedHtml(request, reply, site.id, async () => {
-        const objects = await publishedObjects(site.id, listing.type);
-        return renderList(site, t(site.locale, listing.titleKey), objects, listing.path);
+        const [objects, availablePaths] = await Promise.all([
+          publishedObjects(site.id, listing.type),
+          publishedNavPaths(site.id),
+        ]);
+        return renderList(site, t(site.locale, listing.titleKey), objects, listing.path, availablePaths);
       });
     });
 
@@ -146,7 +160,8 @@ export async function sitePageRoutes(app: FastifyInstance) {
       if (!object) {
         return reply.code(404).send("Not found");
       }
-      const html = await renderObjectPage(site, object, `${detail.prefix}/${slug}`);
+      const availablePaths = await publishedNavPaths(site.id);
+      const html = await renderObjectPage(site, object, `${detail.prefix}/${slug}`, availablePaths);
       setCachedPage(site.id, request.raw.url ?? request.url, html, "text/html; charset=utf-8");
       return sendHtml(reply, html);
     });
