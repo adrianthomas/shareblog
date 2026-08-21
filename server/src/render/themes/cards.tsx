@@ -1079,6 +1079,17 @@ export const cardsScript = `
 
     scroller.addEventListener('pointerdown', function (e) {
       if (scroller.scrollTop > 0 || e.button !== 0) return;
+      // A tap/click on a link or button (the close control, a retailer
+      // link in a book's body, ...) fires the same pointerdown -> pointerup
+      // sequence a drag gesture does, just with ~0 movement — which used to
+      // fall through to endDrag's "spring back" branch below and force the
+      // backdrop back to full opacity, fighting whatever that click just
+      // triggered (most visibly: closing overlay's own fade-out, leaving
+      // the dim backdrop stuck on screen well past when it should have
+      // cleared). A real drag-to-dismiss only ever starts from open
+      // content/background, never from a control, so ignore pointerdowns
+      // that land on one.
+      if (e.target.closest('a, button')) return;
       startY = e.clientY;
       startTime = Date.now();
       dragging = true;
