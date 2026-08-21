@@ -35,9 +35,18 @@ ssh "${UBERSPACE_USER}@${UBERSPACE_HOST}" bash -s <<REMOTE
 set -euo pipefail
 if [ -d "${REMOTE_PATH}/.git" ]; then
   cd "${REMOTE_PATH}"
-  if [ -n "\$(git status --porcelain)" ]; then
+  dirty="\$(git status --porcelain)"
+  # The one expected/harmless case: npm install (below) is allowed to
+  # rewrite package-lock.json to match whatever npm version runs it, which
+  # differs from the npm on whatever machine committed the lockfile. That's
+  # not a real change — reset it automatically so it can't block the pull.
+  # Anything else modified or untracked stops the deploy for a human to
+  # look at, same as the local working-tree check above.
+  if [ "\$dirty" = " M server/package-lock.json" ]; then
+    git checkout -- server/package-lock.json
+  elif [ -n "\$dirty" ]; then
     echo "Remote working tree has local changes — inspect and clean up on the server before deploying:" >&2
-    git status --porcelain >&2
+    echo "\$dirty" >&2
     exit 1
   fi
   git pull --ff-only
@@ -47,10 +56,10 @@ else
   cd "${REMOTE_PATH}"
 fi
 cd server
-# npm ci (not install) — it installs exactly what's in package-lock.json and
-# never rewrites it, so a different npm version on this box can't leave
-# lockfile drift behind that blocks the next deploy's git pull.
-npm ci
+# npm install, not ci: ci deletes node_modules and reinstalls everything
+# from scratch, which OOM-kills on this host's memory limits. install
+# reuses what's on disk and only touches what package-lock.json changed.
+npm install
 npm run build
 npm run db:migrate
 supervisorctl restart shareblog
