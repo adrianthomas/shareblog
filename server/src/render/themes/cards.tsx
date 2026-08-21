@@ -962,8 +962,33 @@ export const cardsScript = `
         scroller.setAttribute('tabindex', '-1');
         while (fetchedMain.firstChild) scroller.appendChild(fetchedMain.firstChild);
 
-        panel.innerHTML = '';
-        panel.appendChild(scroller);
+        // Cross-fade the loading clone into the real content instead of a
+        // hard swap. The clone is necessarily an approximation — a bare
+        // cover/photo image with none of its caption, or a feed-sized card
+        // that the detail page repads/resizes — so the instant it's
+        // replaced by the real markup is a visible pop no matter how close
+        // the two are (worst case: a book's nearly-fullscreen cover
+        // collapsing straight to its small detail-page thumbnail). Briefly
+        // overlapping old and new reads as a deliberate transition instead
+        // of a flicker.
+        if (reduceMotion) {
+          panel.innerHTML = '';
+          panel.appendChild(scroller);
+        } else {
+          scroller.style.opacity = '0';
+          scroller.style.transition = 'opacity 0.2s ease';
+          panel.appendChild(scroller);
+          requestAnimationFrame(function () {
+            clone.style.transition = 'opacity 0.2s ease';
+            clone.style.opacity = '0';
+            scroller.style.opacity = '1';
+          });
+          setTimeout(function () {
+            if (clone.parentNode === panel) panel.removeChild(clone);
+            scroller.style.transition = '';
+            scroller.style.opacity = '';
+          }, 220);
+        }
 
         // The close link moved over with the rest of #main-content's
         // children (it's server-rendered as part of the detail markup, not
