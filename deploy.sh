@@ -35,14 +35,22 @@ ssh "${UBERSPACE_USER}@${UBERSPACE_HOST}" bash -s <<REMOTE
 set -euo pipefail
 if [ -d "${REMOTE_PATH}/.git" ]; then
   cd "${REMOTE_PATH}"
-  git pull
+  if [ -n "\$(git status --porcelain)" ]; then
+    echo "Remote working tree has local changes — inspect and clean up on the server before deploying:" >&2
+    git status --porcelain >&2
+    exit 1
+  fi
+  git pull --ff-only
 else
   echo "==> No repo at ${REMOTE_PATH} yet, cloning ${REPO_URL}"
   git clone "${REPO_URL}" "${REMOTE_PATH}"
   cd "${REMOTE_PATH}"
 fi
 cd server
-npm install
+# npm ci (not install) — it installs exactly what's in package-lock.json and
+# never rewrites it, so a different npm version on this box can't leave
+# lockfile drift behind that blocks the next deploy's git pull.
+npm ci
 npm run build
 npm run db:migrate
 supervisorctl restart shareblog
