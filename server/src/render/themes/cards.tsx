@@ -253,6 +253,7 @@ export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, vari
       href={href}
       data-cards-card
       data-cards-variant={variant}
+      data-cards-type={type}
     >
       {hero.imageUrl ? (
         <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
@@ -967,15 +968,21 @@ export const cardsScript = `
   }
 
   function openCard(link) {
-    // Photos get their own shared-element transition (see openPhotoCard)
-    // instead of this generic whole-panel FLIP — the whole point of that
-    // one is that nothing here (a box growing from the card's rect,
-    // holding a stretched approximation of the content) applies to it.
+    var heroEl = link.querySelector('.cards-hero');
+    // Photos and covered books get their own shared-element transitions
+    // (see openPhotoCard/openBookCard) instead of this generic whole-panel
+    // FLIP — the whole point of those is that nothing here (a box growing
+    // from the card's rect, holding a stretched approximation of the
+    // content) applies to them. A book with no cover never renders a
+    // .cards-hero in the feed at all (falls to TextCard instead — see
+    // CardsFeedItem), so heroEl's presence is what actually distinguishes
+    // "this book has a cover to fly" from "this book is text-only," not
+    // just its content type.
     if (link.dataset.cardsVariant === 'photo') { openPhotoCard(link); return; }
+    if (link.dataset.cardsType === 'book' && heroEl) { openBookCard(link); return; }
 
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
-    var heroEl = link.querySelector('.cards-hero');
     var textEl = link.querySelector('.cards-text-card, .cards-quote-card');
 
     document.documentElement.classList.add('cards-lock-scroll');
@@ -1297,16 +1304,214 @@ export const cardsScript = `
     document.addEventListener('keydown', onKeydown);
   }
 
+  // A book's cover goes from a 4:3 landscape crop overlaid with a white
+  // scrim caption (the generic feed Hero, same as every other cover-image
+  // type) to a small 2:3 portrait crop sitting plainly beside/above real
+  // page text (CardsBookDetailHeader — see its own comment for why it
+  // can't share the generic Hero treatment at all). That's three
+  // mismatches stacked on the generic whole-panel FLIP at once — aspect
+  // ratio, absolute size, and caption style — so books get the same
+  // shared-element treatment as photos: fly just the cover to its real,
+  // measured detail position, fade the text in beside it.
+  //
+  // Unlike photos, this book's own cover and meta are laid out as flex
+  // *siblings* (see .cards-book-header), not caption-then-image in one
+  // column — so unlike the photo date, nothing about the meta block's
+  // eventual height (an extra rating line, say) can push the cover
+  // around. There's nothing to reserve space for up front here.
+  function openBookCard(link) {
+    var heroImg = link.querySelector('.cards-hero img');
+    var fromRect = heroImg.getBoundingClientRect();
+    var eyebrowEl = link.querySelector('.cards-eyebrow');
+    var titleEl = link.querySelector('.cards-title');
+    var authorEl = link.querySelector('.cards-subtitle');
+
+    document.documentElement.classList.add('cards-lock-scroll');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'cards-overlay-backdrop';
+    document.body.appendChild(backdrop);
+
+    var panel = document.createElement('div');
+    panel.className = 'cards-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.style.opacity = '0';
+
+    var header = document.createElement('header');
+    header.className = 'cards-book-header';
+
+    var imgClone = document.createElement('img');
+    imgClone.className = 'cards-book-cover';
+    imgClone.src = heroImg.currentSrc || heroImg.src;
+    imgClone.alt = '';
+
+    var meta = document.createElement('div');
+    meta.className = 'cards-book-meta';
+    meta.style.opacity = '0';
+    meta.style.transform = 'translateY(10px)';
+    if (eyebrowEl) {
+      var eyebrowClone = document.createElement('p');
+      eyebrowClone.className = 'cards-book-eyebrow';
+      eyebrowClone.textContent = eyebrowEl.textContent;
+      meta.appendChild(eyebrowClone);
+    }
+    var titleClone = document.createElement('h1');
+    titleClone.className = 'cards-book-title';
+    titleClone.textContent = titleEl ? titleEl.textContent : '';
+    meta.appendChild(titleClone);
+    if (authorEl) {
+      var authorClone = document.createElement('p');
+      authorClone.className = 'cards-book-author';
+      authorClone.textContent = authorEl.textContent;
+      meta.appendChild(authorClone);
+    }
+
+    header.appendChild(imgClone);
+    header.appendChild(meta);
+    panel.appendChild(header);
+    document.body.appendChild(panel);
+
+    var main = document.getElementById('main-content');
+    if (main) main.inert = true;
+    var tabbar = document.querySelector('.cards-tabbar');
+    if (tabbar) tabbar.inert = true;
+
+    requestAnimationFrame(function () {
+      backdrop.classList.add('cards-overlay-backdrop--visible');
+      // Laid out with the real detail CSS above (including its own
+      // responsive column/row switch at 720px), imgClone is already
+      // exactly where the fetched page will place it.
+      var toRect = imgClone.getBoundingClientRect();
+
+      if (reduceMotion) {
+        panel.style.opacity = '1';
+        meta.style.opacity = '';
+        meta.style.transform = '';
+      } else {
+        var scaleX = fromRect.width / toRect.width;
+        var scaleY = fromRect.height / toRect.height;
+        var dx = (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2);
+        var dy = (fromRect.top + fromRect.height / 2) - (toRect.top + toRect.height / 2);
+        imgClone.style.transform =
+          'translate(' + dx.toFixed(2) + 'px, ' + dy.toFixed(2) + 'px) scale(' + scaleX.toFixed(4) + ', ' + scaleY.toFixed(4) + ')';
+        void imgClone.offsetWidth;
+
+        var metaDelay = Math.round(OPEN_MS * 0.45);
+        panel.style.transition = 'opacity ' + Math.round(OPEN_MS * 0.6) + 'ms ease';
+        imgClone.style.transition = 'transform ' + OPEN_MS + 'ms cubic-bezier(0.22, 1, 0.36, 1)';
+        meta.style.transition = 'opacity 260ms ease ' + metaDelay + 'ms, transform 320ms ease ' + metaDelay + 'ms';
+
+        panel.style.opacity = '1';
+        imgClone.style.transform = 'none';
+        meta.style.opacity = '1';
+        meta.style.transform = 'none';
+
+        setTimeout(function () {
+          panel.style.transition = '';
+          imgClone.style.transition = '';
+          meta.style.transition = '';
+        }, OPEN_MS);
+      }
+    });
+
+    finishOpenBook(link, panel, header, meta, titleClone, backdrop);
+  }
+
+  // Same reasoning as finishOpenPhoto: the cover and meta text (eyebrow/
+  // title/author) are already exactly right by the time the real page
+  // arrives, so nothing containing them ever gets an opacity transition —
+  // only what's genuinely new (rating, date, the close control, and any
+  // body text/retailer links below the header) fades in, appended
+  // directly into the meta block or scroller rather than swapping a whole
+  // container for a fresh one.
+  function finishOpenBook(link, panel, header, meta, titleClone, backdrop) {
+    var controller = new AbortController();
+    current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
+    history.pushState({ cardsOverlay: true }, '', link.href);
+    var openStartedAt = Date.now();
+
+    fetch(link.href, { signal: controller.signal })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad response');
+        return res.text();
+      })
+      .then(function (html) {
+        if (!current || current.panel !== panel) return;
+        var elapsed = Date.now() - openStartedAt;
+        var remaining = OPEN_MS - elapsed;
+        if (remaining > 0) {
+          setTimeout(function () { applyFetchedBookHtml(html); }, remaining);
+        } else {
+          applyFetchedBookHtml(html);
+        }
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        window.location.href = link.href;
+      });
+
+    function applyFetchedBookHtml(html) {
+      if (!current || current.panel !== panel) return;
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var fetchedMain = doc.getElementById('main-content');
+      if (!fetchedMain) { window.location.href = link.href; return; }
+      document.title = doc.title;
+
+      var fetchedRating = fetchedMain.querySelector('.cards-book-rating');
+      var fetchedDate = fetchedMain.querySelector('.cards-book-date');
+      if (fetchedRating) meta.appendChild(fetchedRating);
+      if (fetchedDate) meta.appendChild(fetchedDate);
+      var fetchedBody = fetchedMain.querySelector('.cards-body');
+
+      var scroller = document.createElement('div');
+      scroller.className = 'cards-panel-scroll';
+      scroller.setAttribute('tabindex', '-1');
+      var closeLink = fetchedMain.querySelector('.cards-close');
+      if (closeLink) scroller.appendChild(closeLink);
+      scroller.appendChild(header);
+      if (fetchedBody) scroller.appendChild(fetchedBody);
+      panel.appendChild(scroller);
+
+      if (!reduceMotion) {
+        [closeLink, fetchedRating, fetchedDate, fetchedBody].forEach(function (el) {
+          if (!el) return;
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.2s ease';
+          requestAnimationFrame(function () { el.style.opacity = '1'; });
+          setTimeout(function () { el.style.transition = ''; el.style.opacity = ''; }, 260);
+        });
+      }
+
+      if (closeLink) {
+        closeLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          closeOverlay({});
+        });
+      }
+
+      wireDismissGesture(scroller, panel, backdrop);
+
+      if (!titleClone.id) titleClone.id = 'cards-panel-heading';
+      panel.setAttribute('aria-labelledby', titleClone.id);
+      titleClone.setAttribute('tabindex', '-1');
+      titleClone.focus({ preventScroll: true });
+    }
+
+    document.addEventListener('keydown', onKeydown);
+  }
+
   // The rest of opening a card — fetching the real detail page and
   // cross-fading it in over whatever placeholder the entry animation
   // built, wiring up the close control and drag-to-dismiss, moving focus
   // — is identical regardless of *how* that placeholder got on screen, so
   // openCard's generic whole-panel FLIP hands off to this once its own
-  // entry animation has started. (openPhotoCard has its own
-  // finishOpenPhoto instead — its placeholder's image and caption are
-  // already exactly right, and cross-fading a container they sit inside
-  // would sweep them into that fade regardless of being "the same
-  // element," which is a problem this generic path doesn't have.)
+  // entry animation has started. (openPhotoCard/openBookCard have their
+  // own finishOpenPhoto/finishOpenBook instead — their placeholders'
+  // images and text are already exactly right, and cross-fading a
+  // container they sit inside would sweep them into that fade regardless
+  // of being "the same element," which is a problem this generic path
+  // doesn't have.)
   function finishOpen(link, panel, clone, backdrop) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
