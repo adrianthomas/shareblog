@@ -6,7 +6,26 @@ import { sendEmail } from "./email.js";
 
 const CODE_TTL_MINUTES = 10;
 
+// When set, only these emails can sign in or create an account — without it,
+// anyone who finds the API can request a code, verify it, and create their
+// own site on this box (real risk for a self-hosted single-tenant instance,
+// none for local dev, so it's opt-in via env rather than hardcoded).
+function isAllowedEmail(email: string): boolean {
+  const allowlist = process.env.ALLOWED_SIGNUP_EMAILS;
+  if (!allowlist) return true;
+  return allowlist
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(email.toLowerCase());
+}
+
 export async function requestAuthCode(email: string, context: "web" | "mobile") {
+  // No token is issued and no email is sent for a disallowed address, but the
+  // route still replies 202 either way so this can't be used to probe which
+  // emails are allowlisted.
+  if (!isAllowedEmail(email)) return;
+
   const purpose = context === "mobile" ? "mobile_code" : "web_session";
   const secret = context === "mobile" ? generateMobileCode() : generateMagicLinkToken();
   const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60_000);
