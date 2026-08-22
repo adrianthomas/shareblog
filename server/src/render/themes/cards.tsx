@@ -217,7 +217,21 @@ function PhotoCard({
         {subtitle ? <p className="cards-photo-subtitle">{subtitle}</p> : null}
         {dateLabel ? <p className="cards-photo-date">{dateLabel}</p> : null}
       </div>
-      <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+      {full ? (
+        // Detail page only: the frame (a plain div, no intrinsic aspect
+        // ratio of its own) is what actually participates in the flex
+        // column's grow/shrink math below — an <img> is a replaced
+        // element, and giving *it* flex: 1 directly lets its own intrinsic
+        // ratio leak into the flex-basis calculation and override the
+        // "how much space is actually left" answer, growing it past the
+        // viewport instead of fitting inside it. The image just fills
+        // whatever box the frame ends up with, via object-fit: contain.
+        <div className="cards-photo-frame">
+          <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+        </div>
+      ) : (
+        <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+      )}
       {full && exif && exif.length > 0 ? (
         <dl className="cards-photo-exif">
           {exif.map((row) => (
@@ -689,18 +703,26 @@ export const cardsStyles = `
      scrim, since no text rides on top of it here. The detail page has no
      such constraint and shows the photo at its own natural aspect ratio. */
   .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image { aspect-ratio: 4 / 3; object-fit: cover; }
-  /* Detail page: give the photo a fixed display frame instead of just
-     however tall its own aspect ratio happens to make it, and let it show
-     through object-fit: contain rather than cropping to that frame — the
-     whole image at the largest size that fits, for any aspect ratio,
-     landscape or portrait. No background needed on the image itself: the
-     immersive black backdrop below (.cards-detail-header--photo) already
-     shows through any letterbox gap, so the frame reads as part of the
-     same black viewer rather than a separate boxed image sitting on it. */
+  /* Detail page: give the photo the full remaining space in the viewer
+     (see .cards-photo-card--full's flex column below) instead of a fixed
+     vh-based frame, and let it show through object-fit: contain rather
+     than cropping to that frame — the whole image at the largest size
+     that fits, for any aspect ratio *and* any viewport aspect ratio,
+     portrait or landscape, phone or wide desktop window, without ever
+     stretching or cropping it. No background needed on the image itself:
+     the immersive black backdrop below (.cards-detail-header--photo)
+     already shows through any letterbox gap, so the frame reads as part
+     of the same black viewer rather than a separate boxed image sitting
+     on it. No rounded corners either, now that it runs edge to edge —
+     rounding a corner that's flush with the physical screen edge would
+     just look like a notch cut out of the photo. */
+  .cards-photo-card--full .cards-photo-frame {
+    flex: 1 1 0%; min-height: 0; position: relative;
+  }
   .cards-photo-card--full .cards-photo-image {
-    height: min(70vh, 640px); width: 100%;
+    position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: contain;
-    border-radius: 12px;
+    border-radius: 0;
   }
 
   /* EXIF strip: detail page only (see PhotoCard's \`full\` guard) — a compact
@@ -715,6 +737,15 @@ export const cardsStyles = `
     display: flex; flex-wrap: wrap; gap: 0.7rem 1.75rem;
     font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
     font-variant-numeric: tabular-nums;
+    /* Only ever rendered inside .cards-photo-card--full's edge-to-edge
+       flex column (see PhotoCard's "full" guard) — same reasoning as the
+       caption above, it needs its own horizontal padding now that the
+       card itself doesn't provide any, and flex-shrink: 0 so it keeps its
+       natural height rather than getting squeezed by the image's flex: 1
+       claiming space first. */
+    padding-left: max(1.25rem, env(safe-area-inset-left));
+    padding-right: max(1.25rem, env(safe-area-inset-right));
+    flex-shrink: 0;
   }
   .cards-photo-exif-row { margin: 0; }
   .cards-photo-exif-row dt {
@@ -740,15 +771,38 @@ export const cardsStyles = `
      would otherwise leave a trailing strip of the page's own background
      below the header, breaking the immersion right at the bottom edge. */
   body.theme-cards:has(.cards-detail-header--photo) main { padding-bottom: 0; }
-  /* The actual content column, centered inside that black bleed — widens
-     past this on desktop (see the media query below) since there the
-     photo itself should be the large, dominant element rather than
-     stopping at the same width a couple of sentences of body text gets. */
+  /* The actual content column, filling that black bleed edge to edge — a
+     flex column so the image (flex: 1 1 0%, see above) can claim
+     whatever's left after the caption's own height, at any viewport size
+     or orientation, rather than a fixed vh-based guess that's tuned for
+     one aspect ratio and falls apart at another (a landscape phone is
+     just as wide as a small desktop window, so a width-based breakpoint
+     alone can't tell "make more room" from "this is a phone lying down"
+     apart — sizing off the real remaining space sidesteps that entirely,
+     which is also why there's no separate desktop treatment below the
+     way the generic Hero and book headers have). No horizontal padding
+     here any more — that's what let the image run edge to edge — the
+     caption below gets its own instead, so the text isn't flush with the
+     screen edge just because the photo now is.
+     A hard height, not min-height: flex-grow's "how much space is left"
+     math needs a *definite* container size to divide up, and min-height
+     alone doesn't give it one. border-box is what keeps that height
+     honest once padding enters the picture — the default content-box
+     sizing treats padding as *additional* to a specified height rather
+     than eating into it, so height: 100vh plus this padding would
+     otherwise render at 100vh-plus-padding tall, overflowing the real
+     viewport by exactly the padding amount (border-box folds the padding
+     inside the 100vh instead, the same as everywhere else in this file
+     that mixes a viewport-unit size with padding). */
   .cards-photo-card--full {
-    max-width: 640px; margin: 0 auto;
-    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 3rem;
+    display: flex; flex-direction: column; box-sizing: border-box;
+    height: 100vh; width: 100%;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 0 max(1.5rem, env(safe-area-inset-bottom));
   }
-  .cards-detail-header--photo .cards-photo-caption { padding: 0; }
+  .cards-detail-header--photo .cards-photo-caption {
+    padding: 0 max(1.25rem, env(safe-area-inset-right)) 0 max(1.25rem, env(safe-area-inset-left));
+    flex-shrink: 0;
+  }
   /* Light-on-black overrides for the caption/EXIF text, matching the fixed
      black backdrop above — the theme's --fg/--muted/--border tokens are
      tuned for a page background that's light in light mode and dark in
@@ -760,10 +814,6 @@ export const cardsStyles = `
   .cards-photo-card--full .cards-photo-exif { border-top-color: rgba(255,255,255,0.18); }
   .cards-photo-card--full .cards-photo-exif-row dt { color: rgba(255,255,255,0.55); }
   .cards-photo-card--full .cards-photo-exif-row dd { color: rgba(255,255,255,0.92); }
-  @media (min-width: 720px) {
-    .cards-photo-card--full { max-width: min(92vw, 1080px); }
-    .cards-photo-card--full .cards-photo-image { height: min(78vh, 820px); }
-  }
 
   /* Body content beneath a detail header — the "content beneath" the App
      Store's expanded card falls back to a normal readable text column
@@ -1175,8 +1225,15 @@ export const cardsScript = `
     imgClone.src = heroImg.currentSrc || heroImg.src;
     imgClone.alt = '';
 
+    // Matches PhotoCard's own server-rendered markup (see its comment on
+    // .cards-photo-frame) — the frame, not the <img> itself, is the flex
+    // item the CSS expects to grow/shrink to fill the remaining space.
+    var frame = document.createElement('div');
+    frame.className = 'cards-photo-frame';
+    frame.appendChild(imgClone);
+
     card.appendChild(caption);
-    card.appendChild(imgClone);
+    card.appendChild(frame);
     header.appendChild(card);
     panel.appendChild(header);
     document.body.appendChild(panel);
