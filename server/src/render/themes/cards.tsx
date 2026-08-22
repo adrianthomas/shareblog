@@ -248,7 +248,12 @@ function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: str
 // click and animate into the detail view instead of a hard navigation.
 export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, variant }: CardsItemData) {
   return (
-    <a className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`} href={href} data-cards-card>
+    <a
+      className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`}
+      href={href}
+      data-cards-card
+      data-cards-variant={variant}
+    >
       {hero.imageUrl ? (
         <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
       ) : variant === "quote" ? (
@@ -964,6 +969,17 @@ export const cardsScript = `
     panel.className = 'cards-panel';
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
+    // .cards-panel's own CSS background is var(--bg) (white/near-black
+    // depending on theme), which is right for every detail page except a
+    // photo's — that one is a fixed black immersive viewer regardless of
+    // theme (see .cards-detail-header--photo). Left at the CSS default, a
+    // photo's growing panel showed as a big pale card with the photo
+    // floating on it until the real (black) content arrived — reading as
+    // "a white surface, then a switch to the photo view" instead of just
+    // the photo itself moving. Setting it upfront means the panel is
+    // already the right color for the whole zoom, before any content
+    // (cloned or real) has loaded.
+    if (link.dataset.cardsVariant === 'photo') panel.style.background = '#000';
 
     var clone;
     if (heroEl) {
