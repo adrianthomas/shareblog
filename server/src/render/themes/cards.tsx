@@ -969,17 +969,25 @@ export const cardsScript = `
 
   function openCard(link) {
     var heroEl = link.querySelector('.cards-hero');
-    // Photos and covered books get their own shared-element transitions
-    // (see openPhotoCard/openBookCard) instead of this generic whole-panel
-    // FLIP — the whole point of those is that nothing here (a box growing
-    // from the card's rect, holding a stretched approximation of the
-    // content) applies to them. A book with no cover never renders a
-    // .cards-hero in the feed at all (falls to TextCard instead — see
-    // CardsFeedItem), so heroEl's presence is what actually distinguishes
-    // "this book has a cover to fly" from "this book is text-only," not
-    // just its content type.
+    // Photos, covered books, and any other cover-image card get their own
+    // shared-element transitions (see openPhotoCard/openBookCard/
+    // openHeroCard) instead of this generic whole-panel FLIP — the whole
+    // point of those is that nothing here (a box growing from the card's
+    // rect, holding a stretched approximation of the content, animated as
+    // one big WAAPI transform+border-radius keyframe list) applies to
+    // them. That combination in particular — animating border-radius,
+    // which isn't compositor-only the way a plain transform is, alongside
+    // a full-bleed photo — was landing choppy enough on real devices to
+    // read as "no animation, just a snap" rather than a smooth zoom, which
+    // openHeroCard's plain CSS transform transition on the image itself
+    // doesn't have. A book with no cover never renders a .cards-hero in
+    // the feed at all (falls to TextCard instead — see CardsFeedItem), so
+    // heroEl's presence is what actually distinguishes "this book has a
+    // cover to fly" from "this book is text-only," not just its content
+    // type. This whole-panel FLIP now only ever runs for text/quote clones.
     if (link.dataset.cardsVariant === 'photo') { openPhotoCard(link); return; }
     if (link.dataset.cardsType === 'book' && heroEl) { openBookCard(link); return; }
+    if (heroEl) { openHeroCard(link); return; }
 
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
@@ -996,28 +1004,15 @@ export const cardsScript = `
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
 
-    var clone;
-    if (heroEl) {
-      clone = document.createElement('div');
-      clone.className = 'cards-hero';
-      clone.style.position = 'absolute';
-      clone.style.inset = '0';
-      var img = heroEl.querySelector('img');
-      var cloneImg = document.createElement('img');
-      cloneImg.src = img.currentSrc || img.src;
-      cloneImg.alt = '';
-      clone.appendChild(cloneImg);
-    } else if (textEl) {
-      // The text card's real content, not a placeholder — there's no
-      // fetch needed to know what it says, so it can just be there from
-      // the first frame. Pinned to the top/sides but not the bottom, so
-      // it keeps its own natural (content-sized) height while growing
-      // rather than being stretched to fill the panel.
-      clone = textEl.cloneNode(true);
+    // The text card's real content, not a placeholder — there's no fetch
+    // needed to know what it says, so it can just be there from the first
+    // frame. Pinned to the top/sides but not the bottom, so it keeps its
+    // own natural (content-sized) height while growing rather than being
+    // stretched to fill the panel.
+    var clone = textEl ? textEl.cloneNode(true) : document.createElement('div');
+    if (textEl) {
       clone.style.position = 'absolute';
       clone.style.top = '0'; clone.style.left = '0'; clone.style.right = '0';
-    } else {
-      clone = document.createElement('div');
     }
     panel.appendChild(clone);
 
@@ -1040,17 +1035,7 @@ export const cardsScript = `
     // like it's dissolving into the backdrop, only its (approximate)
     // content does. Reuses frames' own offsets so the fade always lines
     // up with the same linear timeline the transform/radius are sampled on.
-    //
-    // Hero-image clones skip this: unlike a text card's badge/title/date
-    // stack, a cover photo scaling non-uniformly doesn't really read as
-    // "distorted approximation" the way stretched text does, and fading
-    // it out early left a visibly blank panel for the last ~40% of the
-    // zoom, then popped a freshly-fetched copy of the same image back in
-    // over it once the fetch resolved — a fade-out-then-back-in that's
-    // exactly what read as flickering. finishOpenHero (used for these)
-    // carries the same image straight into the fetched content instead of
-    // swapping it for a fresh copy, so there's nothing left to fade at all.
-    var cloneFrames = heroEl ? null : frames.map(function (f) {
+    var cloneFrames = frames.map(function (f) {
       return { offset: f.offset, opacity: String(Math.max(0, 1 - f.offset * 1.6)) };
     });
 
@@ -1078,25 +1063,19 @@ export const cardsScript = `
           try { openAnim.commitStyles(); } catch (err) {}
           openAnim.cancel();
         };
-        if (cloneFrames) {
-          var cloneFadeAnim = clone.animate(cloneFrames, { duration: OPEN_MS, easing: 'linear', fill: 'forwards' });
-          cloneFadeAnim.onfinish = function () {
-            // Same fill:'forwards' hazard as openAnim above — release it once
-            // it's done so a later write (there isn't one today, but keeps
-            // this element as unsurprising as the others) isn't silently
-            // ignored.
-            try { cloneFadeAnim.commitStyles(); } catch (err) {}
-            cloneFadeAnim.cancel();
-          };
-        }
+        var cloneFadeAnim = clone.animate(cloneFrames, { duration: OPEN_MS, easing: 'linear', fill: 'forwards' });
+        cloneFadeAnim.onfinish = function () {
+          // Same fill:'forwards' hazard as openAnim above — release it once
+          // it's done so a later write (there isn't one today, but keeps
+          // this element as unsurprising as the others) isn't silently
+          // ignored.
+          try { cloneFadeAnim.commitStyles(); } catch (err) {}
+          cloneFadeAnim.cancel();
+        };
       }
     });
 
-    if (heroEl) {
-      finishOpenHero(link, panel, clone, cloneImg, backdrop);
-    } else {
-      finishOpen(link, panel, clone, backdrop);
-    }
+    finishOpen(link, panel, clone, backdrop);
   }
 
   // A photo's feed thumbnail is a cropped (object-fit: cover) rectangle
@@ -1517,32 +1496,143 @@ export const cardsScript = `
     document.addEventListener('keydown', onKeydown);
   }
 
-  // The generic finish path for a cover-image card (article or music —
-  // photos and covered books have their own dedicated open animations
-  // entirely; this is for the ones still using openCard's whole-panel
-  // FLIP, where the crop language already matches between feed and
-  // detail, so only the cross-fade itself needs fixing). Unlike the text
-  // clone's approximation, the cloned image is *exactly* the picture the
-  // real page will show, just not yet wearing its scrim/caption/close
-  // control — so instead of cross-fading the whole thing against a fresh
-  // copy (two overlapping images dipping in brightness, then a
-  // fade-out-then-back-in on top of that — see the note above on why
-  // cloneFadeAnim is skipped for these), this carries the same <img> node
-  // straight into the fetched markup and only fades in what's actually
-  // new around it.
-  //
-  // That reveal is held off until the zoom (openAnim, driven by OPEN_MS)
-  // has actually finished, same reasoning as finishOpenPhoto's
-  // minVisibleMs: the scrim/caption/close fade-in runs on its own short
-  // CSS transition, on its own clock, completely unsynchronized with the
-  // WAAPI zoom's — so on a fast same-server fetch that resolves well
-  // inside the zoom's duration, the reveal used to play out *while the
-  // panel was still visibly scaling underneath it*, two different motions
-  // at two different speeds overlapping. Waiting for the zoom to actually
-  // land first turns it into one continuous flow: the image scales up on
-  // its own, uninterrupted, and only once it's at rest does anything else
-  // start moving.
-  function finishOpenHero(link, panel, heroClone, cloneImg, backdrop) {
+  // A cover-image card (article or music with artwork — photos and
+  // covered books have their own dedicated versions of this same idea)
+  // used to get the same whole-panel WAAPI FLIP as a text card: one
+  // animation combining transform *and* border-radius, sampled across 30
+  // keyframes. border-radius isn't compositor-only the way a plain
+  // transform is — animating it typically forces a repaint every frame —
+  // and on real devices that was landing choppy enough, especially with a
+  // full-bleed photo underneath, to read as barely animating at all
+  // rather than a smooth zoom. This instead FLIPs just the image with a
+  // plain CSS transform transition (the same approach openPhotoCard uses,
+  // and for the same reason: cheap, compositor-only, one continuous
+  // motion), landing at the same fullscreen/centered-card shape the
+  // detail page's own Hero already computes for it, while the panel
+  // itself just fades in behind it and the scrim/caption fade in a beat
+  // later. The crop language is already the same in both places (unlike
+  // photo's cover-to-contain switch), so this only had to fix *how* the
+  // grow happens, not what shape it grows into.
+  function openHeroCard(link) {
+    var heroImgEl = link.querySelector('.cards-hero img');
+    var fromRect = heroImgEl.getBoundingClientRect();
+    var eyebrowEl = link.querySelector('.cards-eyebrow');
+    var titleEl = link.querySelector('.cards-title');
+    var subtitleEl = link.querySelector('.cards-subtitle');
+
+    document.documentElement.classList.add('cards-lock-scroll');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'cards-overlay-backdrop';
+    document.body.appendChild(backdrop);
+
+    var panel = document.createElement('div');
+    panel.className = 'cards-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.style.opacity = '0';
+
+    var header = document.createElement('header');
+    header.className = 'cards-detail-header';
+
+    var hero = document.createElement('div');
+    hero.className = 'cards-hero cards-detail-hero';
+
+    var imgClone = document.createElement('img');
+    imgClone.src = heroImgEl.currentSrc || heroImgEl.src;
+    imgClone.alt = '';
+
+    var scrim = document.createElement('div');
+    scrim.className = 'cards-scrim';
+    scrim.setAttribute('aria-hidden', 'true');
+    scrim.style.opacity = '0';
+
+    var caption = document.createElement('div');
+    caption.className = 'cards-caption';
+    caption.style.opacity = '0';
+    caption.style.transform = 'translateY(10px)';
+    if (eyebrowEl) {
+      var eyebrowClone = document.createElement('p');
+      eyebrowClone.className = 'cards-eyebrow';
+      eyebrowClone.textContent = eyebrowEl.textContent;
+      caption.appendChild(eyebrowClone);
+    }
+    var titleClone = document.createElement('h1');
+    titleClone.className = 'cards-title';
+    titleClone.textContent = titleEl ? titleEl.textContent : '';
+    caption.appendChild(titleClone);
+    if (subtitleEl) {
+      var subtitleClone = document.createElement('p');
+      subtitleClone.className = 'cards-subtitle';
+      subtitleClone.textContent = subtitleEl.textContent;
+      caption.appendChild(subtitleClone);
+    }
+
+    hero.appendChild(imgClone);
+    hero.appendChild(scrim);
+    hero.appendChild(caption);
+    header.appendChild(hero);
+    panel.appendChild(header);
+    document.body.appendChild(panel);
+
+    var main = document.getElementById('main-content');
+    if (main) main.inert = true;
+    var tabbar = document.querySelector('.cards-tabbar');
+    if (tabbar) tabbar.inert = true;
+
+    requestAnimationFrame(function () {
+      backdrop.classList.add('cards-overlay-backdrop--visible');
+      // Laid out with the real detail CSS above — including its own
+      // responsive switch from a full-bleed mobile header to a smaller
+      // centered card at 720px — imgClone is already exactly where the
+      // fetched page will place it.
+      var toRect = imgClone.getBoundingClientRect();
+
+      if (reduceMotion) {
+        panel.style.opacity = '1';
+        scrim.style.opacity = '';
+        caption.style.opacity = '';
+        caption.style.transform = '';
+      } else {
+        var scaleX = fromRect.width / toRect.width;
+        var scaleY = fromRect.height / toRect.height;
+        var dx = (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2);
+        var dy = (fromRect.top + fromRect.height / 2) - (toRect.top + toRect.height / 2);
+        imgClone.style.transform =
+          'translate(' + dx.toFixed(2) + 'px, ' + dy.toFixed(2) + 'px) scale(' + scaleX.toFixed(4) + ', ' + scaleY.toFixed(4) + ')';
+        void imgClone.offsetWidth;
+
+        var captionDelay = Math.round(OPEN_MS * 0.45);
+        panel.style.transition = 'opacity ' + Math.round(OPEN_MS * 0.6) + 'ms ease';
+        imgClone.style.transition = 'transform ' + OPEN_MS + 'ms cubic-bezier(0.22, 1, 0.36, 1)';
+        scrim.style.transition = 'opacity 260ms ease ' + captionDelay + 'ms';
+        caption.style.transition = 'opacity 260ms ease ' + captionDelay + 'ms, transform 320ms ease ' + captionDelay + 'ms';
+
+        panel.style.opacity = '1';
+        imgClone.style.transform = 'none';
+        scrim.style.opacity = '1';
+        caption.style.opacity = '1';
+        caption.style.transform = 'none';
+
+        setTimeout(function () {
+          panel.style.transition = '';
+          imgClone.style.transition = '';
+          scrim.style.transition = '';
+          caption.style.transition = '';
+        }, OPEN_MS);
+      }
+    });
+
+    finishOpenHero(link, panel, header, caption, titleClone, backdrop);
+  }
+
+  // Same reasoning as finishOpenPhoto/finishOpenBook: the image, scrim,
+  // and caption text (eyebrow/title/subtitle) are already exactly right
+  // by the time the real page arrives, so nothing containing them ever
+  // gets an opacity transition — only what's genuinely new (the date,
+  // filled into the caption directly; the close control; any body text/
+  // links below the header) fades in on its own.
+  function finishOpenHero(link, panel, header, caption, titleClone, backdrop) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
     history.pushState({ cardsOverlay: true }, '', link.href);
@@ -1575,27 +1665,27 @@ export const cardsScript = `
       if (!fetchedMain) { window.location.href = link.href; return; }
       document.title = doc.title;
 
-      var fetchedImg = fetchedMain.querySelector('.cards-hero img');
-      if (fetchedImg) fetchedImg.replaceWith(cloneImg);
+      var fetchedDate = fetchedMain.querySelector('.cards-date');
+      if (fetchedDate) {
+        var dateClone = document.createElement('p');
+        dateClone.className = 'cards-date';
+        dateClone.textContent = fetchedDate.textContent;
+        caption.appendChild(dateClone);
+      }
 
       var closeLink = fetchedMain.querySelector('.cards-close');
-      var header = fetchedMain.querySelector('.cards-detail-header');
       var fetchedBody = fetchedMain.querySelector('.cards-body');
 
       var scroller = document.createElement('div');
       scroller.className = 'cards-panel-scroll';
       scroller.setAttribute('tabindex', '-1');
       if (closeLink) scroller.appendChild(closeLink);
-      if (header) scroller.appendChild(header);
+      scroller.appendChild(header);
       if (fetchedBody) scroller.appendChild(fetchedBody);
       panel.appendChild(scroller);
 
-      if (heroClone.parentNode === panel) panel.removeChild(heroClone);
-
-      var fetchedScrim = scroller.querySelector('.cards-scrim');
-      var fetchedCaption = scroller.querySelector('.cards-caption');
       if (!reduceMotion) {
-        [fetchedScrim, fetchedCaption, fetchedBody, closeLink].forEach(function (el) {
+        [closeLink, fetchedBody].forEach(function (el) {
           if (!el) return;
           el.style.opacity = '0';
           el.style.transition = 'opacity 0.2s ease';
@@ -1613,15 +1703,10 @@ export const cardsScript = `
 
       wireDismissGesture(scroller, panel, backdrop);
 
-      var heading = scroller.querySelector('h1');
-      if (heading) {
-        if (!heading.id) heading.id = 'cards-panel-heading';
-        panel.setAttribute('aria-labelledby', heading.id);
-        heading.setAttribute('tabindex', '-1');
-        heading.focus({ preventScroll: true });
-      } else {
-        scroller.focus({ preventScroll: true });
-      }
+      if (!titleClone.id) titleClone.id = 'cards-panel-heading';
+      panel.setAttribute('aria-labelledby', titleClone.id);
+      titleClone.setAttribute('tabindex', '-1');
+      titleClone.focus({ preventScroll: true });
     }
 
     document.addEventListener('keydown', onKeydown);
