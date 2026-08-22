@@ -1530,10 +1530,23 @@ export const cardsScript = `
   // cloneFadeAnim is skipped for these), this carries the same <img> node
   // straight into the fetched markup and only fades in what's actually
   // new around it.
+  //
+  // That reveal is held off until the zoom (openAnim, driven by OPEN_MS)
+  // has actually finished, same reasoning as finishOpenPhoto's
+  // minVisibleMs: the scrim/caption/close fade-in runs on its own short
+  // CSS transition, on its own clock, completely unsynchronized with the
+  // WAAPI zoom's — so on a fast same-server fetch that resolves well
+  // inside the zoom's duration, the reveal used to play out *while the
+  // panel was still visibly scaling underneath it*, two different motions
+  // at two different speeds overlapping. Waiting for the zoom to actually
+  // land first turns it into one continuous flow: the image scales up on
+  // its own, uninterrupted, and only once it's at rest does anything else
+  // start moving.
   function finishOpenHero(link, panel, heroClone, cloneImg, backdrop) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
     history.pushState({ cardsOverlay: true }, '', link.href);
+    var openStartedAt = Date.now();
 
     fetch(link.href, { signal: controller.signal })
       .then(function (res) {
@@ -1541,7 +1554,14 @@ export const cardsScript = `
         return res.text();
       })
       .then(function (html) {
-        applyFetchedHeroHtml(html);
+        if (!current || current.panel !== panel) return;
+        var elapsed = Date.now() - openStartedAt;
+        var remaining = OPEN_MS - elapsed;
+        if (remaining > 0) {
+          setTimeout(function () { applyFetchedHeroHtml(html); }, remaining);
+        } else {
+          applyFetchedHeroHtml(html);
+        }
       })
       .catch(function (err) {
         if (err && err.name === 'AbortError') return;
