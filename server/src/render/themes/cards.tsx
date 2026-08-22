@@ -944,6 +944,19 @@ export const cardsScript = `
   var tabbarEl = document.querySelector('.cards-tabbar');
   if (tabbarEl && window.visualViewport) {
     var syncTabbar = function () {
+      // The rubber-band bounce at the very top of the page (scrollY
+      // clamped to 0, but the WKWebView's scroll view still overscrolls
+      // past it) also perturbs the visual viewport's own geometry, which
+      // this was reading as "the toolbar changed" — nudging the bar along
+      // with the bounce instead of leaving it planted the way a plain
+      // position: fixed element normally would. The toolbar itself never
+      // actually collapses/expands while sitting at the top with nothing
+      // left to scroll, so skip the correction there entirely; it only
+      // matters once real scrolling has moved past scrollY 0.
+      if (window.scrollY <= 0) {
+        tabbarEl.style.transform = '';
+        return;
+      }
       var vv = window.visualViewport;
       var hiddenBelow = window.innerHeight - (vv.height + vv.offsetTop);
       tabbarEl.style.transform = hiddenBelow > 0.5 ? 'translateY(' + (-hiddenBelow).toFixed(2) + 'px)' : '';
