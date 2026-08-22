@@ -7,9 +7,9 @@ import { storage } from "../storage/index.js";
 import { Layout } from "./templates/Layout.js";
 import { LandingPage } from "./templates/LandingPage.js";
 import { ThoughtPost } from "./templates/ThoughtPost.js";
-import { PhotoPost } from "./templates/PhotoPost.js";
-import { BookCard } from "./templates/BookCard.js";
-import { MusicCard } from "./templates/MusicCard.js";
+import { PhotoPost, formatExif } from "./templates/PhotoPost.js";
+import { BookCard, flattenLinks } from "./templates/BookCard.js";
+import { MusicCard, PLATFORM_LABELS } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
 import { QuotePost } from "./templates/QuotePost.js";
 import { AboutPage } from "./templates/AboutPage.js";
@@ -204,16 +204,60 @@ function siteOrigin(site: Site): string {
   return `${scheme}://${site.subdomain}.${baseDomain}`;
 }
 
-function feedTitle(object: ContentObject): string {
-  if (object.title) return object.title;
-  const body = object.body ?? "";
-  const excerpt = body.slice(0, 60);
-  const truncated = excerpt.length < body.length ? `${excerpt}…` : excerpt || object.type;
-  if (object.type === "quote") {
-    const { author } = object.metadata as QuoteMetadata;
-    return author ? `“${truncated}” — ${author}` : `“${truncated}”`;
+const TYPE_LABEL_KEY: Record<ContentObject["type"], MessageKey> = {
+  thought: "typeThought",
+  article: "typeArticle",
+  book: "typeBook",
+  music: "typeMusic",
+  photo: "typePhoto",
+  quote: "typeQuote",
+};
+
+const FEED_TITLE_MAX = 80;
+
+function truncateSummary(text: string, max = FEED_TITLE_MAX): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max)}…`;
+}
+
+// The start (long-form types) or full content (everything else, which is
+// short enough already) of a post — used as the feed item title, after the
+// type label. Kept separate from feedItemContent below, which renders the
+// *entire* body/metadata for the item description regardless of type; this
+// is deliberately just enough to identify the post in a title.
+function feedContentSummary(object: ContentObject): string {
+  switch (object.type) {
+    case "thought":
+      return truncateSummary(object.body ?? "");
+    case "article":
+      return object.title ?? truncateSummary(object.body ?? "");
+    case "book":
+      return object.title ?? "";
+    case "music": {
+      const { artist, releaseTitle } = object.metadata as MusicMetadata;
+      return [artist, releaseTitle].filter(Boolean).join(" — ");
+    }
+    case "photo": {
+      const { caption } = object.metadata as PhotoMetadata;
+      return caption ? truncateSummary(caption) : "";
+    }
+    case "quote": {
+      const { author } = object.metadata as QuoteMetadata;
+      const text = truncateSummary(object.body ?? "");
+      return author ? `“${text}” — ${author}` : `“${text}”`;
+    }
   }
-  return truncated;
+}
+
+// Unified across every type — "{type label}: {summary}" — so a reader
+// scanning a feed of mixed post types (or a photo/music post whose only
+// natural title lives in metadata, not object.title) can always tell what
+// kind of post it is and what it's about from the title alone.
+function feedTitle(object: ContentObject, locale: string): string {
+  const typeLabel = t(locale, TYPE_LABEL_KEY[object.type]);
+  const summary = feedContentSummary(object);
+  return summary ? `${typeLabel}: ${summary}` : typeLabel;
 }
 
 // Escapes text for use both as XML character data and, since the same
@@ -236,7 +280,22 @@ function paragraphs(body: string | null): string {
     .join("");
 }
 
-async function feedItemContent(object: ContentObject): Promise<string> {
+// A "·"-separated line of links — the same list BookCard/MusicCard show on
+// the site's own detail page, reused here so the feed item carries the same
+// buy/listen links instead of stranding the reader with just a name.
+function linkList(entries: Array<{ label: string; url: string }>): string {
+  if (entries.length === 0) return "";
+  const links = entries.map(({ label, url }) => `<a href="${escapeXml(url)}">${escapeXml(label)}</a>`).join(" · ");
+  return `<p>${links}</p>`;
+}
+
+function exifList(rows: ReturnType<typeof formatExif>): string {
+  if (!rows || rows.length === 0) return "";
+  const items = rows.map((row) => `<li><strong>${escapeXml(row.label)}:</strong> ${escapeXml(row.value)}</li>`).join("");
+  return `<ul>${items}</ul>`;
+}
+
+async function feedItemContent(object: ContentObject, locale: string): Promise<string> {
   switch (object.type) {
     case "thought":
       return paragraphs(object.body);
@@ -256,7 +315,8 @@ async function feedItemContent(object: ContentObject): Promise<string> {
       const rating = metadata.rating
         ? `<p>${"★".repeat(metadata.rating)}${"☆".repeat(5 - metadata.rating)}</p>`
         : "";
-      return image + author + rating + paragraphs(object.body);
+      const links = linkList(metadata.links ? flattenLinks(metadata.links) : []);
+      return image + author + rating + paragraphs(object.body) + links;
     }
     case "music": {
       const metadata = object.metadata as MusicMetadata;
@@ -264,7 +324,13 @@ async function feedItemContent(object: ContentObject): Promise<string> {
         ? `<p><img src="${escapeXml(metadata.artworkUrl)}" alt="Artwork for ${escapeXml(metadata.releaseTitle)}" /></p>`
         : "";
       const artist = `<p>${escapeXml(metadata.artist)}</p>`;
-      return image + artist + paragraphs(object.body);
+      const linkEntries = Object.entries(metadata.links ?? {})
+        .filter((entry): entry is [string, string] => Boolean(entry[1]))
+        .map(([platform, url]) => ({
+          label: t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform }),
+          url,
+        }));
+      return image + artist + paragraphs(object.body) + linkList(linkEntries);
     }
     case "photo": {
       const metadata = object.metadata as PhotoMetadata;
@@ -272,7 +338,8 @@ async function feedItemContent(object: ContentObject): Promise<string> {
       const alt = escapeXml(metadata.caption ?? "");
       const image = url ? `<p><img src="${escapeXml(url)}" alt="${alt}" /></p>` : "";
       const caption = metadata.caption ? `<p>${escapeXml(metadata.caption)}</p>` : "";
-      return image + caption;
+      const exif = exifList(formatExif(await photoExif(object), locale));
+      return image + caption + exif;
     }
     case "quote": {
       const metadata = object.metadata as QuoteMetadata;
@@ -298,8 +365,8 @@ export async function renderFeed(
     await Promise.all(
       objects.map(async (object) => {
         const link = `${origin}/${objectPath(object)}`;
-        const title = escapeXml(feedTitle(object));
-        const content = await feedItemContent(object);
+        const title = escapeXml(feedTitle(object, site.locale));
+        const content = await feedItemContent(object, site.locale);
         const pubDate = (object.publishedAt ?? object.createdAt).toUTCString();
         return (
           `<item><title>${title}</title><link>${escapeXml(link)}</link>` +

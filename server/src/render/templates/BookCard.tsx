@@ -24,7 +24,7 @@ const AMAZON_REGION_LABELS: Record<(typeof AMAZON_REGION_ORDER)[number], string>
   jp: "Amazon (JP)",
 };
 
-interface BookLink {
+export interface BookLink {
   key: string;
   label: string;
   url: string;
@@ -36,7 +36,7 @@ interface BookLink {
 // carry an `amazonRegion` so the client can promote the visitor's likely
 // storefront (see the script in Layout.tsx) without any server-side
 // geolocation or header sniffing.
-function flattenLinks(links: NonNullable<BookMetadata["links"]>): BookLink[] {
+export function flattenLinks(links: NonNullable<BookMetadata["links"]>): BookLink[] {
   const entries: BookLink[] = [];
   for (const region of AMAZON_REGION_ORDER) {
     const url = links.amazon?.[region];

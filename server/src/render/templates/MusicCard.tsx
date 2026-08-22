@@ -5,7 +5,7 @@ import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
 
-const PLATFORM_LABELS: Record<string, string> = {
+export const PLATFORM_LABELS: Record<string, string> = {
   spotify: "Spotify",
   appleMusic: "Apple Music",
   youtubeMusic: "YouTube Music",
