@@ -210,28 +210,42 @@ function PhotoCard({
   full?: boolean;
 }) {
   return (
-    <div className={`cards-photo-card${full ? " cards-photo-card--full" : ""}`}>
-      <div className="cards-photo-caption">
-        <p className="cards-photo-eyebrow">{eyebrow}</p>
-        <TitleTag className="cards-photo-title">{title}</TitleTag>
-        {subtitle ? <p className="cards-photo-subtitle">{subtitle}</p> : null}
-        {dateLabel ? <p className="cards-photo-date">{dateLabel}</p> : null}
-      </div>
-      {full ? (
-        // Detail page only: the frame (a plain div, no intrinsic aspect
-        // ratio of its own) is what actually participates in the flex
-        // column's grow/shrink math below — an <img> is a replaced
-        // element, and giving *it* flex: 1 directly lets its own intrinsic
-        // ratio leak into the flex-basis calculation and override the
-        // "how much space is actually left" answer, growing it past the
-        // viewport instead of fitting inside it. The image just fills
-        // whatever box the frame ends up with, via object-fit: contain.
-        <div className="cards-photo-frame">
-          <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+    <>
+      <div className={`cards-photo-card${full ? " cards-photo-card--full" : ""}`}>
+        <div className="cards-photo-caption">
+          <p className="cards-photo-eyebrow">{eyebrow}</p>
+          <TitleTag className="cards-photo-title">{title}</TitleTag>
+          {subtitle ? <p className="cards-photo-subtitle">{subtitle}</p> : null}
+          {dateLabel ? <p className="cards-photo-date">{dateLabel}</p> : null}
         </div>
-      ) : (
-        <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
-      )}
+        {full ? (
+          // Detail page only: the frame (a plain div, no intrinsic aspect
+          // ratio of its own) is what actually participates in the flex
+          // column's grow/shrink math below — an <img> is a replaced
+          // element, and giving *it* flex: 1 directly lets its own intrinsic
+          // ratio leak into the flex-basis calculation and override the
+          // "how much space is actually left" answer, growing it past the
+          // viewport instead of fitting inside it. The image just fills
+          // whatever box the frame ends up with, via object-fit: contain.
+          <div className="cards-photo-frame">
+            <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+          </div>
+        ) : (
+          <img className="cards-photo-image" src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
+        )}
+      </div>
+      {/* A sibling of .cards-photo-card--full, not a child — the client's
+          openPhotoCard placeholder (which fills the same 100vh viewer
+          before it knows whether this photo even has EXIF data) can't
+          predict this strip's presence or height, and it used to be a
+          third flex item sharing that column's space with the image. The
+          instant the real page swapped it in, the image's flex: 1 share
+          shrank to make room — a live-resizing photo, the exact jump
+          being avoided elsewhere by reserving space up front. EXIF has no
+          fixed number of rows to reserve space for the way the caption's
+          date line did, so instead it just sits below the fixed 100vh
+          viewer entirely, in its own scrollable space that was never part
+          of the image's sizing to begin with. */}
       {full && exif && exif.length > 0 ? (
         <dl className="cards-photo-exif">
           {exif.map((row) => (
@@ -242,7 +256,7 @@ function PhotoCard({
           ))}
         </dl>
       ) : null}
-    </div>
+    </>
   );
 }
 
@@ -737,15 +751,13 @@ export const cardsStyles = `
     display: flex; flex-wrap: wrap; gap: 0.7rem 1.75rem;
     font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
     font-variant-numeric: tabular-nums;
-    /* Only ever rendered inside .cards-photo-card--full's edge-to-edge
-       flex column (see PhotoCard's "full" guard) — same reasoning as the
-       caption above, it needs its own horizontal padding now that the
-       card itself doesn't provide any, and flex-shrink: 0 so it keeps its
-       natural height rather than getting squeezed by the image's flex: 1
-       claiming space first. */
+    /* Only ever rendered as a sibling of .cards-photo-card--full (see
+       PhotoCard's "full" guard), which no longer gives it any horizontal
+       padding to inherit now that the card itself is edge to edge — see
+       that component's own comment for why EXIF sits outside the card's
+       flex column entirely, rather than inside it as a third flex item. */
     padding-left: max(1.25rem, env(safe-area-inset-left));
     padding-right: max(1.25rem, env(safe-area-inset-right));
-    flex-shrink: 0;
   }
   .cards-photo-exif-row { margin: 0; }
   .cards-photo-exif-row dt {
@@ -806,14 +818,16 @@ export const cardsStyles = `
   /* Light-on-black overrides for the caption/EXIF text, matching the fixed
      black backdrop above — the theme's --fg/--muted/--border tokens are
      tuned for a page background that's light in light mode and dark in
-     dark mode, not a backdrop that's always black regardless of mode. */
+     dark mode, not a backdrop that's always black regardless of mode.
+     EXIF is scoped to the header, not .cards-photo-card--full — it's a
+     sibling of that card now (see PhotoCard), not a descendant. */
   .cards-photo-card--full .cards-photo-eyebrow { color: rgba(255,255,255,0.65); }
   .cards-photo-card--full .cards-photo-title { color: #fff; }
   .cards-photo-card--full .cards-photo-subtitle { color: rgba(255,255,255,0.82); }
   .cards-photo-card--full .cards-photo-date { color: rgba(255,255,255,0.6); }
-  .cards-photo-card--full .cards-photo-exif { border-top-color: rgba(255,255,255,0.18); }
-  .cards-photo-card--full .cards-photo-exif-row dt { color: rgba(255,255,255,0.55); }
-  .cards-photo-card--full .cards-photo-exif-row dd { color: rgba(255,255,255,0.92); }
+  .cards-detail-header--photo .cards-photo-exif { border-top-color: rgba(255,255,255,0.18); }
+  .cards-detail-header--photo .cards-photo-exif-row dt { color: rgba(255,255,255,0.55); }
+  .cards-detail-header--photo .cards-photo-exif-row dd { color: rgba(255,255,255,0.92); }
 
   /* Body content beneath a detail header — the "content beneath" the App
      Store's expanded card falls back to a normal readable text column
@@ -1340,8 +1354,13 @@ export const cardsScript = `
       dateClone.textContent = fetchedDate ? fetchedDate.textContent : '';
       dateClone.style.visibility = '';
 
+      // A sibling of card within header, not a child of it — matching
+      // PhotoCard's own server-rendered structure (see its comment on why
+      // EXIF sits outside the card's flex column) so it lands below the
+      // fixed 100vh viewer instead of competing with the image for space
+      // inside it.
       var fetchedExif = fetchedMain.querySelector('.cards-photo-exif');
-      if (fetchedExif) card.appendChild(fetchedExif);
+      if (fetchedExif) header.appendChild(fetchedExif);
 
       var scroller = document.createElement('div');
       scroller.className = 'cards-panel-scroll';
