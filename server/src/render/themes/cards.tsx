@@ -1190,7 +1190,7 @@ export const cardsScript = `
       }
     });
 
-    finishOpen(link, panel, header, backdrop, OPEN_MS);
+    finishOpen(link, panel, header, backdrop, OPEN_MS, '.cards-photo-image', imgClone);
   }
 
   // The rest of opening a card — fetching the real detail page and
@@ -1206,8 +1206,17 @@ export const cardsScript = `
   // cross-fade to real content off until that's had time to finish, so a
   // fast same-server fetch resolving well inside the animation's own
   // duration can't cut it short and make the image appear to jump to its
-  // resting position early.
-  function finishOpen(link, panel, clone, backdrop, minVisibleMs) {
+  // resting position early. \`preserveSelector\`/\`preserveEl\` (photos only)
+  // names an element in the placeholder that should carry straight over
+  // into the fetched content instead of being cross-faded against a
+  // second copy of itself — for a photo that's the image: it's already
+  // sitting exactly where it needs to be, so cross-fading a freshly
+  // fetched <img> with the same src on top of it just stacks two
+  // partially-transparent copies of the same picture over the black
+  // backdrop for the ~200ms overlap, which — since compositing each layer
+  // toward transparent isn't the same as staying at full brightness —
+  // visibly dims and re-lightens right at the end, reading as a blink.
+  function finishOpen(link, panel, clone, backdrop, minVisibleMs, preserveSelector, preserveEl) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
     history.pushState({ cardsOverlay: true }, '', link.href);
@@ -1239,6 +1248,11 @@ export const cardsScript = `
       var fetchedMain = doc.getElementById('main-content');
       if (!fetchedMain) { window.location.href = link.href; return; }
       document.title = doc.title;
+
+      if (preserveSelector && preserveEl) {
+        var fetchedPreserve = fetchedMain.querySelector(preserveSelector);
+        if (fetchedPreserve) fetchedPreserve.replaceWith(preserveEl);
+      }
 
       var scroller = document.createElement('div');
       scroller.className = 'cards-panel-scroll';
