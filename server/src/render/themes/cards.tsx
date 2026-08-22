@@ -1116,6 +1116,21 @@ export const cardsScript = `
     titleClone.className = 'cards-photo-title';
     titleClone.textContent = titleEl ? titleEl.textContent : '';
     caption.appendChild(titleClone);
+    // The feed card never shows a date (see Hero/Caption — dateLabel is a
+    // detail-only prop), so there's no text to clone here, but the real
+    // detail page's .cards-photo-date line still occupies its own row.
+    // Leaving it out of the placeholder made the caption one line shorter
+    // than the real thing, so the moment the cross-fade below swapped
+    // this out for the fetched content, that line's height appeared from
+    // nowhere and visibly shoved the image down a few pixels right at the
+    // end. Reserving the same row up front — sized correctly, just not
+    // showing anything — means the swap only changes the *text* in a slot
+    // that was already there, not the layout around it.
+    var dateClone = document.createElement('p');
+    dateClone.className = 'cards-photo-date';
+    dateClone.style.visibility = 'hidden';
+    dateClone.textContent = ' ';
+    caption.appendChild(dateClone);
 
     var imgClone = document.createElement('img');
     imgClone.className = 'cards-photo-image';
