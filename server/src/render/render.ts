@@ -23,6 +23,7 @@ import type {
   Site,
 } from "./templates/types.js";
 import { t, resolveLocale, type MessageKey } from "./i18n.js";
+import { formatBasicText, formatRichText, stripBasicFormatting } from "./format.js";
 
 function wrap(
   site: Site,
@@ -229,9 +230,9 @@ function truncateSummary(text: string, max = FEED_TITLE_MAX): string {
 function feedContentSummary(object: ContentObject): string {
   switch (object.type) {
     case "thought":
-      return truncateSummary(object.body ?? "");
+      return truncateSummary(stripBasicFormatting(object.body ?? ""));
     case "article":
-      return object.title ?? truncateSummary(object.body ?? "");
+      return object.title ?? truncateSummary(stripBasicFormatting(object.body ?? ""));
     case "book":
       return object.title ?? "";
     case "music": {
@@ -272,14 +273,6 @@ function escapeXml(value: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function paragraphs(body: string | null): string {
-  return (body ?? "")
-    .split("\n\n")
-    .filter(Boolean)
-    .map((paragraph) => `<p>${escapeXml(paragraph)}</p>`)
-    .join("");
-}
-
 // A "·"-separated line of links — the same list BookCard/MusicCard show on
 // the site's own detail page, reused here so the feed item carries the same
 // buy/listen links instead of stranding the reader with just a name.
@@ -298,13 +291,13 @@ function exifList(rows: ReturnType<typeof formatExif>): string {
 async function feedItemContent(object: ContentObject, locale: string): Promise<string> {
   switch (object.type) {
     case "thought":
-      return paragraphs(object.body);
+      return formatRichText(object.body ?? "");
     case "article": {
       const metadata = object.metadata as ArticleMetadata;
       const cover = await articleImageUrl(object);
       const image = cover ? `<p><img src="${escapeXml(cover)}" alt="" /></p>` : "";
       const excerpt = metadata.excerpt ? `<p><em>${escapeXml(metadata.excerpt)}</em></p>` : "";
-      return image + excerpt + paragraphs(object.body);
+      return image + excerpt + formatRichText(object.body ?? "");
     }
     case "book": {
       const metadata = object.metadata as BookMetadata;
@@ -316,7 +309,7 @@ async function feedItemContent(object: ContentObject, locale: string): Promise<s
         ? `<p>${"★".repeat(metadata.rating)}${"☆".repeat(5 - metadata.rating)}</p>`
         : "";
       const links = linkList(metadata.links ? flattenLinks(metadata.links) : []);
-      return image + author + rating + paragraphs(object.body) + links;
+      return image + author + rating + formatBasicText(object.body ?? "") + links;
     }
     case "music": {
       const metadata = object.metadata as MusicMetadata;
@@ -330,7 +323,7 @@ async function feedItemContent(object: ContentObject, locale: string): Promise<s
           label: t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform }),
           url,
         }));
-      return image + artist + paragraphs(object.body) + linkList(linkEntries);
+      return image + artist + formatBasicText(object.body ?? "") + linkList(linkEntries);
     }
     case "photo": {
       const metadata = object.metadata as PhotoMetadata;
@@ -345,7 +338,7 @@ async function feedItemContent(object: ContentObject, locale: string): Promise<s
       const metadata = object.metadata as QuoteMetadata;
       const quote = `<p>“${escapeXml(object.body ?? "")}”</p>`;
       const attribution = `<p>— ${escapeXml(metadata.author)}</p>`;
-      const comment = metadata.comment ? `<p>${escapeXml(metadata.comment)}</p>` : "";
+      const comment = metadata.comment ? formatBasicText(metadata.comment) : "";
       return quote + attribution + comment;
     }
   }
