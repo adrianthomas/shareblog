@@ -974,6 +974,21 @@ export const cardsScript = `
     panel.style.borderRadius = frames[0].borderRadius;
     document.body.appendChild(panel);
 
+    // The clone (see above) is necessarily an approximation of the real
+    // detail page, so — same reasoning as CLOSE_EASING's fade, just in
+    // reverse — fade it out well before the grow gets big enough for the
+    // non-uniform scale's stretch to read as distortion, rather than
+    // leaving it at full opacity for the whole zoom and only swapping it
+    // for the real content in one visible pop once the fetch resolves.
+    // Applied to the clone itself, not the panel — the panel's own
+    // background stays solid throughout so the growing box never looks
+    // like it's dissolving into the backdrop, only its (approximate)
+    // content does. Reuses frames' own offsets so the fade always lines
+    // up with the same linear timeline the transform/radius are sampled on.
+    var cloneFrames = frames.map(function (f) {
+      return { offset: f.offset, opacity: String(Math.max(0, 1 - f.offset * 1.6)) };
+    });
+
     var main = document.getElementById('main-content');
     if (main) main.inert = true;
     var tabbar = document.querySelector('.cards-tabbar');
@@ -997,6 +1012,15 @@ export const cardsScript = `
           // silently fighting a lingering finished animation.
           try { openAnim.commitStyles(); } catch (err) {}
           openAnim.cancel();
+        };
+        var cloneFadeAnim = clone.animate(cloneFrames, { duration: OPEN_MS, easing: 'linear', fill: 'forwards' });
+        cloneFadeAnim.onfinish = function () {
+          // Same fill:'forwards' hazard as openAnim above — release it once
+          // it's done so a later write (there isn't one today, but keeps
+          // this element as unsurprising as the others) isn't silently
+          // ignored.
+          try { cloneFadeAnim.commitStyles(); } catch (err) {}
+          cloneFadeAnim.cancel();
         };
       }
     });
