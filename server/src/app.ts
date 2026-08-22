@@ -8,7 +8,7 @@ import rateLimit from "@fastify/rate-limit";
 import { ZodError } from "zod";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
-import { join, resolve, normalize, extname } from "node:path";
+import { join, resolve, normalize, extname, sep } from "node:path";
 import { authRoutes } from "./routes/auth.js";
 import { siteRoutes } from "./routes/sites.js";
 import { objectRoutes } from "./routes/objects.js";
@@ -30,7 +30,12 @@ const STATIC_EXTENSION_CONTENT_TYPES: Record<string, string> = {
 };
 
 export function buildApp() {
-  const app = Fastify({ logger: true });
+  // Uberspace terminates TLS and reverse-proxies to this app (see
+  // UBERSPACE.md's "web backend" setup) — without trustProxy, request.ip
+  // resolves to the proxy's own address for every request, which collapses
+  // the per-IP rate limits below (and the auth email rate limit in
+  // routes/auth.ts) into one shared bucket instead of one per real visitor.
+  const app = Fastify({ logger: true, trustProxy: true });
 
   // Routes generally catch their own risky calls and reply with this
   // {error: {code, message}} envelope directly (see resolve.ts) — this is
@@ -89,7 +94,11 @@ export function buildApp() {
     app.get("/files/*", async (request, reply) => {
       const wildcard = (request.params as { "*": string })["*"];
       const filePath = normalize(join(baseDir, wildcard));
-      if (!filePath.startsWith(baseDir)) {
+      // A bare startsWith(baseDir) would also match a sibling directory
+      // that happens to share the prefix (e.g. "../uploads-evil/x" against
+      // baseDir ".../data/uploads") — require the full separator so escapes
+      // are actually caught.
+      if (filePath !== baseDir && !filePath.startsWith(baseDir + sep)) {
         return reply.code(400).send();
       }
       try {
@@ -110,7 +119,7 @@ export function buildApp() {
   app.get("/static/*", async (request, reply) => {
     const wildcard = (request.params as { "*": string })["*"];
     const filePath = normalize(join(publicDir, wildcard));
-    if (!filePath.startsWith(publicDir)) {
+    if (filePath !== publicDir && !filePath.startsWith(publicDir + sep)) {
       return reply.code(400).send();
     }
     try {

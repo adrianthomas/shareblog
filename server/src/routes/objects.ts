@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { and, eq, lt, desc } from "drizzle-orm";
+import { and, eq, inArray, lt, desc } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { assets, contentObjects, contentTypeValues } from "../db/schema.js";
 import { authGuard } from "../middleware/auth-guard.js";
@@ -19,13 +19,36 @@ function referencedAssetIds(metadata: unknown): string[] {
   return [record.assetId, record.coverAssetId].filter((value): value is string => typeof value === "string");
 }
 
-async function deleteAsset(assetId: string): Promise<void> {
-  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId)).limit(1);
+// Scoped to siteId, not just assetId — metadata.assetId is client-supplied
+// (see assertOwnedAssets below for why that's checked at write time too), so
+// without this a crafted object could get another site's asset deleted out
+// from under it.
+async function deleteAsset(assetId: string, siteId: string): Promise<void> {
+  const [asset] = await db.select().from(assets).where(and(eq(assets.id, assetId), eq(assets.siteId, siteId))).limit(1);
   if (!asset) return;
   const variants = asset.variants as Record<string, string>;
   const keys = new Set([asset.storageKey, ...Object.values(variants)].filter(Boolean));
   await Promise.all([...keys].map((key) => storage.delete(key)));
   await db.delete(assets).where(eq(assets.id, assetId));
+}
+
+// createObjectSchema/updateObjectSchema only check that assetId/coverAssetId
+// are UUID-shaped, not that they belong to the caller's own site — without
+// this, an object could be created (or edited) referencing another site's
+// asset, which combined with the delete above would let one site trigger
+// deletion of another site's files the moment multi-tenancy opens up (only
+// one account can exist today, so this is unreachable in practice — but
+// cheap to close now while it's still just a code review finding).
+async function assertOwnedAssets(siteId: string, metadata: unknown): Promise<void> {
+  const ids = [...new Set(referencedAssetIds(metadata))];
+  if (ids.length === 0) return;
+  const owned = await db
+    .select({ id: assets.id })
+    .from(assets)
+    .where(and(inArray(assets.id, ids), eq(assets.siteId, siteId)));
+  if (owned.length !== ids.length) {
+    throw Object.assign(new Error("Referenced asset does not belong to this site."), { statusCode: 400 });
+  }
 }
 
 async function uniqueSlug(siteId: string, base: string): Promise<string> {
@@ -52,6 +75,7 @@ export async function objectRoutes(app: FastifyInstance) {
     }
 
     const body = createObjectSchema.parse(request.body);
+    await assertOwnedAssets(site.id, body.metadata);
     const baseSlug = body.title ? slugify(body.title) : slugFromBody(body.body ?? body.type);
     const slug = await uniqueSlug(site.id, baseSlug || body.type);
 
@@ -124,6 +148,9 @@ export async function objectRoutes(app: FastifyInstance) {
     if (!site) return reply.code(404).send({ error: { code: "not_found", message: "Object not found." } });
 
     const body = updateObjectSchema.parse(request.body);
+    if (body.metadata !== undefined) {
+      await assertOwnedAssets(site.id, body.metadata);
+    }
     const [existing] = await db
       .select()
       .from(contentObjects)
@@ -160,7 +187,7 @@ export async function objectRoutes(app: FastifyInstance) {
       .limit(1);
     if (!existing) return reply.code(404).send();
 
-    await Promise.all(referencedAssetIds(existing.metadata).map(deleteAsset));
+    await Promise.all(referencedAssetIds(existing.metadata).map((id) => deleteAsset(id, site.id)));
     await db.delete(contentObjects).where(eq(contentObjects.id, id));
     invalidateSitePages(site.id);
     return reply.code(204).send();

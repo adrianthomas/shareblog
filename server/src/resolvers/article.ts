@@ -7,6 +7,7 @@ import metascraperAuthor from "metascraper-author";
 import metascraperPublisher from "metascraper-publisher";
 import metascraperUrl from "metascraper-url";
 import type { ResolvedArticle } from "./types.js";
+import { assertSafeFetchTarget } from "../lib/ssrf-guard.js";
 
 const scraper = metascraper([
   metascraperTitle(),
@@ -22,7 +23,17 @@ const scraper = metascraper([
 // the plain URL so the user can supply title/excerpt/etc themselves.
 export async function resolveArticle(targetUrl: string): Promise<ResolvedArticle> {
   try {
-    const response = await got(targetUrl, { timeout: { request: 8000 } });
+    await assertSafeFetchTarget(targetUrl);
+    const response = await got(targetUrl, {
+      timeout: { request: 8000 },
+      hooks: {
+        beforeRedirect: [
+          async (options) => {
+            await assertSafeFetchTarget(`${options.url}`);
+          },
+        ],
+      },
+    });
     const metadata = await scraper({ html: response.body, url: targetUrl });
 
     return {
