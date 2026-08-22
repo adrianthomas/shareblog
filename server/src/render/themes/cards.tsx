@@ -954,6 +954,12 @@ export const cardsScript = `
   }
 
   function openCard(link) {
+    // Photos get their own shared-element transition (see openPhotoCard)
+    // instead of this generic whole-panel FLIP — the whole point of that
+    // one is that nothing here (a box growing from the card's rect,
+    // holding a stretched approximation of the content) applies to it.
+    if (link.dataset.cardsVariant === 'photo') { openPhotoCard(link); return; }
+
     var rect = link.getBoundingClientRect();
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var heroEl = link.querySelector('.cards-hero');
@@ -969,17 +975,6 @@ export const cardsScript = `
     panel.className = 'cards-panel';
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
-    // .cards-panel's own CSS background is var(--bg) (white/near-black
-    // depending on theme), which is right for every detail page except a
-    // photo's — that one is a fixed black immersive viewer regardless of
-    // theme (see .cards-detail-header--photo). Left at the CSS default, a
-    // photo's growing panel showed as a big pale card with the photo
-    // floating on it until the real (black) content arrived — reading as
-    // "a white surface, then a switch to the photo view" instead of just
-    // the photo itself moving. Setting it upfront means the panel is
-    // already the right color for the whole zoom, before any content
-    // (cloned or real) has loaded.
-    if (link.dataset.cardsVariant === 'photo') panel.style.background = '#000';
 
     var clone;
     if (heroEl) {
@@ -1065,9 +1060,143 @@ export const cardsScript = `
       }
     });
 
+    finishOpen(link, panel, clone, backdrop);
+  }
+
+  // A photo's feed thumbnail is a cropped (object-fit: cover) rectangle
+  // and its detail view is the whole, uncropped image (object-fit:
+  // contain) sitting on a fixed black backdrop — two different shapes, in
+  // two different places, with real caption text between them. FLIPping
+  // one box between those (the generic openCard's approach) means
+  // stretching that whole mismatch uniformly, which is what read as "a
+  // white/black card growing" rather than "the photo moving." This
+  // instead moves only the image itself from its cropped feed position to
+  // its real, measured detail position — laying out the actual detail
+  // markup up front (real CSS, so the measured position already accounts
+  // for the responsive breakpoint, safe-area insets, etc. instead of
+  // reimplementing that math here) — while the caption fades/slides in
+  // a beat after, and the panel itself just fades to black behind it all.
+  // Closer to how the App Store's own card-to-detail transition reads:
+  // the asset relocates, the chrome around it arrives separately.
+  function openPhotoCard(link) {
+    var heroImg = link.querySelector('.cards-hero img');
+    var fromRect = heroImg.getBoundingClientRect();
+    var eyebrowEl = link.querySelector('.cards-eyebrow');
+    var titleEl = link.querySelector('.cards-title');
+
+    document.documentElement.classList.add('cards-lock-scroll');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'cards-overlay-backdrop';
+    document.body.appendChild(backdrop);
+
+    var panel = document.createElement('div');
+    panel.className = 'cards-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.style.background = '#000';
+    panel.style.opacity = '0';
+
+    var header = document.createElement('header');
+    header.className = 'cards-detail-header cards-detail-header--photo';
+    var card = document.createElement('div');
+    card.className = 'cards-photo-card cards-photo-card--full';
+
+    var caption = document.createElement('div');
+    caption.className = 'cards-photo-caption';
+    caption.style.opacity = '0';
+    caption.style.transform = 'translateY(10px)';
+    if (eyebrowEl) {
+      var eyebrowClone = document.createElement('p');
+      eyebrowClone.className = 'cards-photo-eyebrow';
+      eyebrowClone.textContent = eyebrowEl.textContent;
+      caption.appendChild(eyebrowClone);
+    }
+    var titleClone = document.createElement('h1');
+    titleClone.className = 'cards-photo-title';
+    titleClone.textContent = titleEl ? titleEl.textContent : '';
+    caption.appendChild(titleClone);
+
+    var imgClone = document.createElement('img');
+    imgClone.className = 'cards-photo-image';
+    imgClone.src = heroImg.currentSrc || heroImg.src;
+    imgClone.alt = '';
+
+    card.appendChild(caption);
+    card.appendChild(imgClone);
+    header.appendChild(card);
+    panel.appendChild(header);
+    document.body.appendChild(panel);
+
+    var main = document.getElementById('main-content');
+    if (main) main.inert = true;
+    var tabbar = document.querySelector('.cards-tabbar');
+    if (tabbar) tabbar.inert = true;
+
+    requestAnimationFrame(function () {
+      backdrop.classList.add('cards-overlay-backdrop--visible');
+      // Laid out with the real detail CSS above, imgClone is already
+      // exactly where the fetched page will place it — measure that
+      // instead of computing it by hand.
+      var toRect = imgClone.getBoundingClientRect();
+
+      if (reduceMotion) {
+        panel.style.opacity = '1';
+        caption.style.opacity = '';
+        caption.style.transform = '';
+      } else {
+        var scaleX = fromRect.width / toRect.width;
+        var scaleY = fromRect.height / toRect.height;
+        var dx = (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2);
+        var dy = (fromRect.top + fromRect.height / 2) - (toRect.top + toRect.height / 2);
+        imgClone.style.transform =
+          'translate(' + dx.toFixed(2) + 'px, ' + dy.toFixed(2) + 'px) scale(' + scaleX.toFixed(4) + ', ' + scaleY.toFixed(4) + ')';
+        // Force the browser to actually paint that starting transform
+        // before the transitions attached below take effect — otherwise
+        // this write and the target-value writes that follow coalesce
+        // into one frame and nothing visibly animates.
+        void imgClone.offsetWidth;
+
+        var captionDelay = Math.round(OPEN_MS * 0.45);
+        panel.style.transition = 'opacity ' + Math.round(OPEN_MS * 0.6) + 'ms ease';
+        imgClone.style.transition = 'transform ' + OPEN_MS + 'ms cubic-bezier(0.22, 1, 0.36, 1)';
+        caption.style.transition = 'opacity 260ms ease ' + captionDelay + 'ms, transform 320ms ease ' + captionDelay + 'ms';
+
+        panel.style.opacity = '1';
+        imgClone.style.transform = 'none';
+        caption.style.opacity = '1';
+        caption.style.transform = 'none';
+
+        setTimeout(function () {
+          panel.style.transition = '';
+          imgClone.style.transition = '';
+          caption.style.transition = '';
+        }, OPEN_MS);
+      }
+    });
+
+    finishOpen(link, panel, header, backdrop, OPEN_MS);
+  }
+
+  // The rest of opening a card — fetching the real detail page and
+  // cross-fading it in over whatever placeholder the entry animation
+  // built, wiring up the close control and drag-to-dismiss, moving focus
+  // — is identical regardless of *how* that placeholder got on screen, so
+  // both openCard's generic whole-panel FLIP and openPhotoCard's
+  // shared-element image transition (below) hand off to this once their
+  // own entry animation has started. \`minVisibleMs\` (photos only, where
+  // the placeholder is doing real choreographed motion — the image is
+  // still mid-flight and the caption mid-fade for the whole entry
+  // animation, not just approximating static content) holds the
+  // cross-fade to real content off until that's had time to finish, so a
+  // fast same-server fetch resolving well inside the animation's own
+  // duration can't cut it short and make the image appear to jump to its
+  // resting position early.
+  function finishOpen(link, panel, clone, backdrop, minVisibleMs) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
     history.pushState({ cardsOverlay: true }, '', link.href);
+    var openStartedAt = Date.now();
 
     fetch(link.href, { signal: controller.signal })
       .then(function (res) {
@@ -1076,72 +1205,83 @@ export const cardsScript = `
       })
       .then(function (html) {
         if (!current || current.panel !== panel) return;
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var fetchedMain = doc.getElementById('main-content');
-        if (!fetchedMain) throw new Error('no main content');
-        document.title = doc.title;
-
-        var scroller = document.createElement('div');
-        scroller.className = 'cards-panel-scroll';
-        scroller.setAttribute('tabindex', '-1');
-        while (fetchedMain.firstChild) scroller.appendChild(fetchedMain.firstChild);
-
-        // Cross-fade the loading clone into the real content instead of a
-        // hard swap. The clone is necessarily an approximation — a bare
-        // cover/photo image with none of its caption, or a feed-sized card
-        // that the detail page repads/resizes — so the instant it's
-        // replaced by the real markup is a visible pop no matter how close
-        // the two are (worst case: a book's nearly-fullscreen cover
-        // collapsing straight to its small detail-page thumbnail). Briefly
-        // overlapping old and new reads as a deliberate transition instead
-        // of a flicker.
-        if (reduceMotion) {
-          panel.innerHTML = '';
-          panel.appendChild(scroller);
+        var elapsed = Date.now() - openStartedAt;
+        var remaining = (minVisibleMs || 0) - elapsed;
+        if (remaining > 0) {
+          setTimeout(function () { applyFetchedHtml(html); }, remaining);
         } else {
-          scroller.style.opacity = '0';
-          scroller.style.transition = 'opacity 0.2s ease';
-          panel.appendChild(scroller);
-          requestAnimationFrame(function () {
-            clone.style.transition = 'opacity 0.2s ease';
-            clone.style.opacity = '0';
-            scroller.style.opacity = '1';
-          });
-          setTimeout(function () {
-            if (clone.parentNode === panel) panel.removeChild(clone);
-            scroller.style.transition = '';
-            scroller.style.opacity = '';
-          }, 220);
-        }
-
-        // The close link moved over with the rest of #main-content's
-        // children (it's server-rendered as part of the detail markup, not
-        // a script-built button — see CardsDetailHeader) — wire its click
-        // here instead of letting it fall through to a hard navigation.
-        var closeLink = scroller.querySelector('.cards-close');
-        if (closeLink) {
-          closeLink.addEventListener('click', function (e) {
-            e.preventDefault();
-            closeOverlay({});
-          });
-        }
-
-        wireDismissGesture(scroller, panel, backdrop);
-
-        var heading = scroller.querySelector('h1');
-        if (heading) {
-          if (!heading.id) heading.id = 'cards-panel-heading';
-          panel.setAttribute('aria-labelledby', heading.id);
-          heading.setAttribute('tabindex', '-1');
-          heading.focus({ preventScroll: true });
-        } else {
-          scroller.focus({ preventScroll: true });
+          applyFetchedHtml(html);
         }
       })
       .catch(function (err) {
         if (err && err.name === 'AbortError') return;
         window.location.href = link.href;
       });
+
+    function applyFetchedHtml(html) {
+      if (!current || current.panel !== panel) return;
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var fetchedMain = doc.getElementById('main-content');
+      if (!fetchedMain) { window.location.href = link.href; return; }
+      document.title = doc.title;
+
+      var scroller = document.createElement('div');
+      scroller.className = 'cards-panel-scroll';
+      scroller.setAttribute('tabindex', '-1');
+      while (fetchedMain.firstChild) scroller.appendChild(fetchedMain.firstChild);
+
+      // Cross-fade the loading clone into the real content instead of a
+      // hard swap. The clone is necessarily an approximation — a bare
+      // cover/photo image with none of its caption, or a feed-sized card
+      // that the detail page repads/resizes — so the instant it's
+      // replaced by the real markup is a visible pop no matter how close
+      // the two are (worst case: a book's nearly-fullscreen cover
+      // collapsing straight to its small detail-page thumbnail). Briefly
+      // overlapping old and new reads as a deliberate transition instead
+      // of a flicker.
+      if (reduceMotion) {
+        panel.innerHTML = '';
+        panel.appendChild(scroller);
+      } else {
+        scroller.style.opacity = '0';
+        scroller.style.transition = 'opacity 0.2s ease';
+        panel.appendChild(scroller);
+        requestAnimationFrame(function () {
+          clone.style.transition = 'opacity 0.2s ease';
+          clone.style.opacity = '0';
+          scroller.style.opacity = '1';
+        });
+        setTimeout(function () {
+          if (clone.parentNode === panel) panel.removeChild(clone);
+          scroller.style.transition = '';
+          scroller.style.opacity = '';
+        }, 220);
+      }
+
+      // The close link moved over with the rest of #main-content's
+      // children (it's server-rendered as part of the detail markup, not
+      // a script-built button — see CardsDetailHeader) — wire its click
+      // here instead of letting it fall through to a hard navigation.
+      var closeLink = scroller.querySelector('.cards-close');
+      if (closeLink) {
+        closeLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          closeOverlay({});
+        });
+      }
+
+      wireDismissGesture(scroller, panel, backdrop);
+
+      var heading = scroller.querySelector('h1');
+      if (heading) {
+        if (!heading.id) heading.id = 'cards-panel-heading';
+        panel.setAttribute('aria-labelledby', heading.id);
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      } else {
+        scroller.focus({ preventScroll: true });
+      }
+    }
 
     document.addEventListener('keydown', onKeydown);
   }
