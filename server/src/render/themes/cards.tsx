@@ -1190,33 +1190,25 @@ export const cardsScript = `
       }
     });
 
-    finishOpen(link, panel, header, backdrop, OPEN_MS, '.cards-photo-image', imgClone);
+    finishOpenPhoto(link, panel, header, card, caption, titleClone, dateClone, backdrop);
   }
 
-  // The rest of opening a card — fetching the real detail page and
-  // cross-fading it in over whatever placeholder the entry animation
-  // built, wiring up the close control and drag-to-dismiss, moving focus
-  // — is identical regardless of *how* that placeholder got on screen, so
-  // both openCard's generic whole-panel FLIP and openPhotoCard's
-  // shared-element image transition (below) hand off to this once their
-  // own entry animation has started. \`minVisibleMs\` (photos only, where
-  // the placeholder is doing real choreographed motion — the image is
-  // still mid-flight and the caption mid-fade for the whole entry
-  // animation, not just approximating static content) holds the
-  // cross-fade to real content off until that's had time to finish, so a
-  // fast same-server fetch resolving well inside the animation's own
-  // duration can't cut it short and make the image appear to jump to its
-  // resting position early. \`preserveSelector\`/\`preserveEl\` (photos only)
-  // names an element in the placeholder that should carry straight over
-  // into the fetched content instead of being cross-faded against a
-  // second copy of itself — for a photo that's the image: it's already
-  // sitting exactly where it needs to be, so cross-fading a freshly
-  // fetched <img> with the same src on top of it just stacks two
-  // partially-transparent copies of the same picture over the black
-  // backdrop for the ~200ms overlap, which — since compositing each layer
-  // toward transparent isn't the same as staying at full brightness —
-  // visibly dims and re-lightens right at the end, reading as a blink.
-  function finishOpen(link, panel, clone, backdrop, minVisibleMs, preserveSelector, preserveEl) {
+  // finishOpen's cross-fade (clone -> scroller, both via opacity) works
+  // for the generic path because the clone is only ever an approximation
+  // being replaced by something better. Here it isn't: imgClone and
+  // caption are already exactly right, so putting them through that same
+  // opacity fade doesn't fix anything, it just recreates the "blink" a
+  // different way — opacity is a *group* compositing effect, so once
+  // they're reparented into a fading container, they get swept along
+  // with it regardless of being "the same element," dipping and
+  // recovering right along with everything else. So instead of fading a
+  // whole container in, this only touches what's actually new: filling in
+  // the date text (the one thing the feed card never had — see the
+  // comment on dateClone above), and fading in just the close control and
+  // EXIF strip (if any), which genuinely didn't exist a moment ago. The
+  // image and caption never have opacity applied to them at all after
+  // landing, so there's nothing left to blink.
+  function finishOpenPhoto(link, panel, header, card, caption, titleClone, dateClone, backdrop) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
     history.pushState({ cardsOverlay: true }, '', link.href);
@@ -1230,12 +1222,90 @@ export const cardsScript = `
       .then(function (html) {
         if (!current || current.panel !== panel) return;
         var elapsed = Date.now() - openStartedAt;
-        var remaining = (minVisibleMs || 0) - elapsed;
+        var remaining = OPEN_MS - elapsed;
         if (remaining > 0) {
-          setTimeout(function () { applyFetchedHtml(html); }, remaining);
+          setTimeout(function () { applyFetchedPhotoHtml(html); }, remaining);
         } else {
-          applyFetchedHtml(html);
+          applyFetchedPhotoHtml(html);
         }
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        window.location.href = link.href;
+      });
+
+    function applyFetchedPhotoHtml(html) {
+      if (!current || current.panel !== panel) return;
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var fetchedMain = doc.getElementById('main-content');
+      if (!fetchedMain) { window.location.href = link.href; return; }
+      document.title = doc.title;
+
+      var fetchedDate = fetchedMain.querySelector('.cards-photo-date');
+      dateClone.textContent = fetchedDate ? fetchedDate.textContent : '';
+      dateClone.style.visibility = '';
+
+      var fetchedExif = fetchedMain.querySelector('.cards-photo-exif');
+      if (fetchedExif) card.appendChild(fetchedExif);
+
+      var scroller = document.createElement('div');
+      scroller.className = 'cards-panel-scroll';
+      scroller.setAttribute('tabindex', '-1');
+      var closeLink = fetchedMain.querySelector('.cards-close');
+      if (closeLink) scroller.appendChild(closeLink);
+      scroller.appendChild(header);
+      panel.appendChild(scroller);
+
+      if (!reduceMotion) {
+        [closeLink, fetchedExif].forEach(function (el) {
+          if (!el) return;
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.2s ease';
+          requestAnimationFrame(function () { el.style.opacity = '1'; });
+          setTimeout(function () { el.style.transition = ''; el.style.opacity = ''; }, 260);
+        });
+      }
+
+      if (closeLink) {
+        closeLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          closeOverlay({});
+        });
+      }
+
+      wireDismissGesture(scroller, panel, backdrop);
+
+      if (!titleClone.id) titleClone.id = 'cards-panel-heading';
+      panel.setAttribute('aria-labelledby', titleClone.id);
+      titleClone.setAttribute('tabindex', '-1');
+      titleClone.focus({ preventScroll: true });
+    }
+
+    document.addEventListener('keydown', onKeydown);
+  }
+
+  // The rest of opening a card — fetching the real detail page and
+  // cross-fading it in over whatever placeholder the entry animation
+  // built, wiring up the close control and drag-to-dismiss, moving focus
+  // — is identical regardless of *how* that placeholder got on screen, so
+  // openCard's generic whole-panel FLIP hands off to this once its own
+  // entry animation has started. (openPhotoCard has its own
+  // finishOpenPhoto instead — its placeholder's image and caption are
+  // already exactly right, and cross-fading a container they sit inside
+  // would sweep them into that fade regardless of being "the same
+  // element," which is a problem this generic path doesn't have.)
+  function finishOpen(link, panel, clone, backdrop) {
+    var controller = new AbortController();
+    current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
+    history.pushState({ cardsOverlay: true }, '', link.href);
+
+    fetch(link.href, { signal: controller.signal })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad response');
+        return res.text();
+      })
+      .then(function (html) {
+        applyFetchedHtml(html);
       })
       .catch(function (err) {
         if (err && err.name === 'AbortError') return;
@@ -1248,11 +1318,6 @@ export const cardsScript = `
       var fetchedMain = doc.getElementById('main-content');
       if (!fetchedMain) { window.location.href = link.href; return; }
       document.title = doc.title;
-
-      if (preserveSelector && preserveEl) {
-        var fetchedPreserve = fetchedMain.querySelector(preserveSelector);
-        if (fetchedPreserve) fetchedPreserve.replaceWith(preserveEl);
-      }
 
       var scroller = document.createElement('div');
       scroller.className = 'cards-panel-scroll';
