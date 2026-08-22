@@ -853,13 +853,15 @@ export const cardsScript = `
     };
   }
 
-  var OPEN_EASING = cubicBezier(0.34, 1.56, 0.64, 1);
-  // Shrinking back into the card is a deceleration (fast start, gentle
-  // settle) — the same shape as OPEN_EASING but without the overshoot,
-  // since bouncing past the card's own size on the way in looks like a
-  // glitch rather than a bounce. The previous curve accelerated instead
-  // (barely moved for most of the animation, then snapped shut in the
-  // last beat), which read as an abrupt cut rather than a close.
+  // Both open and close use the same plain deceleration (fast start,
+  // gentle settle) — no overshoot. OPEN_EASING previously used a "back"
+  // curve (cubicBezier(0.34, 1.56, 0.64, 1)) whose eased progress genuinely
+  // exceeds 1 partway through, which — since sx/sy in buildFlipKeyframes
+  // are computed directly from it with no clamp — made the panel scale
+  // past 100vw/100vh at the peak and spring back down right at the end: a
+  // real "boing" distinct from (and on top of) the content cross-fade,
+  // and the reason open kept reading as a pop even after that was fixed.
+  var OPEN_EASING = cubicBezier(0.22, 1, 0.36, 1);
   var CLOSE_EASING = cubicBezier(0.22, 1, 0.36, 1);
   var OPEN_MS = 480, CLOSE_MS = 420;
   var FLIP_STEPS = 30;
@@ -923,6 +925,28 @@ export const cardsScript = `
   window.addEventListener('popstate', function () {
     if (current) closeOverlay({ skipHistory: true });
   });
+
+  // iOS Safari's compact bottom toolbar collapses and expands as you
+  // scroll, and a plain \`position: fixed; bottom: 0\` element is meant to
+  // track that automatically — but on-device this bar can visibly detach
+  // and get left behind mid-page instead, landing wherever the layout
+  // viewport's bottom happened to be rather than the *visual* viewport's
+  // (confirmed on-device; a minimal fixed div with no other styling
+  // reproduces it too, so it's not particular to this bar's own CSS).
+  // The VisualViewport API reports the actual visible region directly, so
+  // nudge the bar to match it with a transform instead of trusting native
+  // fixed positioning alone to keep up with the toolbar's animation.
+  var tabbarEl = document.querySelector('.cards-tabbar');
+  if (tabbarEl && window.visualViewport) {
+    var syncTabbar = function () {
+      var vv = window.visualViewport;
+      var hiddenBelow = window.innerHeight - (vv.height + vv.offsetTop);
+      tabbarEl.style.transform = hiddenBelow > 0.5 ? 'translateY(' + (-hiddenBelow).toFixed(2) + 'px)' : '';
+    };
+    window.visualViewport.addEventListener('resize', syncTabbar);
+    window.visualViewport.addEventListener('scroll', syncTabbar);
+    syncTabbar();
+  }
 
   function openCard(link) {
     var rect = link.getBoundingClientRect();
