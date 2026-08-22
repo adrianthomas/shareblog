@@ -1040,7 +1040,17 @@ export const cardsScript = `
     // like it's dissolving into the backdrop, only its (approximate)
     // content does. Reuses frames' own offsets so the fade always lines
     // up with the same linear timeline the transform/radius are sampled on.
-    var cloneFrames = frames.map(function (f) {
+    //
+    // Hero-image clones skip this: unlike a text card's badge/title/date
+    // stack, a cover photo scaling non-uniformly doesn't really read as
+    // "distorted approximation" the way stretched text does, and fading
+    // it out early left a visibly blank panel for the last ~40% of the
+    // zoom, then popped a freshly-fetched copy of the same image back in
+    // over it once the fetch resolved — a fade-out-then-back-in that's
+    // exactly what read as flickering. finishOpenHero (used for these)
+    // carries the same image straight into the fetched content instead of
+    // swapping it for a fresh copy, so there's nothing left to fade at all.
+    var cloneFrames = heroEl ? null : frames.map(function (f) {
       return { offset: f.offset, opacity: String(Math.max(0, 1 - f.offset * 1.6)) };
     });
 
@@ -1068,19 +1078,25 @@ export const cardsScript = `
           try { openAnim.commitStyles(); } catch (err) {}
           openAnim.cancel();
         };
-        var cloneFadeAnim = clone.animate(cloneFrames, { duration: OPEN_MS, easing: 'linear', fill: 'forwards' });
-        cloneFadeAnim.onfinish = function () {
-          // Same fill:'forwards' hazard as openAnim above — release it once
-          // it's done so a later write (there isn't one today, but keeps
-          // this element as unsurprising as the others) isn't silently
-          // ignored.
-          try { cloneFadeAnim.commitStyles(); } catch (err) {}
-          cloneFadeAnim.cancel();
-        };
+        if (cloneFrames) {
+          var cloneFadeAnim = clone.animate(cloneFrames, { duration: OPEN_MS, easing: 'linear', fill: 'forwards' });
+          cloneFadeAnim.onfinish = function () {
+            // Same fill:'forwards' hazard as openAnim above — release it once
+            // it's done so a later write (there isn't one today, but keeps
+            // this element as unsurprising as the others) isn't silently
+            // ignored.
+            try { cloneFadeAnim.commitStyles(); } catch (err) {}
+            cloneFadeAnim.cancel();
+          };
+        }
       }
     });
 
-    finishOpen(link, panel, clone, backdrop);
+    if (heroEl) {
+      finishOpenHero(link, panel, clone, cloneImg, backdrop);
+    } else {
+      finishOpen(link, panel, clone, backdrop);
+    }
   }
 
   // A photo's feed thumbnail is a cropped (object-fit: cover) rectangle
@@ -1501,17 +1517,108 @@ export const cardsScript = `
     document.addEventListener('keydown', onKeydown);
   }
 
+  // The generic finish path for a cover-image card (article or music —
+  // photos and covered books have their own dedicated open animations
+  // entirely; this is for the ones still using openCard's whole-panel
+  // FLIP, where the crop language already matches between feed and
+  // detail, so only the cross-fade itself needs fixing). Unlike the text
+  // clone's approximation, the cloned image is *exactly* the picture the
+  // real page will show, just not yet wearing its scrim/caption/close
+  // control — so instead of cross-fading the whole thing against a fresh
+  // copy (two overlapping images dipping in brightness, then a
+  // fade-out-then-back-in on top of that — see the note above on why
+  // cloneFadeAnim is skipped for these), this carries the same <img> node
+  // straight into the fetched markup and only fades in what's actually
+  // new around it.
+  function finishOpenHero(link, panel, heroClone, cloneImg, backdrop) {
+    var controller = new AbortController();
+    current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
+    history.pushState({ cardsOverlay: true }, '', link.href);
+
+    fetch(link.href, { signal: controller.signal })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad response');
+        return res.text();
+      })
+      .then(function (html) {
+        applyFetchedHeroHtml(html);
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        window.location.href = link.href;
+      });
+
+    function applyFetchedHeroHtml(html) {
+      if (!current || current.panel !== panel) return;
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var fetchedMain = doc.getElementById('main-content');
+      if (!fetchedMain) { window.location.href = link.href; return; }
+      document.title = doc.title;
+
+      var fetchedImg = fetchedMain.querySelector('.cards-hero img');
+      if (fetchedImg) fetchedImg.replaceWith(cloneImg);
+
+      var closeLink = fetchedMain.querySelector('.cards-close');
+      var header = fetchedMain.querySelector('.cards-detail-header');
+      var fetchedBody = fetchedMain.querySelector('.cards-body');
+
+      var scroller = document.createElement('div');
+      scroller.className = 'cards-panel-scroll';
+      scroller.setAttribute('tabindex', '-1');
+      if (closeLink) scroller.appendChild(closeLink);
+      if (header) scroller.appendChild(header);
+      if (fetchedBody) scroller.appendChild(fetchedBody);
+      panel.appendChild(scroller);
+
+      if (heroClone.parentNode === panel) panel.removeChild(heroClone);
+
+      var fetchedScrim = scroller.querySelector('.cards-scrim');
+      var fetchedCaption = scroller.querySelector('.cards-caption');
+      if (!reduceMotion) {
+        [fetchedScrim, fetchedCaption, fetchedBody, closeLink].forEach(function (el) {
+          if (!el) return;
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.2s ease';
+          requestAnimationFrame(function () { el.style.opacity = '1'; });
+          setTimeout(function () { el.style.transition = ''; el.style.opacity = ''; }, 260);
+        });
+      }
+
+      if (closeLink) {
+        closeLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          closeOverlay({});
+        });
+      }
+
+      wireDismissGesture(scroller, panel, backdrop);
+
+      var heading = scroller.querySelector('h1');
+      if (heading) {
+        if (!heading.id) heading.id = 'cards-panel-heading';
+        panel.setAttribute('aria-labelledby', heading.id);
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      } else {
+        scroller.focus({ preventScroll: true });
+      }
+    }
+
+    document.addEventListener('keydown', onKeydown);
+  }
+
   // The rest of opening a card — fetching the real detail page and
   // cross-fading it in over whatever placeholder the entry animation
   // built, wiring up the close control and drag-to-dismiss, moving focus
   // — is identical regardless of *how* that placeholder got on screen, so
   // openCard's generic whole-panel FLIP hands off to this once its own
-  // entry animation has started. (openPhotoCard/openBookCard have their
-  // own finishOpenPhoto/finishOpenBook instead — their placeholders'
-  // images and text are already exactly right, and cross-fading a
-  // container they sit inside would sweep them into that fade regardless
-  // of being "the same element," which is a problem this generic path
-  // doesn't have.)
+  // entry animation has started for a text-only clone. (Cover-image
+  // clones use finishOpenHero above instead, and openPhotoCard/
+  // openBookCard have their own finishOpenPhoto/finishOpenBook — in every
+  // one of those cases the placeholder's image and/or text is already
+  // exactly right, and cross-fading a container it sits inside would
+  // sweep it into that fade regardless of being "the same element," which
+  // is a problem only the text clone here doesn't have.)
   function finishOpen(link, panel, clone, backdrop) {
     var controller = new AbortController();
     current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
