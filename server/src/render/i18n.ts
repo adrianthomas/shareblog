@@ -8,6 +8,12 @@ export type MessageKey =
   | "quotes"
   | "about"
   | "followRss"
+  | "typeThought"
+  | "typeArticle"
+  | "typeBook"
+  | "typeMusic"
+  | "typePhoto"
+  | "typeQuote"
   | "skipToContent"
   | "nothingHereYet"
   | "ratingLabel"
@@ -35,6 +41,12 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Quotes",
     about: "About",
     followRss: "Follow RSS",
+    typeThought: "Post",
+    typeArticle: "Article",
+    typeBook: "Book",
+    typeMusic: "Music",
+    typePhoto: "Photo",
+    typeQuote: "Quote",
     skipToContent: "Skip to content",
     nothingHereYet: "Nothing here yet.",
     ratingLabel: "Rating: {rating} out of 5 stars",
@@ -59,6 +71,12 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Zitate",
     about: "Über",
     followRss: "RSS abonnieren",
+    typeThought: "Beitrag",
+    typeArticle: "Artikel",
+    typeBook: "Buch",
+    typeMusic: "Musik",
+    typePhoto: "Foto",
+    typeQuote: "Zitat",
     skipToContent: "Zum Inhalt springen",
     nothingHereYet: "Hier gibt es noch nichts.",
     ratingLabel: "Bewertung: {rating} von 5 Sternen",
@@ -83,6 +101,12 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citations",
     about: "À propos",
     followRss: "Suivre en RSS",
+    typeThought: "Billet",
+    typeArticle: "Article",
+    typeBook: "Livre",
+    typeMusic: "Musique",
+    typePhoto: "Photo",
+    typeQuote: "Citation",
     skipToContent: "Aller au contenu",
     nothingHereYet: "Rien ici pour l'instant.",
     ratingLabel: "Note : {rating} étoiles sur 5",
@@ -107,6 +131,12 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citas",
     about: "Acerca de",
     followRss: "Seguir por RSS",
+    typeThought: "Publicación",
+    typeArticle: "Artículo",
+    typeBook: "Libro",
+    typeMusic: "Música",
+    typePhoto: "Foto",
+    typeQuote: "Cita",
     skipToContent: "Saltar al contenido",
     nothingHereYet: "Todavía no hay nada aquí.",
     ratingLabel: "Valoración: {rating} de 5 estrellas",
@@ -131,6 +161,12 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "引用",
     about: "このサイトについて",
     followRss: "RSSで購読",
+    typeThought: "投稿",
+    typeArticle: "記事",
+    typeBook: "本",
+    typeMusic: "音楽",
+    typePhoto: "写真",
+    typeQuote: "引用",
     skipToContent: "コンテンツへスキップ",
     nothingHereYet: "まだ何もありません。",
     ratingLabel: "評価: 5つ星中{rating}つ",

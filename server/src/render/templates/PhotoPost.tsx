@@ -30,7 +30,7 @@ function formatCamera(exif: AssetExif): string | undefined {
 // the theme file so the theme stays free of i18n lookups and camera-
 // notation formatting, matching how `eyebrow` etc. are already pre-built by
 // callers throughout this file.
-function formatExif(exif: AssetExif | undefined, locale: string): CardsExifRow[] | undefined {
+export function formatExif(exif: AssetExif | undefined, locale: string): CardsExifRow[] | undefined {
   if (!exif) return undefined;
   const camera = formatCamera(exif);
   const rows: Array<[string, string | undefined]> = [
