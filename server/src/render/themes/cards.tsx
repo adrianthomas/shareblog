@@ -909,6 +909,19 @@ export const cardsStyles = `
 export const cardsScript = `
 (function () {
   if (!('animate' in Element.prototype) || !window.fetch || !window.history.pushState) return;
+  // Opening a card pushes a history entry (see history.pushState below)
+  // purely so the URL/back button track it, without ever leaving this
+  // page or its scroll position — but browsers don't know that, and by
+  // default (scrollRestoration: 'auto') try to helpfully restore
+  // whatever scroll position they've associated with an entry when
+  // history.back() returns to it. Since this is a pushState entry, not a
+  // real navigation, that "restore" can fight the page's actual current
+  // scroll position — the underlying feed never moved, closing the
+  // overlay just reveals it again — producing exactly the small end-of-
+  // close jump this was added to fix. Taking manual control tells the
+  // browser this page handles its own scroll position, which it already
+  // does correctly (it never touches it at all).
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Standard Newton-Raphson cubic-bezier solver (the same algorithm
   // browsers use internally for CSS easing) so the eased curve can be
@@ -945,6 +958,36 @@ export const cardsScript = `
   var OPEN_MS = 480, CLOSE_MS = 420;
   var FLIP_STEPS = 30;
   var current = null;
+  var lockedScrollY = 0;
+
+  // \`overflow: hidden\` on html (the .cards-lock-scroll class) is the usual
+  // way to stop the page scrolling behind a modal, but on iOS Safari
+  // specifically it's well known not to reliably hold — the page can
+  // still creep during a swipe, and un-hiding it afterward can leave the
+  // scroll position off by however much it crept, which is exactly the
+  // "cards jump at the end of close" symptom. The robust fix (the same
+  // one most iOS-targeted modal implementations end up at) is to pin the
+  // body itself in place with a negative top offset instead of relying on
+  // overflow — that actually prevents the scroll position from moving at
+  // all while locked, so there's nothing to restore imprecisely once
+  // it's lifted. overflow: hidden stays on too, harmlessly, as a backup
+  // for anything this doesn't cover (e.g. keyboard-driven scrolling).
+  function lockPageScroll() {
+    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add('cards-lock-scroll');
+    document.body.style.position = 'fixed';
+    document.body.style.top = (-lockedScrollY) + 'px';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+  }
+  function unlockPageScroll() {
+    document.documentElement.classList.remove('cards-lock-scroll');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    window.scrollTo(0, lockedScrollY);
+  }
 
   // A full-screen, non-uniform FLIP (translate + independent X/Y scale)
   // between two rects, animated purely via \`transform\` — never top/left/
@@ -1080,7 +1123,7 @@ export const cardsScript = `
     var radius = parseFloat(getComputedStyle(link).borderRadius) || 0;
     var textEl = link.querySelector('.cards-text-card, .cards-quote-card');
 
-    document.documentElement.classList.add('cards-lock-scroll');
+    lockPageScroll();
 
     var backdrop = document.createElement('div');
     backdrop.className = 'cards-overlay-backdrop';
@@ -1186,7 +1229,7 @@ export const cardsScript = `
     var eyebrowEl = link.querySelector('.cards-eyebrow');
     var titleEl = link.querySelector('.cards-title');
 
-    document.documentElement.classList.add('cards-lock-scroll');
+    lockPageScroll();
 
     var backdrop = document.createElement('div');
     backdrop.className = 'cards-overlay-backdrop';
@@ -1420,7 +1463,7 @@ export const cardsScript = `
     var titleEl = link.querySelector('.cards-title');
     var authorEl = link.querySelector('.cards-subtitle');
 
-    document.documentElement.classList.add('cards-lock-scroll');
+    lockPageScroll();
 
     var backdrop = document.createElement('div');
     backdrop.className = 'cards-overlay-backdrop';
@@ -1619,7 +1662,7 @@ export const cardsScript = `
     var titleEl = link.querySelector('.cards-title');
     var subtitleEl = link.querySelector('.cards-subtitle');
 
-    document.documentElement.classList.add('cards-lock-scroll');
+    lockPageScroll();
 
     var backdrop = document.createElement('div');
     backdrop.className = 'cards-overlay-backdrop';
@@ -1949,7 +1992,7 @@ export const cardsScript = `
     function cleanup() {
       o.backdrop.remove();
       o.panel.remove();
-      document.documentElement.classList.remove('cards-lock-scroll');
+      unlockPageScroll();
       if (!lastInputWasKeyboard) {
         o.link.classList.add('cards-item--suppress-focus-ring');
         o.link.addEventListener('blur', function clearSuppress() {
