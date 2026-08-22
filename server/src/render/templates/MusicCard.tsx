@@ -4,6 +4,13 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { formatBasicText } from "../format.js";
+import { CopyLinkButton } from "./CopyButton.js";
+
+function Note({ body }: { body: string | null }) {
+  if (!body) return null;
+  return <div className="body-content" dangerouslySetInnerHTML={{ __html: formatBasicText(body) }} />;
+}
 
 export const PLATFORM_LABELS: Record<string, string> = {
   spotify: "Spotify",
@@ -58,14 +65,19 @@ export function MusicCard({
           eyebrow={t(locale, "music")}
           title={metadata.releaseTitle}
           subtitle={metadata.artist}
-          dateLabel={formatDate(object.publishedAt, locale)}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
           type={object.type}
           hero={hero}
           backHref={backHref!}
           backLabel={backLabel!}
         />
         <div className="cards-body">
-          {object.body ? <p>{object.body}</p> : null}
+          <Note body={object.body} />
           {links.length > 0 ? (
             <p className="music-links">
               {links.map(([platform, url]) => (
@@ -96,7 +108,7 @@ export function MusicCard({
           )}
         </h2>
         <p className="meta">{metadata.artist}</p>
-        {object.body ? <p>{object.body}</p> : null}
+        <Note body={object.body} />
         {visibleLinks.length > 0 ? (
           <p className="music-links">
             {visibleLinks.map(([platform, url]) => (
@@ -106,7 +118,10 @@ export function MusicCard({
             ))}
           </p>
         ) : null}
-        <p className="meta">{formatDate(object.publishedAt, locale)}</p>
+        <p className="meta">
+          {formatDate(object.publishedAt, locale)}
+          {variant === "page" ? <CopyLinkButton locale={locale} /> : null}
+        </p>
       </div>
     </article>
   );

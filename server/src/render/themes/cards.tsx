@@ -88,7 +88,7 @@ function Caption({
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
-  dateLabel?: string;
+  dateLabel?: React.ReactNode;
   titleTag?: "h1" | "h2";
 }) {
   return (
@@ -126,7 +126,7 @@ function TextCard({
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   type: ContentType;
-  dateLabel?: string;
+  dateLabel?: React.ReactNode;
   titleTag?: "h1" | "h2";
   full?: boolean;
 }) {
@@ -163,7 +163,7 @@ function QuoteCard({
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
-  dateLabel?: string;
+  dateLabel?: React.ReactNode;
   seed: string;
   titleTag?: "h1" | "h2";
   full?: boolean;
@@ -203,7 +203,7 @@ function PhotoCard({
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
-  dateLabel?: string;
+  dateLabel?: React.ReactNode;
   hero: CardsHero;
   exif?: CardsExifRow[];
   titleTag?: "h1" | "h2";
@@ -316,7 +316,7 @@ export function CardsDetailHeader({
   backLabel,
   variant,
   exif,
-}: CardsItemData & { dateLabel: string; backHref: string; backLabel: string }) {
+}: CardsItemData & { dateLabel: React.ReactNode; backHref: string; backLabel: string }) {
   if (variant === "photo") {
     return (
       <>
@@ -399,7 +399,7 @@ export function CardsBookDetailHeader({
   author?: React.ReactNode;
   stars?: string | null;
   ratingLabel?: string;
-  dateLabel?: string;
+  dateLabel?: React.ReactNode;
   coverUrl: string;
   coverAlt: string;
   backHref: string;

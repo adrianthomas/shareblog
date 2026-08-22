@@ -8,6 +8,10 @@ export type MessageKey =
   | "quotes"
   | "about"
   | "followRss"
+  | "copyLink"
+  | "urlCopied"
+  | "copyQuote"
+  | "quoteCopied"
   | "typeThought"
   | "typeArticle"
   | "typeBook"
@@ -41,6 +45,10 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Quotes",
     about: "About",
     followRss: "Follow RSS",
+    copyLink: "Copy link",
+    urlCopied: "URL copied",
+    copyQuote: "Copy quote",
+    quoteCopied: "Quote copied",
     typeThought: "Post",
     typeArticle: "Article",
     typeBook: "Book",
@@ -71,6 +79,10 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Zitate",
     about: "Über",
     followRss: "RSS abonnieren",
+    copyLink: "Link kopieren",
+    urlCopied: "URL kopiert",
+    copyQuote: "Zitat kopieren",
+    quoteCopied: "Zitat kopiert",
     typeThought: "Beitrag",
     typeArticle: "Artikel",
     typeBook: "Buch",
@@ -101,6 +113,10 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citations",
     about: "À propos",
     followRss: "Suivre en RSS",
+    copyLink: "Copier le lien",
+    urlCopied: "URL copiée",
+    copyQuote: "Copier la citation",
+    quoteCopied: "Citation copiée",
     typeThought: "Billet",
     typeArticle: "Article",
     typeBook: "Livre",
@@ -131,6 +147,10 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citas",
     about: "Acerca de",
     followRss: "Seguir por RSS",
+    copyLink: "Copiar enlace",
+    urlCopied: "URL copiada",
+    copyQuote: "Copiar cita",
+    quoteCopied: "Cita copiada",
     typeThought: "Publicación",
     typeArticle: "Artículo",
     typeBook: "Libro",
@@ -161,6 +181,10 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "引用",
     about: "このサイトについて",
     followRss: "RSSで購読",
+    copyLink: "リンクをコピー",
+    urlCopied: "URLをコピーしました",
+    copyQuote: "引用をコピー",
+    quoteCopied: "引用をコピーしました",
     typeThought: "投稿",
     typeArticle: "記事",
     typeBook: "本",

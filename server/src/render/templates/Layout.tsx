@@ -2,6 +2,7 @@ import React from "react";
 import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
+import { copyButtonScript } from "./CopyButton.js";
 
 // Promotes the Amazon storefront closest to the visitor's browser-reported
 // language (navigator.language — never sent to the server, never logged),
@@ -166,7 +167,33 @@ export function Layout({
               .quote-text cite { font-style: normal; }
               a.title-link { text-decoration: none; color: inherit; }
               a.title-link:hover { text-decoration: underline; }
-              .about-content p { margin: 0 0 1rem; }
+              /* Icon buttons next to a post's date (copy link) or a quote's
+                 date line (copy quote) — see CopyButton.tsx. color: inherit
+                 rather than a fixed token so it automatically matches
+                 whatever context it's placed in, classic .meta's muted gray
+                 or the cards theme's various per-context date colors
+                 (including light-on-black on the photo detail page).
+                 copy-feedback stays collapsed to zero width until the copy
+                 actually lands, then reveals its text as a subtle inline
+                 expansion rather than a popup/toast. */
+              .copy-btn {
+                display: inline-flex; align-items: center; gap: 0.35rem; vertical-align: middle;
+                background: none; border: none; padding: 0; margin-left: 0.5rem; cursor: pointer;
+                color: inherit; opacity: 0.7; font: inherit; font-size: 0.85em; line-height: 1;
+              }
+              .copy-btn--leading { margin-left: 0; margin-right: 0.5rem; }
+              .copy-btn:hover, .copy-btn:focus-visible { opacity: 1; }
+              .copy-btn svg { display: block; flex-shrink: 0; }
+              .copy-feedback {
+                max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0;
+                transition: opacity 0.2s ease, max-width 0.2s ease;
+              }
+              .copy-feedback--visible { max-width: 8em; opacity: 1; }
+              .body-content p, .about-content p { margin: 0 0 1rem; }
+              .body-content h2 { font-size: 1.3rem; margin: 1.75rem 0 0.75rem; line-height: 1.3; }
+              .body-content h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; line-height: 1.3; }
+              .body-content h2:first-child, .body-content h3:first-child { margin-top: 0; }
+              .body-content img { max-width: 100%; height: auto; border-radius: 6px; margin: 0 0 1rem; display: block; }
               footer.site-footer {
                 margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
                 font-size: 0.9rem;
@@ -219,6 +246,7 @@ export function Layout({
         ) : null}
         {theme === "cards" ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
         <script dangerouslySetInnerHTML={{ __html: amazonRegionScript }} />
+        <script dangerouslySetInnerHTML={{ __html: copyButtonScript }} />
       </body>
     </html>
   );

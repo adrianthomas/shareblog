@@ -4,6 +4,13 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader, CardsBookDetailHeader } from "../themes/cards.js";
+import { formatBasicText } from "../format.js";
+import { CopyLinkButton } from "./CopyButton.js";
+
+function Note({ body }: { body: string | null }) {
+  if (!body) return null;
+  return <div className="body-content" dangerouslySetInnerHTML={{ __html: formatBasicText(body) }} />;
+}
 
 // Retailer brand names — proper nouns, not translated per locale.
 const STORE_LABELS: Record<string, string> = {
@@ -104,14 +111,19 @@ export function BookCard({
             author={metadata.author}
             stars={stars}
             ratingLabel={metadata.rating ? t(locale, "ratingLabel", { rating: metadata.rating }) : undefined}
-            dateLabel={formatDate(object.publishedAt, locale)}
+            dateLabel={
+              <>
+                {formatDate(object.publishedAt, locale)}
+                <CopyLinkButton locale={locale} />
+              </>
+            }
             coverUrl={metadata.coverUrl}
             coverAlt={hero.imageAlt}
             backHref={backHref!}
             backLabel={backLabel!}
           />
           <div className="cards-body">
-            {object.body ? <p>{object.body}</p> : null}
+            <Note body={object.body} />
             <BookLinks links={metadata.links} />
           </div>
         </>
@@ -124,7 +136,12 @@ export function BookCard({
           eyebrow={t(locale, "books")}
           title={object.title}
           subtitle={metadata.author}
-          dateLabel={formatDate(object.publishedAt, locale)}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
           type={object.type}
           hero={hero}
           backHref={backHref!}
@@ -137,7 +154,7 @@ export function BookCard({
               <span className="sr-only">{t(locale, "ratingLabel", { rating: metadata.rating! })}</span>
             </p>
           ) : null}
-          {object.body ? <p>{object.body}</p> : null}
+          <Note body={object.body} />
           <BookLinks links={metadata.links} />
         </div>
       </>
@@ -166,9 +183,12 @@ export function BookCard({
             <span className="sr-only">{t(locale, "ratingLabel", { rating: metadata.rating! })}</span>
           </p>
         ) : null}
-        {object.body ? <p>{object.body}</p> : null}
+        <Note body={object.body} />
         {variant === "page" ? <BookLinks links={metadata.links} /> : null}
-        <p className="meta">{formatDate(object.publishedAt, locale)}</p>
+        <p className="meta">
+          {formatDate(object.publishedAt, locale)}
+          {variant === "page" ? <CopyLinkButton locale={locale} /> : null}
+        </p>
       </div>
     </article>
   );

@@ -4,6 +4,7 @@ import type { Theme, AssetExif } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader, type CardsExifRow } from "../themes/cards.js";
+import { CopyLinkButton } from "./CopyButton.js";
 
 // Fractional shutter speeds are the camera-standard notation for anything
 // faster than 1s ("1/250s", not "0.004s") — everything at or above 1s reads
@@ -86,7 +87,12 @@ export function PhotoPost({
         href={`/photos/${object.slug}`}
         eyebrow={t(locale, "photos")}
         title={title}
-        dateLabel={formatDate(object.publishedAt, locale)}
+        dateLabel={
+          <>
+            {formatDate(object.publishedAt, locale)}
+            <CopyLinkButton locale={locale} />
+          </>
+        }
         type={object.type}
         hero={hero}
         variant="photo"
@@ -104,7 +110,10 @@ export function PhotoPost({
     <article className="card">
       {linked ? <a href={`/photos/${object.slug}`}>{image}</a> : image}
       {metadata.caption ? <p>{metadata.caption}</p> : null}
-      <div className="meta">{formatDate(object.publishedAt, locale)}</div>
+      <div className="meta">
+        {formatDate(object.publishedAt, locale)}
+        {!linked ? <CopyLinkButton locale={locale} /> : null}
+      </div>
       {!linked && exifRows ? (
         <dl className="exif">
           {exifRows.map((row) => (

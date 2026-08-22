@@ -4,6 +4,8 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { formatRichText } from "../format.js";
+import { CopyLinkButton } from "./CopyButton.js";
 
 export function ArticleCard({
   object,
@@ -60,7 +62,7 @@ export function ArticlePage({
   backLabel?: string;
 }) {
   const metadata = object.metadata as ArticleMetadata;
-  const paragraphs = (object.body ?? "").split("\n\n").map((paragraph, i) => <p key={i}>{paragraph}</p>);
+  const bodyHtml = formatRichText(object.body ?? "");
 
   if (theme === "cards") {
     return (
@@ -70,13 +72,18 @@ export function ArticlePage({
           eyebrow={t(locale, "articles")}
           title={object.title}
           subtitle={metadata.excerpt}
-          dateLabel={formatDate(object.publishedAt, locale)}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
           type={object.type}
           hero={{ imageUrl: coverImageUrl, imageAlt: "", gradientSeed: object.slug }}
           backHref={backHref!}
           backLabel={backLabel!}
         />
-        <div className="cards-body">{paragraphs}</div>
+        <div className="cards-body body-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
       </>
     );
   }
@@ -84,8 +91,11 @@ export function ArticlePage({
   return (
     <article>
       <h1>{object.title}</h1>
-      <p className="meta">{formatDate(object.publishedAt, locale)}</p>
-      {paragraphs}
+      <p className="meta">
+        {formatDate(object.publishedAt, locale)}
+        <CopyLinkButton locale={locale} />
+      </p>
+      <div className="body-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
     </article>
   );
 }

@@ -4,6 +4,13 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { CopyLinkButton, CopyQuoteButton } from "./CopyButton.js";
+import { formatBasicText } from "../format.js";
+
+function Comment({ text }: { text: string | undefined }) {
+  if (!text) return null;
+  return <div className="body-content" dangerouslySetInnerHTML={{ __html: formatBasicText(text) }} />;
+}
 
 export function QuotePost({
   object,
@@ -26,6 +33,10 @@ export function QuotePost({
   // browser's lang-based UA quoting, so the marks need to be real characters
   // to look right everywhere the post appears, not just on this page.
   const quoted = <>“{object.body}”</>;
+  // What actually gets copied to the clipboard — the quote and its
+  // attribution, not the poster's own comment underneath it, since that's
+  // a personal reflection rather than part of the quote being shared.
+  const quoteCopyText = `“${object.body ?? ""}” — ${metadata.author}`;
 
   if (theme === "cards") {
     const hero = { gradientSeed: object.slug, imageAlt: "" };
@@ -49,7 +60,13 @@ export function QuotePost({
           eyebrow={t(locale, "quotes")}
           title={quoted}
           subtitle={metadata.author}
-          dateLabel={formatDate(object.publishedAt, locale)}
+          dateLabel={
+            <>
+              <CopyQuoteButton text={quoteCopyText} locale={locale} className="copy-btn--leading" />
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
           type={object.type}
           hero={hero}
           backHref={backHref!}
@@ -58,7 +75,7 @@ export function QuotePost({
         />
         {metadata.comment ? (
           <div className="cards-body">
-            <p>{metadata.comment}</p>
+            <Comment text={metadata.comment} />
           </div>
         ) : null}
       </>
@@ -73,14 +90,18 @@ export function QuotePost({
           — <cite>{metadata.author}</cite>
         </footer>
       </blockquote>
-      {metadata.comment ? <p>{metadata.comment}</p> : null}
+      <Comment text={metadata.comment} />
       <div className="meta">
         {linked ? (
           <a className="title-link" href={`/quotes/${object.slug}`}>
             {formatDate(object.publishedAt, locale)}
           </a>
         ) : (
-          formatDate(object.publishedAt, locale)
+          <>
+            <CopyQuoteButton text={quoteCopyText} locale={locale} className="copy-btn--leading" />
+            {formatDate(object.publishedAt, locale)}
+            <CopyLinkButton locale={locale} />
+          </>
         )}
       </div>
     </article>
