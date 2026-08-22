@@ -472,6 +472,15 @@ export const cardsStyles = `
   }
   .cards-item:hover { transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.18), 0 14px 32px rgba(0,0,0,0.16); }
   .cards-item:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  /* See lastInputWasKeyboard/cleanup() in cardsScript — suppresses the
+     ring specifically on the one programmatic focus() that restores focus
+     to a card after closing it via tap, without disabling :focus-visible
+     for this element generally (a real keyboard Tab onto it still shows
+     the ring normally, and this class is removed on the next blur). The
+     doubled-up class matches .cards-item:focus-visible's own selector on
+     every term and adds one more, so it always wins regardless of
+     source-order specificity ties. */
+  .cards-item.cards-item--suppress-focus-ring:focus-visible { outline: none; }
 
   .cards-hero {
     position: relative; aspect-ratio: 4 / 3; background-size: cover; background-position: center;
@@ -919,6 +928,20 @@ export const cardsScript = `
   }
 
   function isDetailPage() { return document.body.dataset.cardsDetail === 'true'; }
+
+  // closeOverlay's cleanup() below programmatically refocuses the card
+  // that was opened, which is the right call for keyboard/screen-reader
+  // users — it's where they left off — but Safari's :focus-visible
+  // heuristic treats a JS-invoked focus() as ring-worthy on its own
+  // merits, with no memory of whether the interaction that led here was
+  // a tap. Tracking the last input's modality lets cleanup() suppress the
+  // ring specifically when it was a tap/click that closed the card (see
+  // the .cards-item--suppress-focus-ring rule), while still showing it
+  // for an actual keyboard user (Escape, or Enter/Space on the close
+  // control), who needs the visual indicator restored.
+  var lastInputWasKeyboard = false;
+  document.addEventListener('keydown', function () { lastInputWasKeyboard = true; }, true);
+  document.addEventListener('pointerdown', function () { lastInputWasKeyboard = false; }, true);
 
   document.addEventListener('click', function (e) {
     if (isDetailPage() || current) return;
@@ -1851,6 +1874,12 @@ export const cardsScript = `
       o.backdrop.remove();
       o.panel.remove();
       document.documentElement.classList.remove('cards-lock-scroll');
+      if (!lastInputWasKeyboard) {
+        o.link.classList.add('cards-item--suppress-focus-ring');
+        o.link.addEventListener('blur', function clearSuppress() {
+          o.link.classList.remove('cards-item--suppress-focus-ring');
+        }, { once: true });
+      }
       o.link.focus({ preventScroll: true });
     }
 
