@@ -1,0 +1,1 @@
+ALTER TABLE `sites` ADD `federation_enabled` integer DEFAULT true NOT NULL;

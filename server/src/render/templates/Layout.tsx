@@ -2,7 +2,7 @@ import React from "react";
 import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
-import { copyButtonScript } from "./CopyButton.js";
+import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 
 // Promotes the Amazon storefront closest to the visitor's browser-reported
 // language (navigator.language — never sent to the server, never logged),
@@ -64,6 +64,12 @@ export function Layout({
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
   const hasAbout = Boolean(site.about && site.about.trim());
+  // Not siteOrigin() from render.ts — that file imports Layout, so
+  // importing back would be circular. Same computation, just the host
+  // (no scheme) since this only needs it for the @handle@host string and
+  // a relative activity+json link.
+  const fediverseHost = `${site.subdomain}.${process.env.BASE_DOMAIN ?? "localhost:3000"}`;
+  const fediverseHandle = `@${site.subdomain}@${fediverseHost}`;
 
   return (
     <html lang={resolveLocale(site.locale)}>
@@ -73,6 +79,9 @@ export function Layout({
         <title>{pageTitle}</title>
         {site.tagline ? <meta name="description" content={site.tagline} /> : null}
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
+        {site.federationEnabled ? (
+          <link rel="alternate" type="application/activity+json" href={`/users/${site.subdomain}`} />
+        ) : null}
         {theme === "cards" ? (
           // For the cards theme's quote letter-card, which sets its quote text
           // in a typewriter face rather than the site's system UI font.
@@ -130,6 +139,7 @@ export function Layout({
               .site-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
               .rss-link { font-size: 0.7rem; color: var(--muted); text-decoration: none; }
               .rss-link:hover, .rss-link:focus-visible { color: var(--fg); }
+              .fediverse-handle { display: flex; align-items: center; gap: 0.15rem; font-size: 0.7rem; color: var(--muted); }
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
@@ -242,6 +252,12 @@ export function Layout({
             <a className="rss-link" href="/feed.xml">
               {t(site.locale, "followRss")}
             </a>
+            {site.federationEnabled ? (
+              <span className="fediverse-handle">
+                {fediverseHandle}
+                <CopyHandleButton handle={fediverseHandle} locale={site.locale} />
+              </span>
+            ) : null}
             <nav aria-label={t(site.locale, "primaryNavigation")}>
               {navItems(site, availablePaths).map((item) => (
                 <a key={item.href} href={item.href}>

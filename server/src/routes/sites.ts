@@ -32,8 +32,9 @@ const updateSiteSchema = z
   .object({
     theme: z.enum(themeValues).optional(),
     about: z.string().max(20_000).optional(),
+    federationEnabled: z.boolean().optional(),
   })
-  .refine((body) => body.theme !== undefined || body.about !== undefined, {
+  .refine((body) => body.theme !== undefined || body.about !== undefined || body.federationEnabled !== undefined, {
     message: "Provide at least one field to update.",
   });
 
@@ -63,9 +64,10 @@ export async function siteRoutes(app: FastifyInstance) {
     return reply.code(201).send({ site });
   });
 
-  // Theme and About text are the only things settable here today — the iOS
-  // app's theme picker and About editor are the only callers. Broaden the
-  // schema if site settings grow a web dashboard later.
+  // Theme, About text, and the federation toggle are the only things
+  // settable here today — the iOS app's theme picker, About editor, and
+  // Settings screen are the only callers. Broaden the schema if site
+  // settings grow a web dashboard later.
   app.patch("/sites", { preHandler: authGuard }, async (request, reply) => {
     const site = request.authSite;
     if (!site) {
@@ -79,6 +81,7 @@ export async function siteRoutes(app: FastifyInstance) {
       .set({
         ...(body.theme !== undefined ? { theme: body.theme } : {}),
         ...(body.about !== undefined ? { about: body.about || null } : {}),
+        ...(body.federationEnabled !== undefined ? { federationEnabled: body.federationEnabled } : {}),
         updatedAt: new Date(),
       })
       .where(eq(sites.id, site.id))

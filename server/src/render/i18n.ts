@@ -8,6 +8,8 @@ export type MessageKey =
   | "quotes"
   | "about"
   | "followRss"
+  | "copyFediverseHandle"
+  | "fediverseHandleCopied"
   | "aboutShareblog"
   | "releaseHistory"
   | "currentlyRunning"
@@ -48,6 +50,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Quotes",
     about: "About",
     followRss: "Follow RSS",
+    copyFediverseHandle: "Copy Fediverse handle",
+    fediverseHandleCopied: "Handle copied",
     aboutShareblog: "About Shareblog",
     releaseHistory: "Release history",
     currentlyRunning: "Currently running {commit}",
@@ -85,6 +89,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Zitate",
     about: "Über",
     followRss: "RSS abonnieren",
+    copyFediverseHandle: "Fediverse-Adresse kopieren",
+    fediverseHandleCopied: "Adresse kopiert",
     aboutShareblog: "Über Shareblog",
     releaseHistory: "Versionshistorie",
     currentlyRunning: "Aktuell läuft {commit}",
@@ -122,6 +128,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citations",
     about: "À propos",
     followRss: "Suivre en RSS",
+    copyFediverseHandle: "Copier l'identifiant Fediverse",
+    fediverseHandleCopied: "Identifiant copié",
     aboutShareblog: "À propos de Shareblog",
     releaseHistory: "Historique des versions",
     currentlyRunning: "Version actuelle : {commit}",
@@ -159,6 +167,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citas",
     about: "Acerca de",
     followRss: "Seguir por RSS",
+    copyFediverseHandle: "Copiar identificador de Fediverse",
+    fediverseHandleCopied: "Identificador copiado",
     aboutShareblog: "Acerca de Shareblog",
     releaseHistory: "Historial de versiones",
     currentlyRunning: "Ejecutando actualmente {commit}",
@@ -196,6 +206,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "引用",
     about: "このサイトについて",
     followRss: "RSSで購読",
+    copyFediverseHandle: "Fediverseハンドルをコピー",
+    fediverseHandleCopied: "ハンドルをコピーしました",
     aboutShareblog: "Shareblogについて",
     releaseHistory: "更新履歴",
     currentlyRunning: "現在のバージョン: {commit}",

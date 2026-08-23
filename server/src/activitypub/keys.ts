@@ -2,17 +2,20 @@ import type { webcrypto } from "node:crypto";
 import { generateCryptoKeyPair, exportJwk, importJwk } from "@fedify/fedify";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { sites, type ApKeyPairJwk } from "../db/schema.js";
+import { sites, siteActorKeys, type ApKeyPairJwk } from "../db/schema.js";
 
 const ALGORITHMS = ["RSASSA-PKCS1-v1_5", "Ed25519"] as const satisfies readonly ApKeyPairJwk["alg"][];
 
 // A site's actor key pairs (RSA for HTTP Signatures, Ed25519 for Object
-// Integrity Proofs) are generated on first use and stored as JWK on the
-// site row, rather than backfilled for every site up front.
+// Integrity Proofs) are generated on first use and stored as JWK in
+// site_actor_keys — its own table, not a column on `sites` (see the
+// comment on that table in schema.ts for why: private keys must never
+// end up in a plain `sites` row returned to a client).
 export async function getOrCreateKeyPairs(site: typeof sites.$inferSelect): Promise<webcrypto.CryptoKeyPair[]> {
-  if (site.apKeys && site.apKeys.length === ALGORITHMS.length) {
+  const [existing] = await db.select().from(siteActorKeys).where(eq(siteActorKeys.siteId, site.id)).limit(1);
+  if (existing && existing.keys.length === ALGORITHMS.length) {
     return Promise.all(
-      site.apKeys.map(async (pair): Promise<webcrypto.CryptoKeyPair> => ({
+      existing.keys.map(async (pair): Promise<webcrypto.CryptoKeyPair> => ({
         publicKey: await importJwk(pair.publicKeyJwk, "public"),
         privateKey: await importJwk(pair.privateKeyJwk, "private"),
       })),
@@ -28,7 +31,10 @@ export async function getOrCreateKeyPairs(site: typeof sites.$inferSelect): Prom
     })),
   );
 
-  await db.update(sites).set({ apKeys: stored }).where(eq(sites.id, site.id));
+  await db
+    .insert(siteActorKeys)
+    .values({ siteId: site.id, keys: stored })
+    .onConflictDoUpdate({ target: siteActorKeys.siteId, set: { keys: stored } });
 
   return pairs;
 }

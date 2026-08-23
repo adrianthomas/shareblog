@@ -58,12 +58,13 @@ export const sites = sqliteTable("sites", {
   about: text("about"),
   locale: text("locale").notNull().default("en"),
   theme: text("theme", { enum: themeValues }).notNull().default("classic"),
-  // ActivityPub actor key pairs (RSA for HTTP Signatures, Ed25519 for
-  // Object Integrity Proofs), as an array of {alg, publicKeyJwk,
-  // privateKeyJwk} — the shape src/activitypub/keys.ts's key-pairs
-  // dispatcher hands back to Fedify. Generated lazily on first use rather
-  // than backfilled, so null until a site's actor is first dispatched.
-  apKeys: text("ap_keys", { mode: "json" }).$type<ApKeyPairJwk[]>(),
+  // Whether publishing a post delivers a Create activity to this site's
+  // Fediverse followers. The actor/WebFinger/inbox stay live either way
+  // (so existing follows never silently break) — this only gates outbound
+  // delivery, in src/activitypub/federation.ts's deliverCreateActivity.
+  // Defaults on: no separate cross-posting step is the whole point (see
+  // product-spec.md §7).
+  federationEnabled: integer("federation_enabled", { mode: "boolean" }).notNull().default(true),
   createdAt: createdAt(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .notNull()
@@ -75,6 +76,19 @@ export interface ApKeyPairJwk {
   publicKeyJwk: JsonWebKey;
   privateKeyJwk: JsonWebKey;
 }
+
+// Deliberately its own table, not a column on `sites`: every route that
+// touches a site (auth.ts, sites.ts, auth-guard.ts) does a plain
+// `db.select().from(sites)`/`.returning()` and hands the whole row
+// straight back to the client. A private-key column there would leak into
+// every one of those API responses — this table is only ever touched by
+// src/activitypub/keys.ts.
+export const siteActorKeys = sqliteTable("site_actor_keys", {
+  siteId: text("site_id")
+    .primaryKey()
+    .references(() => sites.id),
+  keys: text("keys", { mode: "json" }).notNull().$type<ApKeyPairJwk[]>(),
+});
 
 // One row per remote follower of a site's ActivityPub actor. Backs both
 // the followers-collection dispatcher (what Mastodon reads) and the

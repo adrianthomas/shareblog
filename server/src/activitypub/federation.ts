@@ -181,6 +181,7 @@ function buildCreateActivity(ctx: Context<void>, site: Site, object: ContentObje
 // published — called from routes/objects.ts on both the create-published
 // and become-published paths.
 export async function deliverCreateActivity(site: Site, object: ContentObject): Promise<void> {
+  if (!site.federationEnabled) return;
   const ctx = federation.createContext(new URL(siteOrigin(site)), undefined);
   await ctx.sendActivity({ identifier: site.subdomain }, "followers", buildCreateActivity(ctx, site, object));
 }
