@@ -8,6 +8,7 @@ import { createObjectSchema, updateObjectSchema } from "../lib/schemas.js";
 import { slugify, slugFromBody } from "../lib/slugify.js";
 import { invalidateSitePages } from "../render/page-cache.js";
 import { storage } from "../storage/index.js";
+import { deliverCreateActivity } from "../activitypub/federation.js";
 
 // A Photo/Article/Book object's only link to its uploaded image is one of
 // these metadata fields (there's no DB relation — assets.contentObjectId is
@@ -112,6 +113,9 @@ export async function objectRoutes(app: FastifyInstance) {
       .returning();
 
     invalidateSitePages(site.id);
+    if (object.status === "published") {
+      await deliverCreateActivity(site, object);
+    }
     return reply.code(201).send({ object });
   });
 
@@ -189,6 +193,9 @@ export async function objectRoutes(app: FastifyInstance) {
       .returning();
 
     invalidateSitePages(site.id);
+    if (becomingPublished) {
+      await deliverCreateActivity(site, object);
+    }
     return reply.send({ object });
   });
 

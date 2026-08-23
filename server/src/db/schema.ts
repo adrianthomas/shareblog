@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, uniqueIndex, index } from "drizzle-orm/sqlite-core";
-import { randomUUID } from "node:crypto";
+import { randomUUID, type JsonWebKey } from "node:crypto";
 
 // Curated subset of EXIF tags worth showing on a photo post — camera/lens
 // identity plus the standard "exposure triangle" (aperture, shutter, ISO)
@@ -58,11 +58,42 @@ export const sites = sqliteTable("sites", {
   about: text("about"),
   locale: text("locale").notNull().default("en"),
   theme: text("theme", { enum: themeValues }).notNull().default("classic"),
+  // ActivityPub actor key pairs (RSA for HTTP Signatures, Ed25519 for
+  // Object Integrity Proofs), as an array of {alg, publicKeyJwk,
+  // privateKeyJwk} — the shape src/activitypub/keys.ts's key-pairs
+  // dispatcher hands back to Fedify. Generated lazily on first use rather
+  // than backfilled, so null until a site's actor is first dispatched.
+  apKeys: text("ap_keys", { mode: "json" }).$type<ApKeyPairJwk[]>(),
   createdAt: createdAt(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+export interface ApKeyPairJwk {
+  alg: "RSASSA-PKCS1-v1_5" | "Ed25519";
+  publicKeyJwk: JsonWebKey;
+  privateKeyJwk: JsonWebKey;
+}
+
+// One row per remote follower of a site's ActivityPub actor. Backs both
+// the followers-collection dispatcher (what Mastodon reads) and the
+// recipient list for outgoing deliveries (ctx.sendActivity(sender,
+// "followers", activity)).
+export const apFollowers = sqliteTable(
+  "ap_followers",
+  {
+    id: id(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id),
+    actorUri: text("actor_uri").notNull(),
+    inboxUri: text("inbox_uri").notNull(),
+    sharedInboxUri: text("shared_inbox_uri"),
+    createdAt: createdAt(),
+  },
+  (table) => [uniqueIndex("ap_followers_site_actor_idx").on(table.siteId, table.actorUri)],
+);
 
 export const apiTokens = sqliteTable("api_tokens", {
   id: id(),

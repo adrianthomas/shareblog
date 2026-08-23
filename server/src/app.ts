@@ -15,6 +15,7 @@ import { objectRoutes } from "./routes/objects.js";
 import { assetRoutes } from "./routes/assets.js";
 import { resolveRoutes } from "./routes/resolve.js";
 import { sitePageRoutes } from "./routes/site-pages.js";
+import { activityPubRoutes } from "./activitypub/adapter.js";
 
 const EXTENSION_CONTENT_TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -131,6 +132,17 @@ export function buildApp() {
     reply.header("cache-control", "public, max-age=31536000, immutable");
     return reply.type(contentType).send(createReadStream(filePath));
   });
+
+  // ActivityPub surface (WebFinger, actor, inbox) — registered on the
+  // tenant-routed side like sitePageRoutes, not under /api/v1, since each
+  // site's Fediverse identity lives on its own public host
+  // (<subdomain>.<BASE_DOMAIN>), not the separate api.<domain> host.
+  // Dispatchers in activitypub/federation.ts resolve the site straight
+  // from the request's Host header (Fedify's virtual-hosting support),
+  // the same lookup resolveTenant uses. See activitypub/adapter.ts for
+  // why this is a hand-rolled bridge rather than the official
+  // @fedify/fastify plugin.
+  app.register(activityPubRoutes);
 
   // Public site pages are registered last and are the fallback for any host
   // that resolves to a tenant subdomain; unmatched hosts (including the API

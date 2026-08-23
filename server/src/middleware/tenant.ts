@@ -29,32 +29,30 @@ function extractSubdomain(host: string, baseDomain: string): string | null {
   return subdomain;
 }
 
-export async function resolveTenant(request: FastifyRequest, reply: FastifyReply) {
-  const host = request.headers.host;
+// Shared by resolveTenant (page/API requests) and the ActivityPub module
+// (federation.ts), which needs the same Host-header -> site lookup for
+// virtual-hosted actor/inbox/outbox requests.
+export async function siteForHost(host: string | undefined): Promise<typeof sites.$inferSelect | null> {
   const baseDomain = process.env.BASE_DOMAIN;
-  if (!host || !baseDomain) {
-    return reply.code(404).send({ error: { code: "not_found", message: "Unknown host." } });
-  }
+  if (!host || !baseDomain) return null;
 
   const subdomain = extractSubdomain(host, baseDomain);
-  if (!subdomain) {
-    return reply.code(404).send({ error: { code: "not_found", message: "Unknown site." } });
-  }
+  if (!subdomain) return null;
 
   const cached = cache.get(subdomain);
   if (cached && cached.expiresAt > Date.now()) {
-    if (!cached.site) {
-      return reply.code(404).send({ error: { code: "not_found", message: "No site at this subdomain." } });
-    }
-    request.site = cached.site;
-    return;
+    return cached.site;
   }
 
   const [site] = await db.select().from(sites).where(eq(sites.subdomain, subdomain)).limit(1);
   cache.set(subdomain, { site: site ?? null, expiresAt: Date.now() + CACHE_TTL_MS });
+  return site ?? null;
+}
 
+export async function resolveTenant(request: FastifyRequest, reply: FastifyReply) {
+  const site = await siteForHost(request.headers.host);
   if (!site) {
-    return reply.code(404).send({ error: { code: "not_found", message: "No site at this subdomain." } });
+    return reply.code(404).send({ error: { code: "not_found", message: "Unknown site." } });
   }
   request.site = site;
 }
