@@ -67,6 +67,22 @@ async function uniqueSlug(siteId: string, base: string): Promise<string> {
   }
 }
 
+// Picks the text a new object's slug is based on. Most types have a real
+// title; a Thought or Quote falls back to its body. A Photo has neither —
+// its only human-readable text is the caption tucked away in metadata — so
+// without this special case every photo's slug fell back to the literal
+// word "photo" (deduped only by uniqueSlug's auto-incrementing suffix),
+// giving every photo post on a site the same meaningless "/photos/photo-7"
+// permalink shape instead of one reflecting what the photo actually is.
+function slugSourceText(body: z.infer<typeof createObjectSchema>): string {
+  if (body.title) return body.title;
+  if (body.type === "photo") {
+    const caption = (body.metadata as Record<string, unknown>).caption;
+    if (typeof caption === "string" && caption.trim()) return caption;
+  }
+  return body.body ?? body.type;
+}
+
 export async function objectRoutes(app: FastifyInstance) {
   app.post("/objects", { preHandler: authGuard }, async (request, reply) => {
     const site = request.authSite;
@@ -76,7 +92,8 @@ export async function objectRoutes(app: FastifyInstance) {
 
     const body = createObjectSchema.parse(request.body);
     await assertOwnedAssets(site.id, body.metadata);
-    const baseSlug = body.title ? slugify(body.title) : slugFromBody(body.body ?? body.type);
+    const slugSource = slugSourceText(body);
+    const baseSlug = body.title ? slugify(slugSource) : slugFromBody(slugSource);
     const slug = await uniqueSlug(site.id, baseSlug || body.type);
 
     const [object] = await db
