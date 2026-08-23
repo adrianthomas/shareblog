@@ -13,6 +13,8 @@ import { MusicCard, PLATFORM_LABELS } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
 import { QuotePost } from "./templates/QuotePost.js";
 import { AboutPage } from "./templates/AboutPage.js";
+import { ReleaseHistoryPage } from "./templates/ReleaseHistoryPage.js";
+import { currentCommit } from "../lib/version.js";
 import type {
   ContentObject,
   ArticleMetadata,
@@ -197,6 +199,14 @@ export async function renderObjectPage(
 
 export function renderAboutPage(site: Site): string {
   return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }));
+}
+
+export function renderReleaseHistoryPage(site: Site): string {
+  return wrap(
+    site,
+    t(site.locale, "releaseHistory"),
+    React.createElement(ReleaseHistoryPage, { locale: site.locale, commit: currentCommit }),
+  );
 }
 
 function siteOrigin(site: Site): string {

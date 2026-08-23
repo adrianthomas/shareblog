@@ -194,6 +194,12 @@ export function Layout({
               .body-content h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; line-height: 1.3; }
               .body-content h2:first-child, .body-content h3:first-child { margin-top: 0; }
               .body-content img { max-width: 100%; height: auto; border-radius: 6px; margin: 0 0 1rem; display: block; }
+              .release-entry { margin: 0 0 1.75rem; }
+              .release-entry:last-child { margin-bottom: 0; }
+              .release-date { font-size: 1rem; margin: 0 0 0.5rem; }
+              .release-entry ul { margin: 0; padding-left: 1.25rem; }
+              .release-entry li { margin: 0 0 0.4rem; }
+              .release-entry li:last-child { margin-bottom: 0; }
               footer.site-footer {
                 margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
                 font-size: 0.9rem;

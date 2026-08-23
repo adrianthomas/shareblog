@@ -10,6 +10,7 @@ import {
   renderFeed,
   renderLandingPage,
   renderAboutPage,
+  renderReleaseHistoryPage,
   PATH_PREFIX,
 } from "../render/render.js";
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
@@ -122,6 +123,14 @@ export async function sitePageRoutes(app: FastifyInstance) {
       return reply.code(404).send("Not found");
     }
     return sendCachedHtml(request, reply, site.id, async () => renderAboutPage(site));
+  });
+
+  // Unlike /about, always available — it's product info (what's changed
+  // about Shareblog itself), not something tied to whether this site's
+  // owner has written a bio.
+  app.get("/changelog", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => renderReleaseHistoryPage(site));
   });
 
   app.get("/feed.xml", { preHandler: resolveTenant }, async (request, reply) => {

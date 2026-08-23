@@ -8,6 +8,8 @@ export type MessageKey =
   | "quotes"
   | "about"
   | "followRss"
+  | "releaseHistory"
+  | "currentlyRunning"
   | "copyLink"
   | "urlCopied"
   | "copyQuote"
@@ -45,6 +47,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Quotes",
     about: "About",
     followRss: "Follow RSS",
+    releaseHistory: "Release history",
+    currentlyRunning: "Currently running {commit}",
     copyLink: "Copy link",
     urlCopied: "URL copied",
     copyQuote: "Copy quote",
@@ -79,6 +83,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Zitate",
     about: "Über",
     followRss: "RSS abonnieren",
+    releaseHistory: "Versionshistorie",
+    currentlyRunning: "Aktuell läuft {commit}",
     copyLink: "Link kopieren",
     urlCopied: "URL kopiert",
     copyQuote: "Zitat kopieren",
@@ -113,6 +119,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citations",
     about: "À propos",
     followRss: "Suivre en RSS",
+    releaseHistory: "Historique des versions",
+    currentlyRunning: "Version actuelle : {commit}",
     copyLink: "Copier le lien",
     urlCopied: "URL copiée",
     copyQuote: "Copier la citation",
@@ -147,6 +155,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citas",
     about: "Acerca de",
     followRss: "Seguir por RSS",
+    releaseHistory: "Historial de versiones",
+    currentlyRunning: "Ejecutando actualmente {commit}",
     copyLink: "Copiar enlace",
     urlCopied: "URL copiada",
     copyQuote: "Copiar cita",
@@ -181,6 +191,8 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "引用",
     about: "このサイトについて",
     followRss: "RSSで購読",
+    releaseHistory: "更新履歴",
+    currentlyRunning: "現在のバージョン: {commit}",
     copyLink: "リンクをコピー",
     urlCopied: "URLをコピーしました",
     copyQuote: "引用をコピー",
