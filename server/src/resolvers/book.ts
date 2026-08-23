@@ -54,6 +54,7 @@ function buildLinks(title: string, author: string, isbn13?: string, isbn10?: str
     bookshop: `https://bookshop.org/search?keywords=${query}`,
     kobo: `https://www.kobo.com/search?query=${query}`,
     appleBooks: `https://books.apple.com/search?term=${query}`,
+    storygraph: `https://app.thestorygraph.com/browse?search_term=${query}`,
   };
 }
 

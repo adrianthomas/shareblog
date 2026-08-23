@@ -17,6 +17,7 @@ const STORE_LABELS: Record<string, string> = {
   bookshop: "Bookshop.org",
   kobo: "Kobo",
   appleBooks: "Apple Books",
+  storygraph: "StoryGraph",
 };
 
 const AMAZON_REGION_ORDER = ["us", "de", "uk", "fr", "it", "es", "ca", "jp"] as const;
@@ -49,7 +50,7 @@ export function flattenLinks(links: NonNullable<BookMetadata["links"]>): BookLin
     const url = links.amazon?.[region];
     if (url) entries.push({ key: `amazon-${region}`, label: AMAZON_REGION_LABELS[region], url, amazonRegion: region });
   }
-  for (const key of ["bookshop", "kobo", "appleBooks"] as const) {
+  for (const key of ["bookshop", "kobo", "appleBooks", "storygraph"] as const) {
     const url = links[key];
     if (url) entries.push({ key, label: STORE_LABELS[key], url });
   }

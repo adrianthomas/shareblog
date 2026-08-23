@@ -12,6 +12,7 @@ export interface ResolvedBookCandidate {
     bookshop?: string;
     kobo?: string;
     appleBooks?: string;
+    storygraph?: string;
   };
 }
 

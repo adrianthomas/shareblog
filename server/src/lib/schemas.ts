@@ -32,6 +32,7 @@ export const bookMetadataSchema = z.object({
         .optional(),
       kobo: z.string().url().optional(),
       appleBooks: z.string().url().optional(),
+      storygraph: z.string().url().optional(),
     })
     .default({}),
   source: z.enum(["open_library", "google_books", "manual"]),

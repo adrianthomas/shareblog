@@ -14,6 +14,7 @@ export interface BookMetadata {
     amazon?: Partial<Record<"us" | "uk" | "de" | "fr" | "it" | "es" | "ca" | "jp", string>>;
     kobo?: string;
     appleBooks?: string;
+    storygraph?: string;
   };
 }
 
