@@ -776,7 +776,23 @@ export const cardsStyles = `
      black regardless of light/dark mode, same reasoning as the quote
      card's fixed paper tone: this is viewer chrome around the photo, not
      page content that should invert. */
-  .cards-detail-header--photo { width: 100vw; margin-left: calc(50% - 50vw); background: #000; min-height: 100vh; }
+  .cards-detail-header--photo {
+    width: 100vw; margin-left: calc(50% - 50vw); background: #000;
+    /* 100vh is a *static* value in mobile Safari — it doesn't shrink or
+       grow as the address bar collapses/expands while scrolling, so it
+       ends up sized for whichever state the bar happened to be in at
+       layout time, not the actual visible area at any given moment. The
+       fixed 100vh panel below (.cards-panel) and this header's own hard
+       height (.cards-photo-card--full) are the two places that mismatch
+       actually bites: with the bar showing, the scroller's real content
+       (card + EXIF) can end up shorter than what a 100vh-oriented browser
+       decided the scrollable range was, so a scroll gesture that would
+       otherwise reach the EXIF strip gets rubber-banded back before
+       getting there. 100dvh tracks the *actual* visible viewport live and
+       is well-supported (Safari 15.4+, 2022); 100vh stays first as a
+       fallback for anything older. */
+    min-height: 100vh; min-height: 100dvh;
+  }
   /* On a hard page load (no JS — see the client-side overlay below, which
      doesn't hit this since it never puts fetched content inside a <main>)
      \`main\`'s own fixed 6rem bottom padding (body.theme-cards main, above)
@@ -808,7 +824,10 @@ export const cardsStyles = `
      that mixes a viewport-unit size with padding). */
   .cards-photo-card--full {
     display: flex; flex-direction: column; box-sizing: border-box;
-    height: 100vh; width: 100%;
+    /* See .cards-detail-header--photo above for why this needs the dvh
+       pairing too — the image's flex: 1 1 0% share (on .cards-photo-frame)
+       is computed against *this* height specifically. */
+    height: 100vh; height: 100dvh; width: 100%;
     padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 0 max(1.5rem, env(safe-area-inset-bottom));
   }
   .cards-detail-header--photo .cards-photo-caption {
@@ -877,7 +896,14 @@ export const cardsStyles = `
      top/left/width/height — so the open/close animation runs on the
      compositor thread instead of forcing layout on every frame. */
   .cards-panel {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    position: fixed; top: 0; left: 0; width: 100vw;
+    /* Same dvh pairing as the photo viewer above — this is the box
+       .cards-panel-scroll fills via inset: 0, so if it's sized off the
+       static 100vh instead of the live viewport, the scroller's own
+       available height (and therefore how far a scroll gesture can
+       actually travel) is wrong by however much the address bar has
+       collapsed/expanded since layout. */
+    height: 100vh; height: 100dvh;
     background: var(--bg); z-index: 1001; overflow: hidden;
     transform-origin: 0 0; will-change: transform, border-radius;
   }
