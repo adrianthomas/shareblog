@@ -200,6 +200,16 @@ export function Layout({
               .release-entry ul { margin: 0; padding-left: 1.25rem; }
               .release-entry li { margin: 0 0 0.4rem; }
               .release-entry li:last-child { margin-bottom: 0; }
+              .about-product p, .about-product li { margin: 0 0 0.75rem; }
+              .about-product h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; line-height: 1.3; }
+              .about-product h2:first-of-type { margin-top: 2.25rem; }
+              .about-product ol, .about-product > ul { padding-left: 1.25rem; }
+              .faq-entry { margin: 0 0 1.5rem; }
+              .faq-entry:last-child { margin-bottom: 0; }
+              .faq-entry h3 { font-size: 1rem; margin: 0 0 0.4rem; line-height: 1.3; }
+              .faq-entry ul { margin: 0; padding-left: 1.25rem; }
+              .faq-entry li { margin: 0 0 0.6rem; }
+              .faq-entry li:last-child { margin-bottom: 0; }
               footer.site-footer {
                 margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
                 font-size: 0.9rem;

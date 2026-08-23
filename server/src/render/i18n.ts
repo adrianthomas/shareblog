@@ -8,6 +8,7 @@ export type MessageKey =
   | "quotes"
   | "about"
   | "followRss"
+  | "aboutShareblog"
   | "releaseHistory"
   | "currentlyRunning"
   | "copyLink"
@@ -47,6 +48,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Quotes",
     about: "About",
     followRss: "Follow RSS",
+    aboutShareblog: "About Shareblog",
     releaseHistory: "Release history",
     currentlyRunning: "Currently running {commit}",
     copyLink: "Copy link",
@@ -83,6 +85,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Zitate",
     about: "Über",
     followRss: "RSS abonnieren",
+    aboutShareblog: "Über Shareblog",
     releaseHistory: "Versionshistorie",
     currentlyRunning: "Aktuell läuft {commit}",
     copyLink: "Link kopieren",
@@ -119,6 +122,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citations",
     about: "À propos",
     followRss: "Suivre en RSS",
+    aboutShareblog: "À propos de Shareblog",
     releaseHistory: "Historique des versions",
     currentlyRunning: "Version actuelle : {commit}",
     copyLink: "Copier le lien",
@@ -155,6 +159,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citas",
     about: "Acerca de",
     followRss: "Seguir por RSS",
+    aboutShareblog: "Acerca de Shareblog",
     releaseHistory: "Historial de versiones",
     currentlyRunning: "Ejecutando actualmente {commit}",
     copyLink: "Copiar enlace",
@@ -191,6 +196,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "引用",
     about: "このサイトについて",
     followRss: "RSSで購読",
+    aboutShareblog: "Shareblogについて",
     releaseHistory: "更新履歴",
     currentlyRunning: "現在のバージョン: {commit}",
     copyLink: "リンクをコピー",

@@ -10,6 +10,7 @@ import {
   renderFeed,
   renderLandingPage,
   renderAboutPage,
+  renderAboutProductPage,
   renderReleaseHistoryPage,
   PATH_PREFIX,
 } from "../render/render.js";
@@ -125,9 +126,14 @@ export async function sitePageRoutes(app: FastifyInstance) {
     return sendCachedHtml(request, reply, site.id, async () => renderAboutPage(site));
   });
 
-  // Unlike /about, always available — it's product info (what's changed
-  // about Shareblog itself), not something tied to whether this site's
-  // owner has written a bio.
+  // Unlike /about, always available — these are product info (what
+  // Shareblog is, what's changed about it), not something tied to whether
+  // this site's owner has written a bio.
+  app.get("/about-shareblog", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => renderAboutProductPage(site));
+  });
+
   app.get("/changelog", { preHandler: resolveTenant }, async (request, reply) => {
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => renderReleaseHistoryPage(site));

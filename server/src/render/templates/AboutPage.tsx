@@ -9,6 +9,8 @@ export function AboutPage({ site }: { site: Site }) {
     <>
       <div className="about-content" dangerouslySetInnerHTML={{ __html: html }} />
       <p className="meta">
+        <a href="/about-shareblog">{t(site.locale, "aboutShareblog")}</a>
+        {" · "}
         <a href="/changelog">{t(site.locale, "releaseHistory")}</a>
       </p>
     </>

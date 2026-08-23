@@ -14,6 +14,7 @@ import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
 import { QuotePost } from "./templates/QuotePost.js";
 import { AboutPage } from "./templates/AboutPage.js";
 import { ReleaseHistoryPage } from "./templates/ReleaseHistoryPage.js";
+import { AboutProductPage } from "./templates/AboutProductPage.js";
 import { currentCommit } from "../lib/version.js";
 import type {
   ContentObject,
@@ -201,6 +202,10 @@ export function renderAboutPage(site: Site): string {
   return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }));
 }
 
+export function renderAboutProductPage(site: Site): string {
+  return wrap(site, t(site.locale, "aboutShareblog"), React.createElement(AboutProductPage, {}));
+}
+
 export function renderReleaseHistoryPage(site: Site): string {
   return wrap(
     site,
@@ -209,7 +214,7 @@ export function renderReleaseHistoryPage(site: Site): string {
   );
 }
 
-function siteOrigin(site: Site): string {
+export function siteOrigin(site: Site): string {
   const baseDomain = process.env.BASE_DOMAIN ?? "localhost:3000";
   const scheme = baseDomain.startsWith("localhost") ? "http" : "https";
   return `${scheme}://${site.subdomain}.${baseDomain}`;
