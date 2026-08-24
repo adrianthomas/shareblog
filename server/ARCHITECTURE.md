@@ -1,0 +1,144 @@
+# Server architecture map
+
+A fast-orientation reference for `server/`. CLAUDE.md has the condensed
+version of some of this; this file goes one level deeper — route tables,
+schema tables, and the checklist for cross-cutting changes (like adding a
+content type) that touch many files at once. Keep it in sync — see the root
+CLAUDE.md's "Working in this repo" note.
+
+## Request lifecycle
+
+`server.ts` calls `buildApp()` (`app.ts`), which registers, in order:
+
+1. Global plugins: `@fastify/compress`, `@fastify/etag`, `@fastify/cors`,
+   `@fastify/cookie`, `@fastify/multipart`, `@fastify/rate-limit` (200/min
+   baseline; auth routes set their own tighter limits).
+2. `/api/v1/*` — `authRoutes`, `siteRoutes`, `objectRoutes`, `assetRoutes`,
+   `resolveRoutes`.
+3. `/files/*` (local storage driver only) and `/static/*` — plain
+   filesystem serving with path-traversal guards.
+4. `activityPubRoutes` — WebFinger/actor/inbox, resolved by Host header,
+   same lookup as tenant resolution.
+5. `sitePageRoutes` — the public site (registered **last**, catch-all for
+   any host that isn't `api.<BASE_DOMAIN>`).
+
+One process, split entirely by the `Host` header (`middleware/tenant.ts`):
+`api.<BASE_DOMAIN>` → the JSON API, `<subdomain>.<BASE_DOMAIN>` → that
+site's public pages. `siteForHost()` is the shared lookup (30s in-memory
+cache, keyed by subdomain, invalidated via `invalidateTenantCache` on site
+update); `resolveTenant` wraps it as a route preHandler and 404s unknown
+hosts. `authGuard` (`middleware/auth-guard.ts`) is the separate, unrelated
+preHandler for `/api/v1` routes — it reads the `Authorization: Bearer`
+token, not the Host header, and sets `request.authUser`/`request.authSite`.
+
+## Route map
+
+**`/api/v1` (auth: `authGuard`, bearer token)**
+
+| File | Routes | Notes |
+|---|---|---|
+| `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth; mobile gets a bearer token, web gets a session cookie. Logout revokes *every* token for the account. |
+| `routes/sites.ts` | site CRUD (create, update theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). |
+| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks, cache invalidation, and triggers `deliverCreateActivity` on publish. |
+| `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
+| `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. |
+
+**Public site (auth: `resolveTenant`, Host header)** — `routes/site-pages.ts`
+
+| Path | Renders |
+|---|---|
+| `/` | Home — all types mixed, latest 20 (`renderList`) |
+| `/posts`, `/articles`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listing (`LISTING_TYPES`), full list |
+| `/<listing>/feed.xml`, `/feed.xml` | RSS (`renderFeed`) |
+| `/<prefix>/:slug` (`DETAIL_TYPES`) | Detail page (`renderObjectPage`) — 404s if not published |
+| `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` 404s if the site has no About text |
+
+`PATH_PREFIX` (exported from `render.ts`) is the single source of truth
+mapping a `ContentType` to its URL segment (`photo` → `/photos`) — reused by
+`LISTING_TYPES`/`DETAIL_TYPES` here and by `renderDetail`'s close-button
+`backHref`. Every page response goes through `sendCachedHtml`/
+`sendCachedFeed`, which check `page-cache.ts` (in-memory, keyed by
+`siteId` + full URL) before rendering, and `invalidateSitePages(siteId)` is
+called on every object/site mutation.
+
+## Database (`db/schema.ts`, SQLite via Drizzle)
+
+| Table | Purpose |
+|---|---|
+| `users` | One row per email. |
+| `sites` | One per user (today). `theme` (`classic`/`cards`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
+| `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
+| `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
+| `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
+| `magicTokens` | Email auth codes/links, hashed, purpose-tagged (`web_session`/`mobile_code`). |
+| `contentObjects` | The core table — `type` (`contentTypeValues`), `slug` (unique per site), `title`/`body`/`status`/`sourceUrl`, freeform JSON `metadata` (shape varies by type, not modeled in SQL). |
+| `assets` | Uploaded files — `variants` (JSON, e.g. `medium`/`original` URLs), `exif` (JSON, photos only). Linked from a `contentObjects.metadata.assetId`/`coverAssetId` field, **not** a DB foreign key — `objects.ts`'s `referencedAssetIds`/`assertOwnedAssets` walk those metadata fields by hand. |
+
+## Render pipeline
+
+Server-side React only (`renderToStaticMarkup`), no client hydration, no
+bundler for client JS — the `cards` theme's interactivity
+(`cardsScript` in `themes/cards.tsx`) is a plain template-literal string of
+ES5-ish JS injected as an inline `<script>`.
+
+`render.ts` orchestrates: `renderCard`/`renderDetail` switch on
+`ContentType` to the matching template in `render/templates/*.tsx`, every
+page is wrapped via `wrap()` in `Layout.tsx`. **Every template renders two
+parallel themes from the same function** — `if (theme === "cards") {...}
+return <classic markup>` — there's no separate per-theme file, so adding a
+field to a content type means updating both branches (and the
+`CardsFeedItem`/`CardsDetailHeader` props in `themes/cards.tsx` if the cards
+branch needs new shared-header behavior).
+
+Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
+choice, not a default:
+- `formatBasicText` — paragraphs, `**bold**`, `*italic*`, `[text](url)`.
+- `formatRichText` — the above plus `#`/`##` headings, `![alt](url)`.
+- `stripBasicFormatting` — strips back to plain text (RSS `<title>`, a
+  cards-theme feed tile).
+
+i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
+`site.locale` threads through every render call. Add a string here, not as
+a hardcoded literal in a template (see CLAUDE.md's accessibility/i18n bar).
+
+## Federation (`activitypub/`)
+
+Built on Fedify. `adapter.ts` is a hand-rolled bridge (not the official
+`@fedify/fastify` plugin — see its own comment for why) resolving the site
+from the Host header, same as `resolveTenant`. `federation.ts` handles
+WebFinger/actor/inbox dispatch and `deliverCreateActivity` — delivery is
+**synchronous**, called inline from `objects.ts` on publish, no queue
+worker. `keys.ts` manages the per-site keypair in `siteActorKeys`.
+`sites.federationEnabled` (default on) only gates outbound delivery; the
+actor/WebFinger/inbox stay live regardless, so existing follows never
+silently break.
+
+## Storage (`storage/`)
+
+Driver abstraction behind `storage-adapter.ts`. `local` (filesystem, served
+via the `/files/*` route in `app.ts`) is implemented; `s3` is a documented
+placeholder, not implemented. Selected via `STORAGE_DRIVER` env var.
+
+## Adding a new content type — checklist
+
+1. `db/schema.ts` — add to `contentTypeValues`; run `npm run db:generate` +
+   `db:migrate`.
+2. `resolvers/` — only if it resolves from a shared URL (book/music/article
+   pattern); skip for a type authored directly (thought/quote/photo-style).
+3. `render/templates/<Type>.tsx` — card + detail variants, both theme
+   branches.
+4. `render.ts` — wire into `renderCard`/`renderDetail`'s switches, and
+   `PATH_PREFIX`.
+5. `routes/site-pages.ts` — add to `LISTING_TYPES` and `DETAIL_TYPES`.
+6. `render/i18n.ts` — add a `MessageKey` for the listing title (plural) in
+   every locale.
+7. iOS — see `ios/ARCHITECTURE.md`'s matching checklist; a new type needs
+   changes on both sides together.
+
+## Testing
+
+No lint script, no automated test suite committed as of this writing. Run
+`npx tsc -p tsconfig.json --noEmit` (from `server/`) for type safety, and
+verify rendered output manually (Browser pane). If a test suite exists in
+your checkout that this file doesn't mention yet, that's a sign this file
+is behind — update it rather than trusting this section blindly.
