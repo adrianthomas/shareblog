@@ -148,8 +148,24 @@ export function Layout({
                  every font sub-property including size, and being a plain
                  class it'd win over .rss-link's own font-size by source
                  order despite matching specificity. */
-              .link-btn-reset { background: none; border: none; padding: 0; margin: 0; font-family: inherit; cursor: pointer; }
+              .link-btn-reset { background: none; border: none; padding: 0; margin: 0; font-family: inherit; cursor: pointer; position: relative; }
               .header-link-divider { color: var(--border); }
+              /* Overrides the general .copy-feedback below (see its own
+                 comment) for this specific spot: .site-header-right is a
+                 right-aligned flex column, so the inline max-width
+                 expansion everywhere else pushed this row's right-anchored
+                 content wider and visibly shifted the whole line left —
+                 worst on narrow iOS widths, where there's no slack to
+                 absorb it. Taking the feedback out of flow entirely
+                 (absolute, anchored under the word that was clicked) and
+                 fading it by opacity alone means it can never move
+                 anything else on the page. */
+              .link-btn-reset .copy-feedback {
+                position: absolute; top: 100%; right: 0; margin-top: 0.3rem;
+                max-width: none; white-space: nowrap; opacity: 0; pointer-events: none;
+                transition: opacity 0.4s ease-in-out;
+              }
+              .link-btn-reset .copy-feedback--visible { max-width: none; opacity: 1; }
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
