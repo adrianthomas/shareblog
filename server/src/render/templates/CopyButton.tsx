@@ -50,23 +50,35 @@ export function CopyLinkButton({ locale, className }: { locale: string; classNam
 }
 
 // Same copy-to-clipboard mechanics as CopyQuoteButton, for a site's
-// Fediverse handle (@subdomain@host) next to the RSS link in Layout.tsx —
-// there's no universal "click to follow" across federated servers, so the
-// convention is showing the handle as text a visitor pastes into their own
-// instance's search bar.
-export function CopyHandleButton({ handle, locale, className }: { handle: string; locale: string; className?: string }) {
-  const label = t(locale, "copyFediverseHandle");
+// Fediverse handle (@subdomain@host) — rendered as a plain word ("Fediverse")
+// next to the RSS link in Layout.tsx rather than the handle itself, since
+// the full @handle@host was too long to sit comfortably on one line next to
+// "Follow RSS". There's no universal "click to follow" across federated
+// servers anyway, so copying the handle for a visitor to paste into their
+// own instance's search bar is the point — the tooltip/aria-label says so.
+export function CopyHandleButton({
+  handle,
+  label,
+  locale,
+  className,
+}: {
+  handle: string;
+  label: string;
+  locale: string;
+  className?: string;
+}) {
+  const title = t(locale, "copyFediverseHandle");
   return (
     <button
       type="button"
-      className={`copy-btn${className ? ` ${className}` : ""}`}
+      className={`rss-link link-btn-reset${className ? ` ${className}` : ""}`}
       data-copy="text"
       data-copy-text={handle}
       data-copied-label={t(locale, "fediverseHandleCopied")}
-      aria-label={label}
-      title={label}
+      aria-label={title}
+      title={title}
     >
-      <CopyIcon />
+      {label}
       <span className="copy-feedback" aria-live="polite" />
     </button>
   );

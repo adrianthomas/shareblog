@@ -8,6 +8,7 @@ export type MessageKey =
   | "quotes"
   | "about"
   | "followRss"
+  | "fediverseLabel"
   | "copyFediverseHandle"
   | "fediverseHandleCopied"
   | "aboutShareblog"
@@ -50,6 +51,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Quotes",
     about: "About",
     followRss: "Follow RSS",
+    fediverseLabel: "Fediverse",
     copyFediverseHandle: "Copy Fediverse handle",
     fediverseHandleCopied: "Handle copied",
     aboutShareblog: "About Shareblog",
@@ -89,6 +91,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Zitate",
     about: "Über",
     followRss: "RSS abonnieren",
+    fediverseLabel: "Fediverse",
     copyFediverseHandle: "Fediverse-Adresse kopieren",
     fediverseHandleCopied: "Adresse kopiert",
     aboutShareblog: "Über Shareblog",
@@ -128,6 +131,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citations",
     about: "À propos",
     followRss: "Suivre en RSS",
+    fediverseLabel: "Fédivers",
     copyFediverseHandle: "Copier l'identifiant Fediverse",
     fediverseHandleCopied: "Identifiant copié",
     aboutShareblog: "À propos de Shareblog",
@@ -167,6 +171,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "Citas",
     about: "Acerca de",
     followRss: "Seguir por RSS",
+    fediverseLabel: "Fediverso",
     copyFediverseHandle: "Copiar identificador de Fediverse",
     fediverseHandleCopied: "Identificador copiado",
     aboutShareblog: "Acerca de Shareblog",
@@ -206,6 +211,7 @@ const MESSAGES: Record<string, Messages> = {
     quotes: "引用",
     about: "このサイトについて",
     followRss: "RSSで購読",
+    fediverseLabel: "フェディバース",
     copyFediverseHandle: "Fediverseハンドルをコピー",
     fediverseHandleCopied: "ハンドルをコピーしました",
     aboutShareblog: "Shareblogについて",

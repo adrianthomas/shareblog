@@ -137,13 +137,19 @@ export function Layout({
               header.site-header h1 { font-size: 1.1rem; margin: 0; }
               header.site-header h1 a { text-decoration: none; color: inherit; }
               .site-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; min-width: 0; }
+              .header-links { margin: 0; display: flex; align-items: center; gap: 0.35rem; }
               .rss-link { font-size: 0.7rem; color: var(--muted); text-decoration: none; }
               .rss-link:hover, .rss-link:focus-visible { color: var(--fg); }
-              .fediverse-handle { display: flex; align-items: center; gap: 0.15rem; font-size: 0.7rem; color: var(--muted); max-width: 100%; min-width: 0; }
-              .fediverse-handle-text {
-                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
-                max-width: 60vw; /* hard cap independent of the flex-shrink chain above */
-              }
+              /* Resets a <button> down to plain text so CopyHandleButton
+                 (see CopyButton.tsx) reads as just another word in the
+                 "Follow RSS | Fediverse" line, not a form control — the
+                 .rss-link class supplies the actual visible styling.
+                 font-family only, not the "font" shorthand: that resets
+                 every font sub-property including size, and being a plain
+                 class it'd win over .rss-link's own font-size by source
+                 order despite matching specificity. */
+              .link-btn-reset { background: none; border: none; padding: 0; margin: 0; font-family: inherit; cursor: pointer; }
+              .header-link-divider { color: var(--border); }
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
@@ -253,17 +259,23 @@ export function Layout({
             <a href="/">{site.title}</a>
           </h1>
           <div className="site-header-right">
-            <a className="rss-link" href="/feed.xml">
-              {t(site.locale, "followRss")}
-            </a>
-            {site.federationEnabled ? (
-              <span className="fediverse-handle">
-                <span className="fediverse-handle-text" title={fediverseHandle}>
-                  {fediverseHandle}
-                </span>
-                <CopyHandleButton handle={fediverseHandle} locale={site.locale} />
-              </span>
-            ) : null}
+            <p className="header-links">
+              <a className="rss-link" href="/feed.xml">
+                {t(site.locale, "followRss")}
+              </a>
+              {site.federationEnabled ? (
+                <>
+                  <span className="header-link-divider" aria-hidden="true">
+                    |
+                  </span>
+                  <CopyHandleButton
+                    handle={fediverseHandle}
+                    label={t(site.locale, "fediverseLabel")}
+                    locale={site.locale}
+                  />
+                </>
+              ) : null}
+            </p>
             <nav aria-label={t(site.locale, "primaryNavigation")}>
               {navItems(site, availablePaths).map((item) => (
                 <a key={item.href} href={item.href}>
