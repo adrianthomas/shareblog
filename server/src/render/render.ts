@@ -270,7 +270,7 @@ function feedContentSummary(object: ContentObject): string {
 // scanning a feed of mixed post types (or a photo/music post whose only
 // natural title lives in metadata, not object.title) can always tell what
 // kind of post it is and what it's about from the title alone.
-function feedTitle(object: ContentObject, locale: string): string {
+export function feedTitle(object: ContentObject, locale: string): string {
   const typeLabel = t(locale, TYPE_LABEL_KEY[object.type]);
   const summary = feedContentSummary(object);
   return summary ? `${typeLabel}: ${summary}` : typeLabel;
@@ -303,7 +303,7 @@ function exifList(rows: ReturnType<typeof formatExif>): string {
   return `<ul>${items}</ul>`;
 }
 
-async function feedItemContent(object: ContentObject, locale: string): Promise<string> {
+export async function feedItemContent(object: ContentObject, locale: string): Promise<string> {
   switch (object.type) {
     case "thought":
       return formatRichText(object.body ?? "");

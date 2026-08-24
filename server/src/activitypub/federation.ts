@@ -19,7 +19,7 @@ import { db } from "../db/client.js";
 import { apFollowers, contentObjects } from "../db/schema.js";
 import type { Site, ContentObject } from "../render/templates/types.js";
 import { siteForHost } from "../middleware/tenant.js";
-import { siteOrigin, objectPath } from "../render/render.js";
+import { siteOrigin, objectPath, feedTitle, feedItemContent } from "../render/render.js";
 import { getOrCreateKeyPairs } from "./keys.js";
 
 // One Federation instance serves every site as a virtual host — Fedify
@@ -86,7 +86,7 @@ federation.setOutboxDispatcher("/users/{identifier}/outbox", async (ctx, identif
     .where(and(eq(contentObjects.siteId, site.id), eq(contentObjects.status, "published")))
     .orderBy(desc(contentObjects.publishedAt))
     .limit(20);
-  return { items: rows.map((object) => buildCreateActivity(ctx, site, object)) };
+  return { items: await Promise.all(rows.map((object) => buildCreateActivity(ctx, site, object))) };
 });
 
 federation.setFollowersDispatcher("/users/{identifier}/followers", async (ctx, identifier, cursor) => {
@@ -152,7 +152,13 @@ const AP_TYPE_FOR_CONTENT_TYPE: Record<ContentObject["type"], typeof Note | type
 // Shared by the outbox dispatcher (Mastodon reading a site's post history)
 // and deliverCreateActivity (pushing a new one to followers) — same
 // object, same activity shape, either way.
-function buildCreateActivity(ctx: Context<void>, site: Site, object: ContentObject): Create {
+//
+// name/content reuse feedTitle/feedItemContent from render.ts rather than
+// the raw title/body columns, so a federated post gets the same treatment
+// as its RSS entry: a real title even for types with no `title` column
+// (thought, quote), plus cover image, rating, byline, and the buy/listen
+// links list baked into the HTML — not just bare text.
+async function buildCreateActivity(ctx: Context<void>, site: Site, object: ContentObject): Promise<Create> {
   const ObjectClass = AP_TYPE_FOR_CONTENT_TYPE[object.type];
   const url = `${siteOrigin(site)}/${objectPath(object)}`;
   const published = object.publishedAt ?? object.createdAt;
@@ -160,8 +166,8 @@ function buildCreateActivity(ctx: Context<void>, site: Site, object: ContentObje
   const apObject = new ObjectClass({
     id: new URL(url),
     url: new URL(url),
-    name: object.title ?? undefined,
-    content: object.body ?? undefined,
+    name: feedTitle(object, site.locale),
+    content: await feedItemContent(object, site.locale),
     attribution: ctx.getActorUri(site.subdomain),
     published: Temporal.Instant.fromEpochMilliseconds(published.getTime()),
     to: PUBLIC_COLLECTION,
@@ -183,5 +189,6 @@ function buildCreateActivity(ctx: Context<void>, site: Site, object: ContentObje
 export async function deliverCreateActivity(site: Site, object: ContentObject): Promise<void> {
   if (!site.federationEnabled) return;
   const ctx = federation.createContext(new URL(siteOrigin(site)), undefined);
-  await ctx.sendActivity({ identifier: site.subdomain }, "followers", buildCreateActivity(ctx, site, object));
+  const activity = await buildCreateActivity(ctx, site, object);
+  await ctx.sendActivity({ identifier: site.subdomain }, "followers", activity);
 }
