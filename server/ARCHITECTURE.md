@@ -137,8 +137,22 @@ placeholder, not implemented. Selected via `STORAGE_DRIVER` env var.
 
 ## Testing
 
-No lint script, no automated test suite committed as of this writing. Run
-`npx tsc -p tsconfig.json --noEmit` (from `server/`) for type safety, and
-verify rendered output manually (Browser pane). If a test suite exists in
-your checkout that this file doesn't mention yet, that's a sign this file
-is behind — update it rather than trusting this section blindly.
+No lint script. `npx tsc -p tsconfig.json --noEmit` (from `server/`) for
+type safety, plus manual/browser verification for anything a type check
+can't catch — still the primary way to check most changes.
+
+One real automated suite exists: `tests/e2e/` (Playwright, WebKit —
+matching the cards theme's real target browser, not Chromium), run via
+`npm run test:e2e` (`playwright.config.ts` spins up its own throwaway
+SQLite DB and dev server on port 3100, seeded through `bootstrap-owner.ts`
++ the live API — see the spec file for the pattern). It exists specifically
+to catch regressions in `themes/cards.tsx`'s scroll-lock/restore mechanism
+around opening and closing a card (`lockPageScroll`/`unlockPageScroll`) —
+a bug class subtle enough to have regressed silently once already. It does
+**not** catch every variant of that bug: the iOS Safari toolbar-reveal
+case (see `unlockPageScroll`'s own comment) is driven by the browser's own
+chrome animation, which a synthetic tap doesn't reliably provoke, so that
+one still needs on-device verification. Add to this suite rather than
+starting a second test setup if you're adding coverage elsewhere in
+`server/`. If this section doesn't match what's actually in `tests/`,
+that's a sign it's behind — update it rather than trusting it blindly.
