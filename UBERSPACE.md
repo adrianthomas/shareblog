@@ -55,6 +55,7 @@ cp .env.example .env
 Fill in:
 
 ```
+NODE_ENV=production
 BASE_DOMAIN=yourdomain.com
 API_BASE_URL=https://api.yourdomain.com
 SMTP_HOST=<your account's hostname, e.g. stardust.uberspace.de — see below>
@@ -64,6 +65,11 @@ SMTP_PASS=<password you set in the mailbox step below>
 SMTP_FROM=Shareblog <noreply@yourdomain.com>
 ALLOWED_SIGNUP_EMAILS=you@yourdomain.com
 ```
+
+**Don't skip `NODE_ENV=production`.** It's what actually switches auth
+codes from console-logged (dev only, never emailed) to sent via `SMTP_*`,
+and it's what the `ALLOWED_SIGNUP_EMAILS` requirement below is gated on —
+leave it as `development` and both protections silently don't apply.
 
 **`ALLOWED_SIGNUP_EMAILS` is required** — the server refuses to boot without
 it in production (`server.ts`). Set it to whichever address(es) should be
