@@ -74,12 +74,12 @@ will fail to send them (dev-only console logging is disabled once
 `NODE_ENV=production`), so don't skip this — see
 [server/src/auth/email.ts](server/src/auth/email.ts).
 
-**Set `ALLOWED_SIGNUP_EMAILS` for any real deployment.** Left unset, anyone
-who finds your API can request a code, verify it, and create their own
-account and site on your box — there's no other gate. Set it to a
-comma-separated list of the email(s) that should be able to sign in at all
-(everyone else's request still returns success, so it can't be used to probe
-which addresses are allowlisted — see
+**`ALLOWED_SIGNUP_EMAILS` is required in production** — the server refuses
+to boot without it (`server.ts`), since without it anyone who finds your API
+could request a code, verify it, and create their own account and site on
+your box. Set it to a comma-separated list of the email(s) that should be
+able to sign in at all (everyone else's request still returns success, so it
+can't be used to probe which addresses are allowlisted — see
 [server/src/auth/magic-code.ts](server/src/auth/magic-code.ts)).
 
 `DATABASE_URL` is just a file path — SQLite creates it automatically on

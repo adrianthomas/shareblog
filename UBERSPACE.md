@@ -65,11 +65,12 @@ SMTP_FROM=Shareblog <noreply@yourdomain.com>
 ALLOWED_SIGNUP_EMAILS=you@yourdomain.com
 ```
 
-**Set `ALLOWED_SIGNUP_EMAILS`** to whichever address(es) should be able to
-sign in at all — without it, anyone who finds your API can request a code,
-verify it, and create their own account and site on your account. Everyone
-else's request still returns success either way, so it can't be used to
-probe which addresses are allowlisted (see
+**`ALLOWED_SIGNUP_EMAILS` is required** — the server refuses to boot without
+it in production (`server.ts`). Set it to whichever address(es) should be
+able to sign in at all; without it, anyone who finds your API could request
+a code, verify it, and create their own account and site on your account.
+Everyone else's request still returns success either way, so it can't be
+used to probe which addresses are allowlisted (see
 [server/src/auth/magic-code.ts](server/src/auth/magic-code.ts)).
 
 `PORT` just needs to be free and in Uberspace's allowed range (1024–65535);
