@@ -4,3 +4,7 @@ dist/
 data/uploads/*
 !data/uploads/.gitkeep
 *.log
+playwright-report/
+test-results/
+blob-report/
+data/e2e-test*

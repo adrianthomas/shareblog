@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "bootstrap-owner": "tsx src/db/bootstrap-owner.ts",
+    "test:e2e": "playwright test",
     "postinstall": "node scripts/fix-better-sqlite3.cjs"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^22.10.5",
     "@types/nodemailer": "^8.0.1",

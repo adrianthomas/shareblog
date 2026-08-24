@@ -1004,7 +1004,18 @@ export const cardsScript = `
   // it's lifted. overflow: hidden stays on too, harmlessly, as a backup
   // for anything this doesn't cover (e.g. keyboard-driven scrolling).
   function lockPageScroll() {
-    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    // window.scrollY can be fractional (sub-pixel offsets are real on a
+    // high-DPI display), and this value then feeds two different browser
+    // code paths — a CSS negative top offset here, and window.scrollTo's
+    // own snapping in unlockPageScroll — that aren't guaranteed to round a
+    // fraction identically. A reported "closes and settles a few pixels
+    // off" regression prompted this: rounding once, up front, closes off
+    // that specific disagreement as a possible cause, even though a
+    // pixel-diffed repro on real WebKit (device fling-scroll, open, close)
+    // came back identical both with and without this change — so this is
+    // cheap, harmless precision hardening, not a confirmed fix. If the
+    // jump is still reproducible after this, the cause is elsewhere.
+    lockedScrollY = Math.round(window.scrollY || document.documentElement.scrollTop || 0);
     document.documentElement.classList.add('cards-lock-scroll');
     document.body.style.position = 'fixed';
     document.body.style.top = (-lockedScrollY) + 'px';
