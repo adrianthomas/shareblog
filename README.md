@@ -72,18 +72,25 @@ the Simulator.
 ## Auth
 
 New self-hosted instances have no email/SMTP requirement to get signed in
-the first time — `npm run bootstrap-owner` (wired into `deploy.sh`, see
-[SELF_HOSTING.md](SELF_HOSTING.md)) mints the single owner account directly
-in the database over SSH and prints a raw API token. It's idempotent
-(no-op once an owner exists), since this is a single-tenant instance — see
-the TODO on `sites.ownerUserId` in `server/src/db/schema.ts`. Note there's
-currently no in-app UI to redeem that printed token directly; day-to-day
-sign-in (in the iOS app) still goes through the email code flow in
-`server/src/auth/magic-code.ts`, which `ALLOWED_SIGNUP_EMAILS` locks down to
-specific addresses — see the "Configure the environment" step in
-[SELF_HOSTING.md](SELF_HOSTING.md). Local dev leaves it unset, since anyone
-who can create an account on your own machine already has full access to it
-anyway.
+the first time. Running `npm run bootstrap-owner` interactively (over SSH —
+it's also wired into `deploy.sh`, which runs it non-interactively on every
+deploy) mints the single owner account directly in the database and prints
+a QR code, plus a manual-entry fallback code, that the iOS app's "Scan to
+Connect" (`ServerSetupView`/`ScanToConnectView`) exchanges for a real
+session via `POST /auth/claim-owner` — one scan sets the server address
+*and* signs in, no email involved. The code is short-lived (20 minutes) and
+single-use; re-run the command any time to pair another device. Owner
+creation itself is idempotent (no-op once an owner exists) — see the TODO
+on `sites.ownerUserId` in `server/src/db/schema.ts` — but a fresh pairing
+code is minted on every interactive run.
+
+Day-to-day sign-in (for anyone not using that flow) goes through the email
+code flow in `server/src/auth/magic-code.ts`, which `ALLOWED_SIGNUP_EMAILS`
+locks down to specific addresses — **required** in production, the server
+refuses to boot without it (`server.ts`) — see the "Configure the
+environment" step in [SELF_HOSTING.md](SELF_HOSTING.md). Local dev leaves it
+unset, since anyone who can create an account on your own machine already
+has full access to it anyway.
 
 ## Federation
 

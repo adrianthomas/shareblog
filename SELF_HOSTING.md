@@ -100,19 +100,20 @@ npm run bootstrap-owner
 ```
 
 Mints the single owner account directly in the database over this same SSH
-session and prints a raw API token — no working mailbox needed just to get
-signed in the first time. Idempotent: this is a single-tenant instance (see
-the TODO on `sites.ownerUserId` in `server/src/db/schema.ts`), so running it
-again on a later deploy is a harmless no-op once an owner exists. It's also
-wired into `deploy.sh`, so subsequent deploys run it automatically without
-you needing to think about it. Uses your shell's `$USER@uber.space`-style
-placeholder address by default; pass `-- --email you@yourdomain.com` to set
-it explicitly instead.
+session — no working mailbox needed just to get signed in the first time.
+Run interactively like this, it also prints a QR code (plus a manual-entry
+fallback code) that the iOS app's **Scan to Connect** button reads directly:
+one scan sets the server address and signs in, no email step at all. The
+code expires in 20 minutes and is single-use; just re-run this command
+whenever you want to pair another device — it always mints a fresh one on
+an interactive run. (Run non-interactively — e.g. by `deploy.sh`, which
+calls this on every deploy — it skips the code/QR and only handles the
+idempotent "create the owner if none exists yet" part, so automated deploys
+don't spam unused codes.)
 
-There's no in-app UI yet to redeem that printed token directly — day-to-day
-sign-in in the iOS app still goes through the email code flow, which is why
-step 2's `ALLOWED_SIGNUP_EMAILS` matters: set it to the same address you
-bootstrap with.
+If you'd rather not scan, day-to-day sign-in can still go through the email
+code flow instead, which is why step 2's `ALLOWED_SIGNUP_EMAILS` matters:
+set it to the same address you bootstrap with.
 
 ## 5. Keep the server running
 
@@ -163,7 +164,11 @@ create — Caddy requests a cert for each hostname automatically.
 
 ## 7. Point the iOS app at your server
 
-Open the app — the first screen asks for your server's domain
+Easiest path: tap **Scan to Connect** on the app's first screen and scan
+the QR code step 4 printed (or re-run `npm run bootstrap-owner` if it's
+already expired) — sets the server address and signs you in together.
+
+Otherwise, open the app — the first screen asks for your server's domain
 (`yourdomain.com`, no `https://` needed). It assumes the `api.<domain>`
 convention above. Sign-in codes will arrive by email via the SMTP settings
 from step 2, for whichever address(es) you put in `ALLOWED_SIGNUP_EMAILS`.

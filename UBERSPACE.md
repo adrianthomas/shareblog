@@ -117,17 +117,19 @@ npm run bootstrap-owner
 ```
 
 Mints the single owner account directly in the database over this same SSH
-session and prints a raw API token — no working mailbox needed just to get
-signed in the first time. Idempotent: this is a single-tenant instance, so
-running it again on a later deploy is a harmless no-op once an owner
-exists — [deploy.sh](deploy.sh) already runs it on every deploy. Uses
-`$USER@uber.space` as a placeholder address by default; pass
-`-- --email you@yourdomain.com` to set it explicitly.
+session — no working mailbox needed just to get signed in the first time.
+Run interactively like this, it also prints a QR code (plus a manual-entry
+fallback code) that the iOS app's **Scan to Connect** button reads
+directly: one scan sets the server address and signs in, no email step at
+all. The code expires in 20 minutes and is single-use — just re-run this
+command whenever you want to pair another device. (Run non-interactively —
+[deploy.sh](deploy.sh) calls this on every deploy — it skips the code/QR
+and only handles the idempotent "create the owner if none exists yet"
+part, so automated deploys don't spam unused codes.)
 
-There's no in-app UI yet to redeem that printed token directly — day-to-day
-sign-in in the iOS app still goes through the email code flow, which is why
-step 3's `ALLOWED_SIGNUP_EMAILS` matters: set it to the same address you
-bootstrap with.
+If you'd rather not scan, day-to-day sign-in can still go through the email
+code flow instead, which is why step 3's `ALLOWED_SIGNUP_EMAILS` matters:
+set it to the same address you bootstrap with.
 
 ## 6. Keep the server running — supervisord, not systemd
 
@@ -195,9 +197,13 @@ uberspace web backend set myfirstsite.yourdomain.com --http --port 3000
 
 ## 8. Point the iOS app at your server
 
-Same as any other host — see step 7 in [SELF_HOSTING.md](SELF_HOSTING.md).
-Open the app, enter `yourdomain.com` (no scheme needed) on the first
-screen, and it assumes the `api.<domain>` convention set up above. Sign-in
+Easiest path: tap **Scan to Connect** on the app's first screen and scan
+the QR code step 5 printed (or re-run `npm run bootstrap-owner` if it's
+already expired) — this sets the server address and signs you in together.
+
+Otherwise, same as any other host — see step 7 in
+[SELF_HOSTING.md](SELF_HOSTING.md): enter `yourdomain.com` (no scheme
+needed), and it assumes the `api.<domain>` convention set up above. Sign-in
 codes go to whichever address(es) you put in `ALLOWED_SIGNUP_EMAILS`.
 
 ## Updating
