@@ -136,10 +136,14 @@ export function Layout({
                        flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-bottom: 2rem; }
               header.site-header h1 { font-size: 1.1rem; margin: 0; }
               header.site-header h1 a { text-decoration: none; color: inherit; }
-              .site-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; }
+              .site-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; min-width: 0; }
               .rss-link { font-size: 0.7rem; color: var(--muted); text-decoration: none; }
               .rss-link:hover, .rss-link:focus-visible { color: var(--fg); }
-              .fediverse-handle { display: flex; align-items: center; gap: 0.15rem; font-size: 0.7rem; color: var(--muted); }
+              .fediverse-handle { display: flex; align-items: center; gap: 0.15rem; font-size: 0.7rem; color: var(--muted); max-width: 100%; min-width: 0; }
+              .fediverse-handle-text {
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+                max-width: 60vw; /* hard cap independent of the flex-shrink chain above */
+              }
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
@@ -254,7 +258,9 @@ export function Layout({
             </a>
             {site.federationEnabled ? (
               <span className="fediverse-handle">
-                {fediverseHandle}
+                <span className="fediverse-handle-text" title={fediverseHandle}>
+                  {fediverseHandle}
+                </span>
                 <CopyHandleButton handle={fediverseHandle} locale={site.locale} />
               </span>
             ) : null}
