@@ -131,6 +131,25 @@ export const magicTokens = sqliteTable("magic_tokens", {
   createdAt: createdAt(),
 });
 
+// The QR/manual-code pairing flow (see db/bootstrap-owner.ts): a short-lived,
+// single-use code printed by an interactive `npm run bootstrap-owner` run,
+// exchanged by the iOS app for a real session token via POST
+// /auth/claim-owner — lets first sign-in (and re-pairing a later device)
+// skip the email round-trip entirely. Deliberately its own table rather than
+// a third magicTokens `purpose`: this isn't email-based at all (no `email`
+// column makes sense here), and SSH-only origin makes its trust model
+// different enough to keep separate.
+export const ownerClaims = sqliteTable("owner_claims", {
+  id: id(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  codeHash: text("code_hash").notNull().unique(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  consumedAt: integer("consumed_at", { mode: "timestamp_ms" }),
+  createdAt: createdAt(),
+});
+
 export const contentTypeValues = ["thought", "photo", "book", "article", "music", "quote"] as const;
 export type ContentType = (typeof contentTypeValues)[number];
 

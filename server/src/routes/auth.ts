@@ -4,6 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { apiTokens, sites } from "../db/schema.js";
 import { requestAuthCode, verifyMobileCode, verifyWebMagicLink } from "../auth/magic-code.js";
+import { claimOwner } from "../auth/owner-claim.js";
 import { generateApiToken, hashToken } from "../auth/tokens.js";
 import { authGuard } from "../middleware/auth-guard.js";
 
@@ -15,6 +16,11 @@ const requestCodeSchema = z.object({
 const verifyCodeSchema = z.object({
   email: z.string().email().toLowerCase(),
   code: z.string().length(6),
+  deviceName: z.string().max(120).optional(),
+});
+
+const claimOwnerSchema = z.object({
+  code: z.string().min(4).max(32),
   deviceName: z.string().max(120).optional(),
 });
 
@@ -54,6 +60,38 @@ export async function authRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const body = verifyCodeSchema.parse(request.body);
       const user = await verifyMobileCode(body.email, body.code);
+      if (!user) {
+        return reply.code(401).send({ error: { code: "invalid_code", message: "Invalid or expired code." } });
+      }
+
+      const token = generateApiToken();
+      await db.insert(apiTokens).values({
+        userId: user.id,
+        tokenHash: hashToken(token),
+        deviceName: body.deviceName,
+      });
+
+      const [site] = await db.select().from(sites).where(eq(sites.ownerUserId, user.id)).limit(1);
+
+      return reply.send({
+        token,
+        user: { id: user.id, email: user.email },
+        site: site ?? null,
+      });
+    },
+  );
+
+  // The QR/manual-entry alternative to the two routes above — redeems a
+  // pairing code an interactive `npm run bootstrap-owner` run printed (see
+  // db/bootstrap-owner.ts), for first sign-in (or pairing a later device)
+  // without an email round-trip. Rate-limited like verify-code above,
+  // keyed by IP only since there's no email dimension to this one.
+  app.post(
+    "/auth/claim-owner",
+    { config: { rateLimit: { max: 10, timeWindow: "15 minutes", hook: "preHandler" } } },
+    async (request, reply) => {
+      const body = claimOwnerSchema.parse(request.body);
+      const user = await claimOwner(body.code);
       if (!user) {
         return reply.code(401).send({ error: { code: "invalid_code", message: "Invalid or expired code." } });
       }

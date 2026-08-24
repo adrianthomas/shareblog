@@ -43,6 +43,13 @@
       "when": 1787506733889,
       "tag": "0005_brown_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787593170180,
+      "tag": "0006_nebulous_mulholland_black",
+      "breakpoints": true
     }
   ]
 }
