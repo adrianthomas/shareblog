@@ -753,11 +753,16 @@ export const cardsStyles = `
     font-variant-numeric: tabular-nums;
     /* Only ever rendered as a sibling of .cards-photo-card--full (see
        PhotoCard's "full" guard), which no longer gives it any horizontal
-       padding to inherit now that the card itself is edge to edge — see
-       that component's own comment for why EXIF sits outside the card's
-       flex column entirely, rather than inside it as a third flex item. */
+       padding — or, since this is now the actual bottom of the header,
+       bottom padding either — to inherit now that the card itself is edge
+       to edge. See that component's own comment for why EXIF sits outside
+       the card's flex column entirely, rather than inside it as a third
+       flex item; that's also why it needs its own bottom padding matching
+       the card's (env(safe-area-inset-bottom)) rather than getting it for
+       free the way a fourth flex item would. */
     padding-left: max(1.25rem, env(safe-area-inset-left));
     padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
   .cards-photo-exif-row { margin: 0; }
   .cards-photo-exif-row dt {
