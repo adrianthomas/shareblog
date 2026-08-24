@@ -1029,6 +1029,33 @@ export const cardsScript = `
     document.body.style.left = '';
     document.body.style.right = '';
     window.scrollTo(0, lockedScrollY);
+
+    // iOS Safari's own top toolbar is usually still hidden at this exact
+    // point — it was hidden before the card was opened (from scrolling
+    // down to it) and stayed that way for the whole time scroll was
+    // locked, since a position: fixed body doesn't generate the scroll
+    // events that would normally bring it back. Closing the card hands
+    // scrolling back to a normal page, which is exactly the condition that
+    // makes Safari decide to reveal the toolbar again — but that reveal is
+    // the browser's own chrome animation, asynchronous and outside this
+    // script's control, so it lands *after* the scrollTo above, not before
+    // it. The toolbar reappearing shrinks the visual viewport from the
+    // top, same as the known case already handled for the tab bar below
+    // (see syncTabbar) — reported as the page settling a few pixels off
+    // right as the toolbar finishes sliding back into place. Re-asserting
+    // the scroll position once more, on the next visualViewport resize
+    // (the toolbar's own settle signal), corrects for whatever that
+    // reveal perturbs, the same way syncTabbar corrects the tab bar for it.
+    if (window.visualViewport) {
+      var resettle = function () {
+        window.scrollTo(0, lockedScrollY);
+        window.visualViewport.removeEventListener('resize', resettle);
+      };
+      window.visualViewport.addEventListener('resize', resettle);
+      // Nothing to correct if the toolbar was already settled and no
+      // resize ever fires — don't leave the listener attached forever.
+      setTimeout(function () { window.visualViewport.removeEventListener('resize', resettle); }, 800);
+    }
   }
 
   // A full-screen, non-uniform FLIP (translate + independent X/Y scale)
