@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Set up your Shareblog server</title>
+<meta name="description" content="How to run your own Shareblog server: what you need, where to host it, and how first sign-in works.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2314181f'/%3E%3Ctext x='50' y='68' font-family='monospace' font-size='58' font-weight='700' fill='%2337e6c4' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --bg-raised: #ffffff;
+    --ink: #181a1e;
+    --ink-muted: #565b64;
+    --border: #dedad0;
+    --accent: #0f8f76;
+    --accent-ink: #ffffff;
+    --code-bg: #14181f;
+    --code-ink: #d8f5ec;
+    --code-border: #2a2f38;
+    --focus: #0f8f76;
+    --tag-recommended-bg: #0f8f7622;
+    --tag-recommended-ink: #0a6a56;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14151a;
+      --bg-raised: #1c1e25;
+      --ink: #edeef0;
+      --ink-muted: #9aa0ac;
+      --border: #2c2f38;
+      --accent: #37e6c4;
+      --accent-ink: #0a1210;
+      --code-bg: #0c0e12;
+      --code-ink: #c8f7ea;
+      --code-border: #262a33;
+      --focus: #37e6c4;
+      --tag-recommended-bg: #37e6c422;
+      --tag-recommended-ink: #37e6c4;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14151a;
+    --bg-raised: #1c1e25;
+    --ink: #edeef0;
+    --ink-muted: #9aa0ac;
+    --border: #2c2f38;
+    --accent: #37e6c4;
+    --accent-ink: #0a1210;
+    --code-bg: #0c0e12;
+    --code-ink: #c8f7ea;
+    --code-border: #262a33;
+    --focus: #37e6c4;
+    --tag-recommended-bg: #37e6c422;
+    --tag-recommended-ink: #37e6c4;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; }
+
+  header.hero {
+    padding: 4.5rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    margin-bottom: 1.75rem;
+  }
+  .mark .glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 6px;
+    background: var(--code-bg);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 1.15rem;
+    color: var(--ink-muted);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  nav.toc a { color: var(--ink-muted); text-decoration: none; }
+  nav.toc a:hover { color: var(--ink); }
+
+  section { padding: 3rem 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  h2 {
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 1.25rem;
+    text-wrap: balance;
+  }
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.6rem;
+  }
+  p { margin: 0 0 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.65rem; }
+  .checklist li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: baseline;
+    color: var(--ink);
+  }
+  .checklist li::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-top: 0.45rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .checklist .fine { color: var(--ink-muted); font-size: 0.92rem; }
+
+  .cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 1.5rem; }
+  .card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    position: relative;
+  }
+  .card h3 { margin: 0 0 0.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: var(--tag-recommended-bg);
+    color: var(--tag-recommended-ink);
+  }
+  .card p { color: var(--ink-muted); font-size: 0.95rem; }
+  .card .links { margin-top: 1rem; display: flex; gap: 1rem; font-size: 0.9rem; flex-wrap: wrap; }
+
+  ol.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: grid; gap: 1.5rem; }
+  ol.steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0.9rem;
+    row-gap: 0.15rem;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    grid-column: 1;
+    grid-row: 1 / 3;
+    align-self: start;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 700;
+    color: var(--accent-ink);
+    background: var(--accent);
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+  ol.steps h3 { grid-column: 2; grid-row: 1; margin: 0.15rem 0 0.35rem; font-size: 1.02rem; }
+  ol.steps p { grid-column: 2; grid-row: 2; color: var(--ink-muted); font-size: 0.95rem; margin: 0; }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border: 1px solid var(--code-border);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    margin: 0.6rem 0 0;
+  }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  p code, li code {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 0.1rem 0.4rem;
+    border-radius: 5px;
+    font-size: 0.88em;
+  }
+
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    background: var(--bg-raised);
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+    margin-top: 1.5rem;
+  }
+  .callout strong { color: var(--ink); }
+
+  footer {
+    padding: 3rem 0 4rem;
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+  }
+  footer .links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; margin-bottom: 1rem; }
+  footer .links a { text-decoration: none; }
+  footer .links a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    header.hero { padding: 3rem 0 2rem; }
+    section { padding: 2.25rem 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="mark"><span class="glyph">&gt;_</span> shareblog</div>
+    <h1>Your blog needs a home you control.</h1>
+    <p class="lede">Shareblog isn't a hosted service — there's no shareblog.com account to sign up for. This page walks through giving your posts a home of their own: a server, a domain, and about twenty minutes.</p>
+  </header>
+
+  <nav class="toc" aria-label="On this page">
+    <a href="#idea">The idea</a>
+    <a href="#need">What you need</a>
+    <a href="#hosting">Where to host</a>
+    <a href="#setup">Setup steps</a>
+    <a href="#connect">Connecting the app</a>
+  </nav>
+
+  <section id="idea">
+    <p class="eyebrow">The idea</p>
+    <h2>Yours the way a domain is yours</h2>
+    <p>Shareblog turns a share-sheet tap into a real post — a thought, a photo, a book, a song, an article, a quote — published on a site that belongs to you, not to a platform. It's Fediverse-native too: anyone on Mastodon or elsewhere in the Fediverse can follow your site directly.</p>
+    <p>That independence is a deliberate trade. It takes a bit of setup up front, but nobody can shut your site down, put it behind a paywall, or change the rules on you later. It's yours the way a website or an email address is yours — not the way a social account is.</p>
+  </section>
+
+  <section id="need">
+    <p class="eyebrow">What you need</p>
+    <h2>Before you start</h2>
+    <ul class="checklist">
+      <li>A place to run a small always-on process — <span class="fine">a few dollars a month covers it comfortably; see hosting options below.</span></li>
+      <li>A domain name you control — <span class="fine">so you can add DNS records for it.</span></li>
+      <li>A terminal — <span class="fine">setup is a handful of copy-pasted commands over SSH, no ops experience required.</span></li>
+      <li>About 15–20 minutes.</li>
+    </ul>
+  </section>
+
+  <section id="hosting">
+    <p class="eyebrow">Where to host</p>
+    <h2>Pick a home for it</h2>
+    <p>Shareblog is one small Node process backed by a single SQLite file — no database server, no container orchestration, nothing exotic. It runs comfortably on the cheapest tier of almost any host.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Uberspace <span class="tag">Recommended</span></h3>
+        <p>Shared hosting built for exactly this: SSH access from signup, no root needed, automatic TLS certificates, and pay-what-you-want pricing. The full walkthrough below is written against it command-for-command.</p>
+        <div class="links">
+          <a href="https://uberspace.de" target="_blank" rel="noopener">uberspace.de →</a>
+          <a href="https://github.com/adrianthomas/shareblog/blob/main/UBERSPACE.md" target="_blank" rel="noopener">Full guide →</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Any Linux VPS</h3>
+        <p>DigitalOcean, Hetzner, a spare box under your desk — anywhere you can SSH in and run a long-lived process. You'll manage your own reverse proxy (Caddy or nginx) and process supervisor (systemd).</p>
+        <div class="links">
+          <a href="https://github.com/adrianthomas/shareblog/blob/main/SELF_HOSTING.md" target="_blank" rel="noopener">Full guide →</a>
+        </div>
+      </div>
+    </div>
+    <p class="callout">It's open source (MIT) — <strong>read the code, fork it, run it exactly the way you want.</strong> <a href="https://github.com/adrianthomas/shareblog" target="_blank" rel="noopener">github.com/adrianthomas/shareblog →</a></p>
+  </section>
+
+  <section id="setup">
+    <p class="eyebrow">Setup steps</p>
+    <h2>The short version</h2>
+    <p>This is the shape of it — the linked guides above have the exact commands for your host.</p>
+    <ol class="steps">
+      <li>
+        <h3>Get the code and install</h3>
+        <p><code>git clone</code> the repo onto your server, then <code>npm install</code> and <code>npm run build</code> inside <code>server/</code>.</p>
+      </li>
+      <li>
+        <h3>Configure the environment</h3>
+        <p>Copy <code>.env.example</code> to <code>.env</code> — your domain, where SQLite and uploads live, and (optionally, for day-to-day email sign-in) SMTP settings.</p>
+      </li>
+      <li>
+        <h3>Run migrations</h3>
+        <p><code>npm run db:migrate</code> creates the SQLite database — nothing to provision separately.</p>
+      </li>
+      <li>
+        <h3>Create your owner account</h3>
+        <p><code>npm run bootstrap-owner</code> — mints your account directly in the database. No working inbox required; see "How first sign-in works" below.</p>
+      </li>
+      <li>
+        <h3>Keep it running</h3>
+        <p>A process supervisor restarts it if it ever crashes — <code>supervisord</code> on Uberspace, <code>systemd</code> on your own VPS.</p>
+      </li>
+      <li>
+        <h3>Point your domain at it</h3>
+        <p>Add DNS records for your domain and <code>api.&lt;yourdomain&gt;</code>, and one more per site you create later.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section id="connect">
+    <p class="eyebrow">How first sign-in works</p>
+    <h2>Connecting the app</h2>
+    <p>New self-hosted instances don't need email or SMTP configured just to get started. Running <code>npm run bootstrap-owner</code> interactively prints a QR code straight in your terminal, plus a short backup code if you can't scan it.</p>
+    <pre><code>$ npm run bootstrap-owner
+
+Scan this in the Shareblog app to connect and sign in:
+
+  █▀▀▀▀▀█ ▀▄█▀▄ █▀▀▀▀▀█
+  █ ███ █ ▄▀ ▄▀ █ ███ █
+  █ ▀▀▀ █ █▀▄▀█ █ ▀▀▀ █
+  ▀▀▀▀▀▀▀ █▄▀ ▀ ▀▀▀▀▀▀▀
+
+Can't scan? Enter this code by hand: 7F3K-QXPZ
+Expires in 20 minutes, single use.</code></pre>
+    <p style="margin-top:1rem">Open Shareblog, tap <strong>Scan to Connect</strong> on the very first screen, and scan it — that sets your server address and signs you in, together, in one step. Lost it or it expired? Just run the command again.</p>
+    <p class="callout">Prefer email sign-in day to day? Set <code>ALLOWED_SIGNUP_EMAILS</code> in your <code>.env</code> to your own address and configure <code>SMTP_*</code> — <strong>the bootstrap step still works either way</strong>, it just means you're never blocked on email working before you can get in the first time.</p>
+  </section>
+
+  <footer>
+    <div class="links">
+      <a href="https://github.com/adrianthomas/shareblog" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/adrianthomas/shareblog/blob/main/SELF_HOSTING.md" target="_blank" rel="noopener">Self-hosting guide</a>
+      <a href="https://github.com/adrianthomas/shareblog/blob/main/UBERSPACE.md" target="_blank" rel="noopener">Uberspace guide</a>
+      <a href="https://github.com/adrianthomas/shareblog/blob/main/README.md" target="_blank" rel="noopener">README</a>
+    </div>
+    <p>Shareblog is MIT-licensed and self-hosted only — there's no hosted tier, and none is planned.</p>
+  </footer>
+</div>
+
+</body>
+</html>
