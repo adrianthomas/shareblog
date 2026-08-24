@@ -37,7 +37,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
 | File | Routes | Notes |
 |---|---|---|
-| `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth; mobile gets a bearer token, web gets a session cookie. Logout revokes *every* token for the account. |
+| `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see `ownerClaims` table, `ios/ARCHITECTURE.md`'s Auth/bootstrapping section). Logout revokes *every* token for the account. |
 | `routes/sites.ts` | site CRUD (create, update theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). |
 | `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks, cache invalidation, and triggers `deliverCreateActivity` on publish. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
@@ -71,6 +71,7 @@ called on every object/site mutation.
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
 | `magicTokens` | Email auth codes/links, hashed, purpose-tagged (`web_session`/`mobile_code`). |
+| `ownerClaims` | Short-lived (20 min), single-use pairing codes minted by an interactive `bootstrap-owner` run; redeemed via `POST /auth/claim-owner`. |
 | `contentObjects` | The core table — `type` (`contentTypeValues`), `slug` (unique per site), `title`/`body`/`status`/`sourceUrl`, freeform JSON `metadata` (shape varies by type, not modeled in SQL). |
 | `assets` | Uploaded files — `variants` (JSON, e.g. `medium`/`original` URLs), `exif` (JSON, photos only). Linked from a `contentObjects.metadata.assetId`/`coverAssetId` field, **not** a DB foreign key — `objects.ts`'s `referencedAssetIds`/`assertOwnedAssets` walk those metadata fields by hand. |
 
