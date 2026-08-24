@@ -55,8 +55,22 @@ cp .env.example .env
 Fill in:
 
 ```
-
+BASE_DOMAIN=yourdomain.com
+API_BASE_URL=https://api.yourdomain.com
+SMTP_HOST=<your account's hostname, e.g. stardust.uberspace.de — see below>
+SMTP_PORT=587
+SMTP_USER=noreply@yourdomain.com
+SMTP_PASS=<password you set in the mailbox step below>
+SMTP_FROM=Shareblog <noreply@yourdomain.com>
+ALLOWED_SIGNUP_EMAILS=you@yourdomain.com
 ```
+
+**Set `ALLOWED_SIGNUP_EMAILS`** to whichever address(es) should be able to
+sign in at all — without it, anyone who finds your API can request a code,
+verify it, and create their own account and site on your account. Everyone
+else's request still returns success either way, so it can't be used to
+probe which addresses are allowlisted (see
+[server/src/auth/magic-code.ts](server/src/auth/magic-code.ts)).
 
 `PORT` just needs to be free and in Uberspace's allowed range (1024–65535);
 the webserver in front of it is what's actually reachable from the
@@ -89,7 +103,26 @@ full backup is just `supervisorctl stop shareblog && cp -r data/ backup/`.
 npm run db:migrate
 ```
 
-## 5. Keep the server running — supervisord, not systemd
+## 5. Create the owner account
+
+```bash
+npm run bootstrap-owner
+```
+
+Mints the single owner account directly in the database over this same SSH
+session and prints a raw API token — no working mailbox needed just to get
+signed in the first time. Idempotent: this is a single-tenant instance, so
+running it again on a later deploy is a harmless no-op once an owner
+exists — [deploy.sh](deploy.sh) already runs it on every deploy. Uses
+`$USER@uber.space` as a placeholder address by default; pass
+`-- --email you@yourdomain.com` to set it explicitly.
+
+There's no in-app UI yet to redeem that printed token directly — day-to-day
+sign-in in the iOS app still goes through the email code flow, which is why
+step 3's `ALLOWED_SIGNUP_EMAILS` matters: set it to the same address you
+bootstrap with.
+
+## 6. Keep the server running — supervisord, not systemd
 
 Uberspace has no systemd or sudo; long-running processes are supervised by
 `supervisord` instead, via one `.ini` file per service in
@@ -126,7 +159,7 @@ supervisorctl update
 supervisorctl status shareblog
 ```
 
-## 6. Domains and routing
+## 7. Domains and routing
 
 One Shareblog process serves everything, split by the `Host` header (see
 [tenant.ts](server/src/middleware/tenant.ts)): the apex/API host, plus one
@@ -153,11 +186,12 @@ uberspace web domain add myfirstsite.yourdomain.com
 uberspace web backend set myfirstsite.yourdomain.com --http --port 3000
 ```
 
-## 7. Point the iOS app at your server
+## 8. Point the iOS app at your server
 
-Same as any other host — see step 6 in [SELF_HOSTING.md](SELF_HOSTING.md).
+Same as any other host — see step 7 in [SELF_HOSTING.md](SELF_HOSTING.md).
 Open the app, enter `yourdomain.com` (no scheme needed) on the first
-screen, and it assumes the `api.<domain>` convention set up above.
+screen, and it assumes the `api.<domain>` convention set up above. Sign-in
+codes go to whichever address(es) you put in `ALLOWED_SIGNUP_EMAILS`.
 
 ## Updating
 
@@ -166,8 +200,12 @@ git pull
 npm install
 npm run build
 npm run db:migrate
+npm run bootstrap-owner
 supervisorctl restart shareblog
 ```
+
+(`bootstrap-owner` is a no-op once an owner exists — harmless to run on
+every update, same as `deploy.sh` does.)
 
 ## Automating this
 
@@ -185,15 +223,16 @@ run
 from your own machine. It refuses to run with uncommitted local changes,
 then SSHes in and either `git pull`s the existing clone at `REMOTE_PATH`
 or, on the very first run, `git clone`s `REPO_URL` there — followed by
-`npm install`, `npm run build`, `npm run db:migrate`, and
-`supervisorctl restart shareblog` in `server/`, the same commands you'd
-type by hand. Push to `origin` yourself first; the script's own push
-step is commented out, since the remote `git pull` needs your commits
-to already be there. `deploy.env` is gitignored since it's
-machine-specific. Note this only handles updates/first clone — the
-one-time account setup (steps 2, 3, 5, and 6 above: Node version,
-`.env`, the supervisord service file, domains) still has to be done by
-hand before the first `./deploy.sh` run will fully succeed.
+`npm install`, `npm run build`, `npm run db:migrate`,
+`npm run bootstrap-owner`, and `supervisorctl restart shareblog` in
+`server/`, the same commands you'd type by hand. Push to `origin` yourself
+first; the script's own push step is commented out, since the remote
+`git pull` needs your commits to already be there. `deploy.env` is
+gitignored since it's machine-specific. Note this only handles
+updates/first clone — the one-time account setup (steps 2, 3, 6, and 7
+above: Node version, `.env`, the supervisord service file, domains) still
+has to be done by hand before the first `./deploy.sh` run will fully
+succeed.
 
 ## No wildcard subdomains
 

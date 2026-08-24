@@ -63,6 +63,7 @@ SMTP_PORT=587
 SMTP_USER=<smtp username>
 SMTP_PASS=<smtp password>
 SMTP_FROM=Shareblog <noreply@yourdomain.com>
+ALLOWED_SIGNUP_EMAILS=you@yourdomain.com
 ```
 
 `PORT` just needs to be free on the box — the reverse proxy is what's
@@ -71,6 +72,14 @@ emailed via `SMTP_*`; without a host configured there, `NODE_ENV=production`
 will fail to send them (dev-only console logging is disabled once
 `NODE_ENV=production`), so don't skip this — see
 [server/src/auth/email.ts](server/src/auth/email.ts).
+
+**Set `ALLOWED_SIGNUP_EMAILS` for any real deployment.** Left unset, anyone
+who finds your API can request a code, verify it, and create their own
+account and site on your box — there's no other gate. Set it to a
+comma-separated list of the email(s) that should be able to sign in at all
+(everyone else's request still returns success, so it can't be used to probe
+which addresses are allowlisted — see
+[server/src/auth/magic-code.ts](server/src/auth/magic-code.ts)).
 
 `DATABASE_URL` is just a file path — SQLite creates it automatically on
 first migration, no server to provision. It's worth pointing it at the same
@@ -83,7 +92,28 @@ first migration, no server to provision. It's worth pointing it at the same
 npm run db:migrate
 ```
 
-## 4. Keep the server running
+## 4. Create the owner account
+
+```bash
+npm run bootstrap-owner
+```
+
+Mints the single owner account directly in the database over this same SSH
+session and prints a raw API token — no working mailbox needed just to get
+signed in the first time. Idempotent: this is a single-tenant instance (see
+the TODO on `sites.ownerUserId` in `server/src/db/schema.ts`), so running it
+again on a later deploy is a harmless no-op once an owner exists. It's also
+wired into `deploy.sh`, so subsequent deploys run it automatically without
+you needing to think about it. Uses your shell's `$USER@uber.space`-style
+placeholder address by default; pass `-- --email you@yourdomain.com` to set
+it explicitly instead.
+
+There's no in-app UI yet to redeem that printed token directly — day-to-day
+sign-in in the iOS app still goes through the email code flow, which is why
+step 2's `ALLOWED_SIGNUP_EMAILS` matters: set it to the same address you
+bootstrap with.
+
+## 5. Keep the server running
 
 A basic systemd unit at `/etc/systemd/system/shareblog.service`:
 
@@ -109,7 +139,7 @@ sudo systemctl enable --now shareblog
 sudo systemctl status shareblog
 ```
 
-## 5. Reverse proxy + TLS
+## 6. Reverse proxy + TLS
 
 DNS: point `yourdomain.com`, `api.yourdomain.com`, and each site subdomain
 you create at your server's IP (A/AAAA records).
@@ -130,12 +160,12 @@ sudo systemctl reload caddy
 Add a new line (or extend the host list) for every additional site you
 create — Caddy requests a cert for each hostname automatically.
 
-## 6. Point the iOS app at your server
+## 7. Point the iOS app at your server
 
 Open the app — the first screen asks for your server's domain
 (`yourdomain.com`, no `https://` needed). It assumes the `api.<domain>`
 convention above. Sign-in codes will arrive by email via the SMTP settings
-from step 3.
+from step 2, for whichever address(es) you put in `ALLOWED_SIGNUP_EMAILS`.
 
 To point at a different server later, or to test against a local dev server
 from a physical device (e.g. `http://192.168.1.5:3000`), use **Settings →
@@ -149,8 +179,12 @@ git pull
 npm install
 npm run build
 npm run db:migrate
+npm run bootstrap-owner
 sudo systemctl restart shareblog
 ```
+
+(`bootstrap-owner` is a no-op once an owner exists — harmless to run on
+every update, same as `deploy.sh` does.)
 
 ## A note on wildcard subdomains
 

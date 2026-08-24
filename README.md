@@ -62,13 +62,39 @@ your Mac's LAN IP (e.g. `http://192.168.1.5:3000`, not `api.localhost:3000`
 that field accepts a full `http(s)://` URL for exactly this case. For a real
 deployment, see [SELF_HOSTING.md](SELF_HOSTING.md).
 
-**Not yet verified in a running Simulator**: this machine's CoreSimulator
-framework is out of date relative to the installed Xcode build, which
-currently blocks booting a simulator. Both targets do build cleanly for the
-iOS Simulator SDK (`xcodebuild ... -destination 'generic/platform=iOS
-Simulator'`), so the code compiles — running the actual share-sheet flow
-end-to-end still needs a real device or a working simulator, which needs a
-macOS software update.
+Both targets build and run in the iOS Simulator (verified on iOS 17 and iOS
+26 runtimes) as well as on a real device. Apple Notes and a few other system
+apps aren't present on Simulator runtimes at all, so exercising the share
+extension against *those* specific source apps still needs a real device —
+everything else (onboarding, feed, compose screens, Settings) works fine in
+the Simulator.
+
+## Auth
+
+New self-hosted instances have no email/SMTP requirement to get signed in
+the first time — `npm run bootstrap-owner` (wired into `deploy.sh`, see
+[SELF_HOSTING.md](SELF_HOSTING.md)) mints the single owner account directly
+in the database over SSH and prints a raw API token. It's idempotent
+(no-op once an owner exists), since this is a single-tenant instance — see
+the TODO on `sites.ownerUserId` in `server/src/db/schema.ts`. Note there's
+currently no in-app UI to redeem that printed token directly; day-to-day
+sign-in (in the iOS app) still goes through the email code flow in
+`server/src/auth/magic-code.ts`, which `ALLOWED_SIGNUP_EMAILS` locks down to
+specific addresses — see the "Configure the environment" step in
+[SELF_HOSTING.md](SELF_HOSTING.md). Local dev leaves it unset, since anyone
+who can create an account on your own machine already has full access to it
+anyway.
+
+## Federation
+
+Every site is a followable Fediverse actor by default (Mastodon and other
+ActivityPub-speaking apps can follow `@<subdomain>@<domain>` and see posts as
+they're published) — see `server/src/activitypub/`, built on
+[Fedify](https://fedify.dev). It's a per-site toggle in the iOS app's
+Settings screen, on by default; turning it off stops new deliveries but
+leaves the actor/inbox/outbox endpoints live so existing followers never see
+a dead account. No extra setup or environment variables needed — it rides
+on `BASE_DOMAIN` like everything else.
 
 ## License
 
