@@ -66,7 +66,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). `theme` (`classic`/`cards`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
+| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -89,7 +89,18 @@ parallel themes from the same function** — `if (theme === "cards") {...}
 return <classic markup>` — there's no separate per-theme file, so adding a
 field to a content type means updating both branches (and the
 `CardsFeedItem`/`CardsDetailHeader` props in `themes/cards.tsx` if the cards
-branch needs new shared-header behavior).
+branch needs new shared-header behavior). `washi` is not a third branch:
+every template only ever checks `=== "cards"`, so a washi site renders the
+same markup as classic. The whole theme lives in one `theme === "washi"`
+gated `<style>` block in `Layout.tsx` — recolors via the shared
+`--fg`/`--bg`/`--muted`/`--border`/`--focus` tokens (set on `<html
+data-theme="washi">` so they cascade to `<body>` too — see the block's own
+comment for why that split matters) plus self-hosted display type
+(`server/public/fonts/shippori-mincho-*`, same latin/latin-ext-only,
+self-hosted pattern as the cards theme's Special Elite). No new JS, no new
+markup branch. A future theme that needs actual layout or interaction
+changes, not just a reskin, would need its own `themes/<name>.tsx` module
+the way `themes/cards.tsx` works, plus real branches in every template.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:

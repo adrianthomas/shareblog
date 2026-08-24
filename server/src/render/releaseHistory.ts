@@ -14,6 +14,7 @@ export const RELEASE_HISTORY: ReleaseEntry[] = [
   {
     date: "2026-08-24",
     changes: [
+      "Added \"Washi,\" a calmer, paper-and-ink site theme with warm tones and serif headings.",
       "Simplified the Fediverse link in the site header to a single word that copies your handle, instead of showing the full address.",
       "Redesigned the photo composer to letterbox photos instead of cropping them to fit.",
       "\"Change server\" in Settings now has a cancel option instead of being all-or-nothing.",

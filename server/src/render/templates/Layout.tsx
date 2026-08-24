@@ -72,7 +72,7 @@ export function Layout({
   const fediverseHandle = `@${site.subdomain}@${fediverseHost}`;
 
   return (
-    <html lang={resolveLocale(site.locale)}>
+    <html lang={resolveLocale(site.locale)} data-theme={theme}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -104,6 +104,53 @@ export function Layout({
                   font-weight: 400;
                   font-display: swap;
                   src: url(/static/fonts/special-elite-latin-ext.woff2) format("woff2");
+                  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+                }
+              `,
+            }}
+          />
+        ) : null}
+        {theme === "washi" ? (
+          // For the washi theme's headings — a mincho (Japanese serif) face
+          // whose brush-influenced strokes carry the paper-and-ink feel into
+          // Latin text too. Self-hosted (SIL OFL, see
+          // server/public/fonts/LICENSE-shippori-mincho.txt) so rendering a
+          // page never calls out to Google's font CDN. Only the latin/
+          // latin-ext subsets are pulled in — body copy here is English, not
+          // Japanese, so the full CJK glyph set would just be dead weight.
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                @font-face {
+                  font-family: "Shippori Mincho";
+                  font-style: normal;
+                  font-weight: 400;
+                  font-display: swap;
+                  src: url(/static/fonts/shippori-mincho-latin-400.woff2) format("woff2");
+                  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+                }
+                @font-face {
+                  font-family: "Shippori Mincho";
+                  font-style: normal;
+                  font-weight: 400;
+                  font-display: swap;
+                  src: url(/static/fonts/shippori-mincho-latin-ext-400.woff2) format("woff2");
+                  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+                }
+                @font-face {
+                  font-family: "Shippori Mincho";
+                  font-style: normal;
+                  font-weight: 600;
+                  font-display: swap;
+                  src: url(/static/fonts/shippori-mincho-latin-600.woff2) format("woff2");
+                  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+                }
+                @font-face {
+                  font-family: "Shippori Mincho";
+                  font-style: normal;
+                  font-weight: 600;
+                  font-display: swap;
+                  src: url(/static/fonts/shippori-mincho-latin-ext-600.woff2) format("woff2");
                   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
                 }
               `,
@@ -261,6 +308,65 @@ export function Layout({
           }}
         />
         {theme === "cards" ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
+        {theme === "washi" ? (
+          // The washi theme is a pure CSS reskin of the classic template
+          // branch — no markup or client-script changes anywhere (unlike
+          // cards, which also needs cardsStyles/cardsScript/CardsTabBar for
+          // its distinct layout and behavior). Every other template file
+          // only branches on theme === "cards", so a washi site renders the
+          // exact same markup as classic; this block is the entire theme.
+          // Recolors via the same --fg/--bg/--muted/--border/--focus tokens
+          // every other rule above already reads (including --focus, which
+          // doubles as the link/accent color — see the plain `a` rule
+          // above), so this only needs to add typography, a paper-grain
+          // texture, and a "mounted print" treatment for images/quotes.
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                html[data-theme="washi"] {
+                  --fg: #33302a; --bg: #f7f2e7; --muted: #746a58; --border: #ddd0b6; --focus: #a8462f;
+                }
+                @media (prefers-color-scheme: dark) {
+                  html[data-theme="washi"] { --fg: #e8e1d2; --bg: #1c1a15; --muted: #a89b83; --border: #3c362b; --focus: #dd8f6f; }
+                }
+                html[data-theme="washi"] body {
+                  background-color: var(--bg);
+                  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+                  background-repeat: repeat;
+                  line-height: 1.65;
+                }
+                html[data-theme="washi"] header.site-header h1 {
+                  font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+                  font-weight: 600; font-size: 1.3rem; letter-spacing: 0.03em;
+                }
+                html[data-theme="washi"] .body-content h2,
+                html[data-theme="washi"] .body-content h3,
+                html[data-theme="washi"] .about-product h2,
+                html[data-theme="washi"] .faq-entry h3,
+                html[data-theme="washi"] .release-date {
+                  font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+                  font-weight: 600; letter-spacing: 0.02em;
+                }
+                html[data-theme="washi"] .quote-text {
+                  border-left-color: var(--focus); border-left-width: 2px;
+                }
+                html[data-theme="washi"] .quote-text p {
+                  font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+                  font-weight: 400; letter-spacing: 0.01em;
+                }
+                html[data-theme="washi"] .card img,
+                html[data-theme="washi"] .body-content img,
+                html[data-theme="washi"] .book img,
+                html[data-theme="washi"] .music img.artwork {
+                  border-radius: 2px;
+                  outline: 1px solid var(--border);
+                  outline-offset: -1px;
+                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+                }
+              `,
+            }}
+          />
+        ) : null}
       </head>
       <body
         className={theme === "cards" ? "theme-cards" : undefined}
