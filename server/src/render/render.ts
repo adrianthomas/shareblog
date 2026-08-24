@@ -86,15 +86,6 @@ export const PATH_PREFIX: Record<ContentObject["type"], string> = {
   quote: "quotes",
 };
 
-const LISTING_KEY: Record<ContentObject["type"], MessageKey> = {
-  thought: "posts",
-  photo: "photos",
-  book: "books",
-  music: "music",
-  article: "articles",
-  quote: "quotes",
-};
-
 async function renderCard(object: ContentObject, locale: string, theme: Site["theme"]): Promise<React.ReactNode> {
   switch (object.type) {
     case "thought":
@@ -124,8 +115,13 @@ async function renderCard(object: ContentObject, locale: string, theme: Site["th
 }
 
 async function renderDetail(object: ContentObject, locale: string, theme: Site["theme"]): Promise<React.ReactNode> {
-  const backHref = `/${PATH_PREFIX[object.type]}`;
-  const backLabel = t(locale, "backTo", { section: t(locale, LISTING_KEY[object.type]) });
+  // Always back to the unfiltered home list, not the type's own category
+  // listing — a permalink can be reached from anywhere (a share, a search
+  // result, the home feed itself), and closing it should return to that
+  // full list rather than a category page the visitor may never have
+  // been on.
+  const backHref = "/";
+  const backLabel = t(locale, "backTo", { section: t(locale, "home") });
   const detailProps = { theme, backHref, backLabel };
 
   switch (object.type) {
