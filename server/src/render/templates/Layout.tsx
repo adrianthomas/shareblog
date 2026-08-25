@@ -769,6 +769,11 @@ export function Layout({
                 body.theme-prism .cards-scrim {
                   background: linear-gradient(to top, rgba(10, 12, 16, 0.78) 0%, rgba(10, 12, 16, 0.34) 48%, rgba(10, 12, 16, 0) 76%);
                 }
+                body.theme-prism .cards-play-button {
+                  color: var(--prism-pink);
+                  background: color-mix(in srgb, var(--prism-surface) 88%, transparent);
+                  box-shadow: 0 1px 2px rgba(66, 66, 250, 0.16), 0 12px 28px rgba(230, 0, 103, 0.22);
+                }
                 body.theme-prism .cards-caption {
                   padding: 1.1rem 1.25rem 1.2rem;
                 }

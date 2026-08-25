@@ -64,17 +64,30 @@ function Hero({
   hero,
   className = "",
   caption,
+  control,
 }: {
   hero: CardsHero;
   className?: string;
   caption: React.ReactNode;
+  control?: React.ReactNode;
 }) {
   return (
     <div className={`cards-hero ${className}`}>
       <img src={hero.imageUrl} alt={hero.imageAlt} loading="lazy" />
       <div className="cards-scrim" aria-hidden="true" />
+      {control}
       {caption}
     </div>
+  );
+}
+
+function PlayButton() {
+  return (
+    <span className="cards-play-button" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" focusable="false">
+        <path d="M8 5.5v13l10-6.5-10-6.5z" fill="currentColor" />
+      </svg>
+    </span>
   );
 }
 
@@ -284,7 +297,11 @@ export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, vari
       data-cards-type={type}
     >
       {hero.imageUrl ? (
-        <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
+        <Hero
+          hero={hero}
+          caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />}
+          control={type === "music" ? <PlayButton /> : undefined}
+        />
       ) : variant === "quote" ? (
         <QuoteCard title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       ) : (
@@ -450,7 +467,10 @@ export function CardsMusicDetailHeader({
     <>
       <CloseButton backHref={backHref} backLabel={backLabel} />
       <header className="cards-music-header">
-        <img className="cards-music-artwork" src={artworkUrl} alt={artworkAlt} loading="lazy" />
+        <div className="cards-music-artwork-wrap">
+          <img className="cards-music-artwork" src={artworkUrl} alt={artworkAlt} loading="lazy" />
+          <PlayButton />
+        </div>
         <div className="cards-music-meta">
           <p className="cards-music-eyebrow">{eyebrow}</p>
           <h1 className="cards-music-title">{title}</h1>
@@ -550,6 +570,17 @@ export const cardsStyles = `
   }
   .cards-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cards-scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 75%); }
+  .cards-play-button {
+    position: absolute; top: 1rem; right: 1rem; z-index: 2;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 46px; height: 46px; border-radius: 999px;
+    color: #111827; background: rgba(255,255,255,0.9);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18), 0 12px 28px rgba(0,0,0,0.28);
+    backdrop-filter: blur(16px) saturate(1.35);
+    -webkit-backdrop-filter: blur(16px) saturate(1.35);
+    pointer-events: none;
+  }
+  .cards-play-button svg { display: block; margin-left: 2px; filter: drop-shadow(0 1px 0 rgba(255,255,255,0.35)); }
   .cards-caption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 1.1rem 1.25rem 1.25rem; color: #fff; }
   .cards-eyebrow {
     margin: 0 0 0.25rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
@@ -677,10 +708,17 @@ export const cardsStyles = `
     max-width: 680px; margin: 0 auto; text-align: center;
     padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
   }
+  .cards-music-artwork-wrap {
+    position: relative; width: min(62vw, 240px); flex-shrink: 0;
+  }
   .cards-music-artwork {
-    width: min(62vw, 240px); aspect-ratio: 1 / 1; object-fit: cover;
-    border-radius: 10px; flex-shrink: 0;
+    display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+    border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.25);
+  }
+  .cards-music-artwork-wrap .cards-play-button {
+    top: auto; right: 0.75rem; bottom: 0.75rem;
+    width: 52px; height: 52px;
   }
   .cards-music-meta { min-width: 0; }
   .cards-music-eyebrow {
@@ -692,7 +730,7 @@ export const cardsStyles = `
   .cards-music-date { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--muted); }
   @media (min-width: 720px) {
     .cards-music-header { flex-direction: row; align-items: flex-start; text-align: left; gap: 2rem; }
-    .cards-music-artwork { width: 240px; }
+    .cards-music-artwork-wrap { width: 240px; }
   }
 
   /* Quote card: a piece of writing paper rather than a UI rectangle. The
@@ -1769,6 +1807,14 @@ export const cardsScript = `
     document.addEventListener('keydown', onKeydown);
   }
 
+  function createPlayButton() {
+    var play = document.createElement('span');
+    play.className = 'cards-play-button';
+    play.setAttribute('aria-hidden', 'true');
+    play.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path d="M8 5.5v13l10-6.5-10-6.5z" fill="currentColor"></path></svg>';
+    return play;
+  }
+
   // Music artwork is square, so it follows the same specialized idea as
   // book covers but with a 1:1 target instead of a paperback shape. The
   // artwork flies to its real detail position while metadata fades in.
@@ -1793,6 +1839,9 @@ export const cardsScript = `
 
     var header = document.createElement('header');
     header.className = 'cards-music-header';
+
+    var artworkWrap = document.createElement('div');
+    artworkWrap.className = 'cards-music-artwork-wrap';
 
     var imgClone = document.createElement('img');
     imgClone.className = 'cards-music-artwork';
@@ -1820,7 +1869,9 @@ export const cardsScript = `
       meta.appendChild(artistClone);
     }
 
-    header.appendChild(imgClone);
+    artworkWrap.appendChild(imgClone);
+    artworkWrap.appendChild(createPlayButton());
+    header.appendChild(artworkWrap);
     header.appendChild(meta);
     panel.appendChild(header);
     document.body.appendChild(panel);
