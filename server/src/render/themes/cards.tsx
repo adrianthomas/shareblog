@@ -488,11 +488,12 @@ export function CardsCategoryFilter({
   return (
     <details className="cards-category-filter">
       <summary className="cards-filter-trigger" aria-label={t(locale, "filterCategories")}>
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" fill="none" />
           <path
-            d="M4 7h10M18 7h2M4 17h2M10 17h10M8 4v6M16 14v6"
+            d="M7.5 8.5h9M9.5 12h5M11 15.5h2"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="1.9"
             strokeLinecap="round"
             fill="none"
           />
