@@ -23,9 +23,7 @@ function MusicLink({ platform, url, locale }: { platform: string; url: string; l
   return (
     <a href={url}>
       <span className="music-link-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="14" height="14" focusable="false">
-          <path d="M8 5.5v13l10-6.5-10-6.5z" fill="currentColor" />
-        </svg>
+        ▶︎
       </span>
       <span>{t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}</span>
     </a>

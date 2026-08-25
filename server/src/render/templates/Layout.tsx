@@ -252,10 +252,12 @@ export function Layout({
                 display: inline-flex; align-items: center; justify-content: center;
                 width: 1.45rem; height: 1.45rem; border-radius: 999px;
                 color: var(--bg); background: var(--focus);
+                font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                font-size: 0.68rem; font-weight: 800; line-height: 1;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 6px 14px color-mix(in srgb, var(--focus) 24%, transparent);
                 flex-shrink: 0;
               }
-              .music-link-icon svg { display: block; margin-left: 1px; }
+              .music-link-icon { padding-left: 1px; }
               .quote-text { margin: 0 0 0.75rem; padding-left: 1rem; border-left: 3px solid var(--border); }
               .quote-text p { margin: 0 0 0.5rem; font-size: 1.15rem; font-style: italic; line-height: 1.4; }
               .quote-text footer { font-size: 0.9rem; color: var(--muted); }
