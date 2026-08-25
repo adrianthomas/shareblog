@@ -28,6 +28,36 @@ const amazonRegionScript = `
 })();
 `;
 
+const prismCardScript = `
+(function () {
+  function isInteractiveTarget(target) {
+    return target && target.closest && target.closest('a, button, input, select, textarea');
+  }
+  var cards = document.querySelectorAll('.prism-feed > .card');
+  for (var i = 0; i < cards.length; i += 1) {
+    var card = cards[i];
+    var link = card.querySelector('a[href]');
+    if (!link) continue;
+    card.setAttribute('role', 'link');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', (link.textContent || '').trim() || link.getAttribute('href'));
+    card.setAttribute('data-card-href', link.getAttribute('href'));
+    card.addEventListener('click', function (event) {
+      if (event.defaultPrevented || isInteractiveTarget(event.target)) return;
+      var href = this.getAttribute('data-card-href');
+      if (href) window.location.href = href;
+    });
+    card.addEventListener('keydown', function (event) {
+      if (event.defaultPrevented || isInteractiveTarget(event.target)) return;
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      var href = this.getAttribute('data-card-href');
+      if (href) window.location.href = href;
+    });
+  }
+})();
+`;
+
 function navItems(site: Site, availablePaths?: string[]) {
   const items = [
     { href: "/posts", label: t(site.locale, "posts") },
@@ -593,7 +623,7 @@ export function Layout({
           // Prism is an original bright/rounded theme inspired by playful
           // technical blogs: compact cards, saturated accent colors, and
           // friendly system typography. It reuses classic detail markup and
-          // adds only a list wrapper, so it stays script-free.
+          // adds only a list wrapper plus a small card-click enhancement.
           <style
             dangerouslySetInnerHTML={{
               __html: `
@@ -717,6 +747,8 @@ export function Layout({
                   background: linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 34%, var(--prism-surface)));
                   box-shadow: var(--prism-shadow);
                   overflow: hidden;
+                  -webkit-tap-highlight-color: transparent;
+                  cursor: pointer;
                   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
                 }
                 html[data-theme="prism"] .prism-feed > .card::before {
@@ -726,10 +758,16 @@ export function Layout({
                   height: 0.36rem;
                   background: linear-gradient(90deg, var(--focus), var(--prism-pink), var(--prism-cyan));
                 }
-                html[data-theme="prism"] .prism-feed > .card:hover {
-                  transform: translateY(-3px);
-                  box-shadow: var(--prism-shadow-hover);
-                  border-color: color-mix(in srgb, var(--focus) 32%, var(--border));
+                html[data-theme="prism"] .prism-feed > .card:focus-visible {
+                  outline: 3px solid var(--focus);
+                  outline-offset: 3px;
+                }
+                @media (hover: hover) and (pointer: fine) {
+                  html[data-theme="prism"] .prism-feed > .card:hover {
+                    transform: translateY(-3px);
+                    box-shadow: var(--prism-shadow-hover);
+                    border-color: color-mix(in srgb, var(--focus) 32%, var(--border));
+                  }
                 }
                 html[data-theme="prism"] .prism-feed > .card > * {
                   position: relative;
@@ -818,7 +856,24 @@ export function Layout({
                   border-radius: 8px;
                   box-shadow: 0 1px 2px rgba(38, 45, 64, 0.12), 0 10px 24px rgba(38, 45, 64, 0.14);
                 }
-                html[data-theme="prism"] .prism-feed > .card > a:first-child img,
+                html[data-theme="prism"] .prism-feed > .card > a:first-child {
+                  display: block;
+                  width: calc(100% + 2.5rem);
+                  max-width: none;
+                  margin: -1.25rem -1.25rem 1rem;
+                  overflow: hidden;
+                  border-radius: 8px 8px 0 0;
+                }
+                html[data-theme="prism"] .prism-feed > .card > a:first-child img {
+                  display: block;
+                  width: 100%;
+                  max-width: none;
+                  margin: 0;
+                  aspect-ratio: 16 / 10;
+                  object-fit: cover;
+                  border-radius: 0;
+                  box-shadow: none;
+                }
                 html[data-theme="prism"] .prism-feed > .card > img:first-child {
                   display: block;
                   width: calc(100% + 2.5rem);
@@ -940,6 +995,7 @@ export function Layout({
           <CardsTabBar locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
         ) : null}
         {theme === "cards" ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
+        {theme === "prism" ? <script dangerouslySetInnerHTML={{ __html: prismCardScript }} /> : null}
         <script dangerouslySetInnerHTML={{ __html: amazonRegionScript }} />
         <script dangerouslySetInnerHTML={{ __html: copyButtonScript }} />
       </body>

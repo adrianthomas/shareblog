@@ -100,10 +100,13 @@ markup. The rest of each theme lives in a gated `<style>` block in
 the cards theme's Special Elite), textured backgrounds, sticky translucent
 header, refined nav pills, paper cards, and media/quote treatments. Prism uses
 system rounded sans typography, high-contrast surfaces, saturated blue/pink
-accents, compact cards, and rounded navigation/link treatments. Neither adds
-JS. A future theme that needs actual detail layout or interaction changes, not
-just a feed wrapper plus CSS, would need its own `themes/<name>.tsx` module the
-way `themes/cards.tsx` works, plus real branches in every template.
+accents, compact cards, and rounded navigation/link treatments, plus a tiny
+`prismCardScript` click/keyboard enhancement so tapping blank card space opens
+the card's detail link while real links/buttons keep their own behavior. Washi
+adds no JS. A future theme that needs actual detail layout or interaction
+changes, not just a feed wrapper plus CSS/small progressive enhancement, would
+need its own `themes/<name>.tsx` module the way `themes/cards.tsx` works, plus
+real branches in every template.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:
