@@ -790,9 +790,7 @@ export const cardsStyles = `
   .cards-quote-text {
     margin: 0; font-family: "Special Elite", "Courier New", monospace;
     font-size: 1.05rem; line-height: 1.65; color: #3a3122;
-    display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .cards-quote-card--full .cards-quote-text { -webkit-line-clamp: unset; }
   .cards-quote-author {
     margin: 0.9rem 0 0; text-align: right;
     font-family: "Special Elite", "Courier New", monospace;
