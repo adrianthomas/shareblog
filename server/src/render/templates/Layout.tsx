@@ -51,6 +51,45 @@ function navItems(site: Site, availablePaths?: string[]) {
   ];
 }
 
+function CategoryFilter({
+  site,
+  currentPath,
+  availablePaths,
+}: {
+  site: Site;
+  currentPath: string;
+  /** Nav paths (e.g. "/posts") that have at least one published post. When omitted, all tabs are shown. */
+  availablePaths?: string[];
+}) {
+  return (
+    <details className="category-filter">
+      <summary className="category-filter-trigger" aria-label={t(site.locale, "filterCategories")}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" fill="none" />
+          <path
+            d="M7.5 8.5h9M9.5 12h5M11 15.5h2"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+        <span>{t(site.locale, "filterCategories")}</span>
+      </summary>
+      <nav className="category-filter-menu" aria-label={t(site.locale, "primaryNavigation")}>
+        {navItems(site, availablePaths).map((item) => {
+          const active = item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href);
+          return (
+            <a key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
+              {item.label}
+            </a>
+          );
+        })}
+      </nav>
+    </details>
+  );
+}
+
 export function Layout({
   site,
   title,
@@ -73,6 +112,7 @@ export function Layout({
   const theme = site.theme;
   const chromeColors = THEME_CHROME_COLORS[theme];
   const usesCardsInteraction = theme === "cards" || theme === "prism";
+  const usesCompactCategoryFilter = !usesCardsInteraction;
   const hasAbout = Boolean(site.about && site.about.trim());
   // Not siteOrigin() from render.ts — that file imports Layout, so
   // importing back would be circular. Same computation, just the host
@@ -230,9 +270,50 @@ export function Layout({
               nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
               nav a { text-decoration: none; color: var(--muted); }
               nav a:hover, nav a:focus-visible { color: var(--fg); }
+              .category-filter { position: relative; align-self: flex-start; }
+              .category-filter-trigger {
+                display: inline-flex; align-items: center; gap: 0.42rem;
+                min-height: 2.15rem; border-radius: 999px; padding: 0.34rem 0.72rem;
+                color: var(--muted); background: color-mix(in srgb, var(--bg) 96%, var(--fg));
+                border: 1px solid var(--border); cursor: pointer; list-style: none;
+                font-size: 0.85rem; line-height: 1;
+              }
+              .category-filter-trigger::-webkit-details-marker { display: none; }
+              .category-filter-trigger:hover { color: var(--fg); }
+              .category-filter-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+              .category-filter-menu {
+                position: absolute; top: calc(100% + 0.45rem); left: 0; z-index: 40;
+                display: grid; gap: 0.12rem; min-width: 11.5rem; padding: 0.35rem;
+                border: 1px solid var(--border); border-radius: 8px;
+                background: var(--bg);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 14px 32px rgba(0,0,0,0.14);
+              }
+              .category-filter-menu a {
+                display: flex; align-items: center; min-height: 2.1rem;
+                padding: 0.42rem 0.62rem; border-radius: 6px;
+                color: var(--muted); text-decoration: none; font-size: 0.9rem;
+              }
+              .category-filter-menu a:hover,
+              .category-filter-menu a:focus-visible { color: var(--fg); background: color-mix(in srgb, var(--focus) 10%, transparent); }
+              .category-filter-menu a[aria-current="page"] {
+                color: var(--focus); font-weight: 700; background: color-mix(in srgb, var(--focus) 12%, transparent);
+              }
               .card { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
               .card:last-child { border-bottom: none; }
               .card img { max-width: 100%; height: auto; border-radius: 6px; }
+              .article-card-cover {
+                display: block; margin-bottom: 0.85rem;
+              }
+              .article-card-cover img {
+                display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+              }
+              .article-excerpt {
+                color: var(--muted);
+              }
+              .article-detail-cover {
+                display: block; width: 100%; max-height: 420px; object-fit: cover;
+                margin: 0 0 1.25rem; border-radius: 6px;
+              }
               .meta { font-size: 0.85rem; color: var(--muted); }
               /* EXIF strip on a photo's detail page. The system's monospace
                  stack resolves to San Francisco Mono on Apple's own platforms —
@@ -470,6 +551,22 @@ export function Layout({
                   background: color-mix(in srgb, var(--focus) 12%, transparent);
                   color: var(--fg);
                 }
+                html[data-theme="washi"] .category-filter-trigger {
+                  background: color-mix(in srgb, var(--washi-paper) 92%, var(--bg));
+                  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+                  box-shadow: 0 1px 2px rgba(45, 31, 13, 0.06);
+                }
+                html[data-theme="washi"] .category-filter-menu {
+                  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+                  border-radius: 10px 6px 12px 5px;
+                  background:
+                    linear-gradient(150deg, color-mix(in srgb, var(--washi-paper) 96%, var(--bg)), var(--washi-paper-warm)),
+                    var(--washi-paper);
+                  box-shadow: var(--washi-shadow);
+                }
+                html[data-theme="washi"] .category-filter-menu a {
+                  border-radius: 8px 4px 9px 4px;
+                }
                 html[data-theme="washi"] .header-links {
                   font-size: 0.8rem;
                 }
@@ -606,6 +703,7 @@ export function Layout({
                 }
                 html[data-theme="washi"] .card img,
                 html[data-theme="washi"] .body-content img,
+                html[data-theme="washi"] .article-detail-cover,
                 html[data-theme="washi"] .book img,
                 html[data-theme="washi"] .music img.artwork {
                   border-radius: 4px 2px 5px 2px;
@@ -1094,6 +1192,8 @@ export function Layout({
             </h1>
             {usesCardsInteraction && !cardsDetail ? (
               <CardsCategoryFilter locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
+            ) : usesCompactCategoryFilter ? (
+              <CategoryFilter site={site} currentPath={currentPath} availablePaths={availablePaths} />
             ) : null}
           </div>
           <div className="site-header-right">
@@ -1114,7 +1214,7 @@ export function Layout({
                 </>
               ) : null}
             </p>
-            {usesCardsInteraction && !cardsDetail ? null : (
+            {usesCardsInteraction && !cardsDetail ? null : usesCompactCategoryFilter ? null : (
               <nav aria-label={t(site.locale, "primaryNavigation")}>
                 {navItems(site, availablePaths).map((item) => (
                   <a key={item.href} href={item.href}>

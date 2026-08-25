@@ -48,13 +48,18 @@ export function ArticleCard({
   }
 
   return (
-    <article className="card">
+    <article className="card article-card">
+      {coverImageUrl ? (
+        <a className="article-card-cover" href={`/articles/${object.slug}`} aria-label={object.title ?? t(locale, "articles")}>
+          <img src={coverImageUrl} alt="" loading="lazy" />
+        </a>
+      ) : null}
       <h2>
         <a className="title-link" href={`/articles/${object.slug}`}>
           {object.title}
         </a>
       </h2>
-      {metadata.excerpt ? <p>{metadata.excerpt}</p> : null}
+      {excerpt ? <p className="article-excerpt">{excerpt}</p> : null}
       <p className="meta">{formatDate(object.publishedAt, locale)}</p>
     </article>
   );
@@ -126,8 +131,10 @@ export function ArticlePage({
   }
 
   return (
-    <article>
+    <article className="article-detail">
+      {coverImageUrl ? <img className="article-detail-cover" src={coverImageUrl} alt="" /> : null}
       <h1>{object.title}</h1>
+      {metadataExcerpt ? <p className="article-excerpt">{metadataExcerpt}</p> : null}
       <p className="meta">
         {formatDate(object.publishedAt, locale)}
         <CopyLinkButton locale={locale} />
