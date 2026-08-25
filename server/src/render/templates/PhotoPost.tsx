@@ -67,7 +67,7 @@ export function PhotoPost({
 }) {
   const metadata = object.metadata as PhotoMetadata;
 
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const title = metadata.caption || formatDate(object.publishedAt, locale);
     const hero = { imageUrl, imageAlt: metadata.caption ?? "", gradientSeed: object.slug };
     if (linked) {

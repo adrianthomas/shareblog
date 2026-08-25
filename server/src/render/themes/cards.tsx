@@ -274,9 +274,13 @@ function PhotoCard({
 export function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: string }) {
   return (
     <a className="cards-close" href={backHref} aria-label={backLabel}>
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+      <svg className="cards-close-icon--x" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
         <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
       </svg>
+      <svg className="cards-close-icon--back" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2.35" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </svg>
+      <span className="cards-close-label">{backLabel}</span>
     </a>
   );
 }
@@ -1086,6 +1090,8 @@ export const cardsStyles = `
     box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 10px 24px rgba(0,0,0,0.2);
   }
   .cards-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .cards-close-icon--back,
+  .cards-close-label { display: none; }
 
   body.theme-cards .site-header-left { gap: 0.7rem; }
   .cards-category-filter { position: relative; align-self: flex-start; }
@@ -1226,6 +1232,7 @@ export const cardsScript = `
   var FLIP_STEPS = 30;
   var current = null;
   var lockedScrollY = 0;
+  function isLedgerTheme() { return document.body.classList.contains('theme-ledger'); }
 
   // \`overflow: hidden\` on html (the .cards-lock-scroll class) is the usual
   // way to stop the page scrolling behind a modal, but on iOS Safari
@@ -1380,6 +1387,8 @@ export const cardsScript = `
   });
 
   function openCard(link) {
+    if (isLedgerTheme()) { openPushCard(link); return; }
+
     var heroEl = link.querySelector('.cards-hero');
     // Photos, covered books, and any other cover-image card get their own
     // shared-element transitions (see openPhotoCard/openBookCard/
@@ -1489,6 +1498,84 @@ export const cardsScript = `
     });
 
     finishOpen(link, panel, clone, backdrop);
+  }
+
+  function openPushCard(link) {
+    lockPageScroll();
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'cards-overlay-backdrop';
+    document.body.appendChild(backdrop);
+
+    var panel = document.createElement('div');
+    panel.className = 'cards-panel cards-panel--push';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.style.transform = 'translateX(100%)';
+    document.body.appendChild(panel);
+
+    var main = document.getElementById('main-content');
+    if (main) main.inert = true;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = true;
+
+    var controller = new AbortController();
+    current = { link: link, backdrop: backdrop, panel: panel, controller: controller, mode: 'push' };
+    history.pushState({ cardsOverlay: true }, '', link.href);
+
+    fetch(link.href, { signal: controller.signal })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad response');
+        return res.text();
+      })
+      .then(function (html) {
+        if (!current || current.panel !== panel) return;
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var fetchedMain = doc.getElementById('main-content');
+        if (!fetchedMain) { window.location.href = link.href; return; }
+        document.title = doc.title;
+
+        var scroller = document.createElement('div');
+        scroller.className = 'cards-panel-scroll';
+        scroller.setAttribute('tabindex', '-1');
+        while (fetchedMain.firstChild) scroller.appendChild(fetchedMain.firstChild);
+        panel.appendChild(scroller);
+
+        var closeLink = scroller.querySelector('.cards-close');
+        if (closeLink) {
+          closeLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            closeOverlay({});
+          });
+        }
+
+        requestAnimationFrame(function () {
+          backdrop.classList.add('cards-overlay-backdrop--visible');
+          if (reduceMotion) {
+            panel.style.transform = 'translateX(0)';
+          } else {
+            panel.style.transition = 'transform 340ms cubic-bezier(0.22, 1, 0.36, 1)';
+            panel.style.transform = 'translateX(0)';
+            setTimeout(function () { panel.style.transition = ''; }, 380);
+          }
+        });
+
+        var heading = scroller.querySelector('h1');
+        if (heading) {
+          if (!heading.id) heading.id = 'cards-panel-heading';
+          panel.setAttribute('aria-labelledby', heading.id);
+          heading.setAttribute('tabindex', '-1');
+          heading.focus({ preventScroll: true });
+        } else {
+          scroller.focus({ preventScroll: true });
+        }
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        window.location.href = link.href;
+      });
+
+    document.addEventListener('keydown', onKeydown);
   }
 
   // A photo's feed thumbnail is a cropped (object-fit: cover) rectangle
@@ -2460,6 +2547,10 @@ export const cardsScript = `
 
     if (reduceMotion) {
       cleanup();
+    } else if (o.mode === 'push') {
+      o.panel.style.transition = 'transform 300ms cubic-bezier(0.32, 0, 0.67, 0)';
+      o.panel.style.transform = 'translateX(100%)';
+      setTimeout(cleanup, 320);
     } else {
       var frames = buildFlipKeyframes(fromRect, toRect, fromRadius, toRadius, CLOSE_EASING, true);
       o.panel.style.transform = frames[0].transform;

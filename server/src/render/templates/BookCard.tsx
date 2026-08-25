@@ -89,7 +89,7 @@ export function BookCard({
   const metadata = object.metadata as BookMetadata;
   const stars = metadata.rating ? "★".repeat(metadata.rating) + "☆".repeat(5 - metadata.rating) : null;
 
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = { imageUrl: metadata.coverUrl, imageAlt: object.title ? `Cover of ${object.title}` : "", gradientSeed: object.slug };
     if (variant === "card") {
       return (

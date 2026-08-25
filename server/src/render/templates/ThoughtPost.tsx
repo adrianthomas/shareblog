@@ -21,7 +21,7 @@ export function ThoughtPost({
   backHref?: string;
   backLabel?: string;
 }) {
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = { gradientSeed: object.slug, imageAlt: "" };
     // The cards feed/detail treatment uses the body itself as the heading
     // (a Thought has no separate title field) — stripped to plain text so

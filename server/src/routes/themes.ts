@@ -28,6 +28,11 @@ const themeOptions = [
     name: "Prism",
     description: "A bright, playful theme with crisp cards, rounded typography, and blue-pink accents.",
   },
+  {
+    id: "ledger",
+    name: "Ledger",
+    description: "A polished index-style theme with clean rows, type labels, and iOS-style push detail views.",
+  },
 ] satisfies ThemeOption[];
 
 const missingThemeMetadata = themeValues.filter((theme) => !themeOptions.some((option) => option.id === theme));

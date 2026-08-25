@@ -29,7 +29,7 @@ export function ArticleCard({
   const metadata = object.metadata as ArticleMetadata;
   const excerpt = articleExcerpt(object, metadata);
 
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     return (
       <CardsFeedItem
         href={`/articles/${object.slug}`}
@@ -84,7 +84,7 @@ export function ArticlePage({
   const bodyHtml = formatRichText(object.body ?? "");
   const metadataExcerpt = metadata.excerpt?.trim();
 
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     if (!coverImageUrl) {
       return (
         <>

@@ -181,7 +181,7 @@ export async function renderList(
     );
   }
   const list =
-    site.theme === "cards" || site.theme === "prism"
+    site.theme === "cards" || site.theme === "prism" || site.theme === "ledger"
       ? React.createElement("div", { className: "cards-feed" }, ...cards)
       : site.theme === "washi"
         ? React.createElement("div", { className: "washi-feed" }, ...cards)
@@ -198,7 +198,7 @@ export async function renderObjectPage(
   const detail = await renderDetail(object, site.locale, site.theme);
   return wrap(site, object.title ?? undefined, detail, {
     currentPath: currentPath ?? `/${PATH_PREFIX[object.type]}/${object.slug}`,
-    cardsDetail: site.theme === "cards" || site.theme === "prism",
+    cardsDetail: site.theme === "cards" || site.theme === "prism" || site.theme === "ledger",
     availablePaths,
   });
 }

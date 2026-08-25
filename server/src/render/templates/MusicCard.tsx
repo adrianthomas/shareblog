@@ -51,7 +51,7 @@ export function MusicCard({
   );
   const visibleLinks = variant === "card" ? links.slice(0, 1) : links;
 
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = {
       imageUrl: metadata.artworkUrl,
       imageAlt: `Artwork for ${metadata.releaseTitle}`,

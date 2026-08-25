@@ -5,6 +5,7 @@ import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
+import { CloseButton } from "../themes/cards.js";
 
 function externalUrl(object: ContentObject): string {
   return object.sourceUrl ?? `/links/${object.slug}`;
@@ -56,14 +57,10 @@ export function LinkPost({
   const bodyHtml = formatBasicText(object.body ?? "");
   const host = linkHost(object);
 
-  if (theme === "cards" || theme === "prism") {
+  if (theme === "cards" || theme === "prism" || theme === "ledger") {
     return (
       <>
-        {!linked ? (
-          <a className="cards-close" href={backHref} aria-label={backLabel}>
-            <span aria-hidden="true">×</span>
-          </a>
-        ) : null}
+        {!linked ? <CloseButton backHref={backHref!} backLabel={backLabel!} /> : null}
         <article className={`cards-link-card${linked ? "" : " cards-link-card--full"}`}>
           <div className="cards-link-topline">
             <p className="cards-link-eyebrow">{t(locale, "links")}</p>

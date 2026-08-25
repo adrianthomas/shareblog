@@ -67,7 +67,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`/`prism`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
+| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`/`prism`/`ledger`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -86,9 +86,9 @@ ES5-ish JS injected as an inline `<script>`.
 `render.ts` orchestrates: `renderCard`/`renderDetail` switch on
 `ContentType` to the matching template in `render/templates/*.tsx`, every
 page is wrapped via `wrap()` in `Layout.tsx`. Templates branch between the
-classic-style markup and the interactive cards pipeline: `cards` and `prism`
-both usually render `CardsFeedItem`/`CardsDetailHeader` from `themes/cards.tsx`, while
-classic and washi fall through to the simpler markup. Link posts are the main
+classic-style markup and the interactive cards pipeline: `cards`, `prism`, and
+`ledger` usually render `CardsFeedItem`/`CardsDetailHeader` from
+`themes/cards.tsx`, while classic and washi fall through to the simpler markup. Link posts are the main
 exception: they use their own slim card with a direct external open action
 instead of the cards overlay opener. Adding a field to a
 content type means updating both branches if the cards-derived themes need to
@@ -102,7 +102,10 @@ header, refined nav pills, paper cards, and media/quote treatments. Prism is a
 proper cards-derived theme: it uses the cards animation/overlay script, tab
 bar, detail headers, and feed link semantics, then restyles the `.cards-*`
 surfaces in its own gated CSS block with rounded system typography,
-high-contrast surfaces, and saturated blue/pink accents.
+high-contrast surfaces, and saturated blue/pink accents. Ledger is also
+cards-derived, but presents the feed as a single-column professional index with
+separators and compact type labels; its branch in `cardsScript` uses an
+iOS-style right-to-left push detail panel instead of the expanding-card motion.
 
 The cards pipeline has specialized media openers where the feed card and
 detail page have genuinely different geometry: photos fly the photo into the

@@ -9,6 +9,7 @@ const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }
   cards: { light: "#ffffff", dark: "#111111" },
   washi: { light: "#f6efe1", dark: "#1c1a15" },
   prism: { light: "#f7f8ff", dark: "#101321" },
+  ledger: { light: "#f8fafc", dark: "#0f1115" },
 };
 
 // Promotes the Amazon storefront closest to the visitor's browser-reported
@@ -111,7 +112,7 @@ export function Layout({
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
   const chromeColors = THEME_CHROME_COLORS[theme];
-  const usesCardsInteraction = theme === "cards" || theme === "prism";
+  const usesCardsInteraction = theme === "cards" || theme === "prism" || theme === "ledger";
   const usesCompactCategoryFilter = !usesCardsInteraction;
   const hasAbout = Boolean(site.about && site.about.trim());
   // Not siteOrigin() from render.ts — that file imports Layout, so
@@ -1168,6 +1169,405 @@ export function Layout({
             }}
           />
         ) : null}
+        {theme === "ledger" ? (
+          // Ledger reuses the cards renderer but tones it into a composed
+          // index: rows with clear type labels, separators, and a push-style
+          // detail transition instead of expanding-card motion.
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                html[data-theme="ledger"] {
+                  --fg: #15171c; --bg: #f8fafc; --muted: #667085; --border: #d8dee8; --focus: #1f5eff;
+                  --ledger-surface: #ffffff;
+                  --ledger-raised: #f1f4f8;
+                  --ledger-separator: #e3e8ef;
+                  --ledger-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 12px 28px rgba(15, 23, 42, 0.08);
+                }
+                @media (prefers-color-scheme: dark) {
+                  html[data-theme="ledger"] {
+                    --fg: #f3f5f8; --bg: #0f1115; --muted: #9aa3b2; --border: #29303a; --focus: #80a7ff;
+                    --ledger-surface: #161a21;
+                    --ledger-raised: #1e2430;
+                    --ledger-separator: #2b333f;
+                    --ledger-shadow: 0 1px 2px rgba(0, 0, 0, 0.26), 0 14px 34px rgba(0, 0, 0, 0.28);
+                  }
+                }
+                html[data-theme="ledger"] body {
+                  max-width: none;
+                  margin: 0;
+                  padding: 0;
+                  background:
+                    linear-gradient(180deg, color-mix(in srgb, var(--ledger-raised) 64%, var(--bg)), var(--bg) 18rem),
+                    var(--bg);
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+                  line-height: 1.55;
+                }
+                body.theme-ledger header.site-header,
+                body.theme-ledger main,
+                body.theme-ledger footer.site-footer {
+                  max-width: 860px;
+                }
+                body.theme-ledger header.site-header {
+                  position: sticky;
+                  top: 0;
+                  z-index: 50;
+                  padding-top: max(0.85rem, env(safe-area-inset-top));
+                  padding-bottom: 0.85rem;
+                  margin-bottom: 0;
+                  align-items: center;
+                  background: color-mix(in srgb, var(--bg) 86%, transparent);
+                  border-bottom: 1px solid color-mix(in srgb, var(--ledger-separator) 82%, transparent);
+                  backdrop-filter: blur(18px) saturate(1.15);
+                  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+                }
+                body.theme-ledger header.site-header h1 {
+                  font-size: 1.15rem;
+                  font-weight: 720;
+                  letter-spacing: 0;
+                }
+                body.theme-ledger .site-header-left {
+                  flex-direction: row;
+                  align-items: center;
+                  gap: 0.8rem;
+                }
+                body.theme-ledger .header-links {
+                  font-size: 0.76rem;
+                }
+                body.theme-ledger main {
+                  padding-top: 1.35rem;
+                }
+                body.theme-ledger .cards-feed {
+                  display: grid;
+                  grid-template-columns: 1fr;
+                  gap: 0;
+                  border: 1px solid var(--ledger-separator);
+                  border-radius: 8px;
+                  background: var(--ledger-surface);
+                  box-shadow: var(--ledger-shadow);
+                  overflow: hidden;
+                }
+                body.theme-ledger .cards-item {
+                  display: block;
+                  border-radius: 0;
+                  background: var(--ledger-surface);
+                  box-shadow: none;
+                  border-bottom: 1px solid var(--ledger-separator);
+                  min-height: 6.8rem;
+                  transition: background 0.16s ease;
+                }
+                body.theme-ledger .cards-item:last-child {
+                  border-bottom: 0;
+                }
+                body.theme-ledger .cards-item:hover {
+                  transform: none;
+                  box-shadow: none;
+                  background: color-mix(in srgb, var(--focus) 5%, var(--ledger-surface));
+                }
+                body.theme-ledger .cards-item:focus-visible {
+                  outline: 2px solid var(--focus);
+                  outline-offset: -2px;
+                }
+                body.theme-ledger .cards-hero {
+                  display: grid;
+                  grid-template-columns: 7.4rem minmax(0, 1fr);
+                  align-items: stretch;
+                  min-height: 6.8rem;
+                  aspect-ratio: auto;
+                  background: var(--ledger-surface);
+                }
+                body.theme-ledger .cards-hero img {
+                  position: static;
+                  width: 7.4rem;
+                  height: 100%;
+                  min-height: 6.8rem;
+                  object-fit: cover;
+                  border-right: 1px solid var(--ledger-separator);
+                }
+                body.theme-ledger .cards-scrim {
+                  display: none;
+                }
+                body.theme-ledger .cards-caption {
+                  position: static;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  min-width: 0;
+                  padding: 0.95rem 1.15rem;
+                  color: var(--fg);
+                }
+                body.theme-ledger .cards-eyebrow,
+                body.theme-ledger .cards-photo-eyebrow,
+                body.theme-ledger .cards-book-eyebrow,
+                body.theme-ledger .cards-music-eyebrow,
+                body.theme-ledger .cards-link-eyebrow {
+                  width: fit-content;
+                  margin: 0 0 0.35rem;
+                  padding: 0.18rem 0.42rem;
+                  border-radius: 4px;
+                  background: color-mix(in srgb, var(--focus) 8%, var(--ledger-raised));
+                  color: color-mix(in srgb, var(--focus) 78%, var(--fg));
+                  font-size: 0.66rem;
+                  font-weight: 760;
+                  letter-spacing: 0.05em;
+                  text-transform: uppercase;
+                  text-shadow: none;
+                }
+                body.theme-ledger .cards-title,
+                body.theme-ledger .cards-photo-title,
+                body.theme-ledger .cards-book-title,
+                body.theme-ledger .cards-music-title,
+                body.theme-ledger .cards-link-title {
+                  color: var(--fg);
+                  font-size: 1.08rem;
+                  line-height: 1.28;
+                  font-weight: 720;
+                  letter-spacing: 0;
+                  text-shadow: none;
+                }
+                body.theme-ledger .cards-subtitle,
+                body.theme-ledger .cards-photo-subtitle,
+                body.theme-ledger .cards-book-author,
+                body.theme-ledger .cards-music-artist,
+                body.theme-ledger .cards-link-excerpt {
+                  margin-top: 0.35rem;
+                  color: var(--muted);
+                  font-size: 0.9rem;
+                  line-height: 1.42;
+                  text-shadow: none;
+                }
+                body.theme-ledger .cards-caption-action,
+                body.theme-ledger .cards-text-action {
+                  width: fit-content;
+                  margin-top: 0.6rem;
+                  border-radius: 5px;
+                  background: color-mix(in srgb, var(--focus) 8%, var(--ledger-raised));
+                  border: 1px solid color-mix(in srgb, var(--focus) 18%, var(--border));
+                  color: var(--focus);
+                  font-size: 0.78rem;
+                  font-weight: 680;
+                }
+                body.theme-ledger .cards-text-card,
+                body.theme-ledger .cards-link-card {
+                  min-height: 6.8rem;
+                  padding: 1rem 1.15rem;
+                  background: transparent;
+                  border: 0;
+                  border-radius: 0;
+                  box-shadow: none;
+                }
+                body.theme-ledger .cards-link-card::before {
+                  display: none;
+                }
+                body.theme-ledger .cards-text-badge,
+                body.theme-ledger .cards-quote-badge {
+                  border-radius: 4px;
+                  padding: 0.18rem 0.42rem;
+                  background: color-mix(in srgb, var(--cards-accent) 8%, var(--ledger-raised));
+                  font-size: 0.66rem;
+                  font-weight: 760;
+                }
+                body.theme-ledger .cards-text-title,
+                body.theme-ledger .cards-quote-text {
+                  font-family: inherit;
+                  color: var(--fg);
+                  font-size: 1.03rem;
+                  line-height: 1.42;
+                  font-weight: 620;
+                  letter-spacing: 0;
+                  text-transform: none;
+                }
+                body.theme-ledger .cards-text-subtitle,
+                body.theme-ledger .cards-text-date,
+                body.theme-ledger .cards-quote-author,
+                body.theme-ledger .cards-quote-date,
+                body.theme-ledger .cards-link-date {
+                  color: var(--muted);
+                }
+                body.theme-ledger .cards-quote-card {
+                  padding: 1rem 1.15rem;
+                  background: transparent;
+                  border-radius: 0;
+                  box-shadow: none;
+                  transform: none;
+                }
+                body.theme-ledger .cards-item--quote {
+                  background: var(--ledger-surface);
+                  border-radius: 0;
+                  overflow: hidden;
+                }
+                body.theme-ledger .cards-item--quote:hover .cards-quote-card {
+                  transform: none;
+                  box-shadow: none;
+                }
+                body.theme-ledger .cards-quote-author {
+                  text-align: left;
+                  font-family: inherit;
+                  font-size: 0.86rem;
+                  text-transform: none;
+                }
+                body.theme-ledger .cards-quote-author::before {
+                  content: "";
+                }
+                body.theme-ledger .cards-quote-date {
+                  margin-top: 0.75rem;
+                  padding-top: 0;
+                  border-top: 0;
+                  text-align: left;
+                }
+                body.theme-ledger .cards-filter-trigger {
+                  width: 34px;
+                  height: 34px;
+                  border-radius: 8px;
+                  background: var(--ledger-surface);
+                  box-shadow: none;
+                }
+                body.theme-ledger .cards-filter-menu {
+                  border-radius: 8px;
+                  background: var(--ledger-surface);
+                  box-shadow: var(--ledger-shadow);
+                }
+                body.theme-ledger .cards-filter-menu a {
+                  border-radius: 6px;
+                }
+                body.theme-ledger .cards-panel {
+                  box-shadow: -18px 0 38px rgba(15, 23, 42, 0.16);
+                  will-change: transform;
+                }
+                body.theme-ledger .cards-overlay-backdrop {
+                  background: rgba(15, 23, 42, 0.12);
+                  backdrop-filter: none;
+                  -webkit-backdrop-filter: none;
+                  transition: opacity 0.28s ease;
+                }
+                body.theme-ledger .cards-panel-scroll main {
+                  max-width: 760px;
+                  margin: 0 auto;
+                }
+                body.theme-ledger .cards-close {
+                  top: max(0.75rem, env(safe-area-inset-top));
+                  left: max(0.85rem, env(safe-area-inset-left));
+                  right: auto;
+                  width: auto;
+                  min-height: 36px;
+                  padding: 0 0.8rem 0 0.55rem;
+                  gap: 0.18rem;
+                  border-radius: 999px;
+                  background: color-mix(in srgb, var(--ledger-surface) 92%, transparent);
+                  color: var(--focus);
+                  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+                  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+                }
+                body.theme-ledger .cards-close-icon--x {
+                  display: none;
+                }
+                body.theme-ledger .cards-close-icon--back {
+                  display: block;
+                }
+                body.theme-ledger .cards-close-label {
+                  display: inline;
+                  font-size: 0.94rem;
+                  font-weight: 620;
+                }
+                body.theme-ledger .cards-detail-header:not(.cards-detail-header--photo),
+                body.theme-ledger .cards-book-header,
+                body.theme-ledger .cards-music-header,
+                body.theme-ledger .cards-article-detail,
+                body.theme-ledger .cards-link-card--full {
+                  margin-top: 0;
+                  padding-top: max(4.4rem, calc(env(safe-area-inset-top) + 3.4rem));
+                }
+                body.theme-ledger .cards-detail-header:not(.cards-detail-header--text):not(.cards-detail-header--photo) {
+                  width: auto;
+                  max-width: 760px;
+                  margin-left: auto;
+                  margin-right: auto;
+                  border-radius: 0;
+                  box-shadow: none;
+                }
+                body.theme-ledger .cards-detail-hero {
+                  min-height: 0;
+                  aspect-ratio: 16 / 9;
+                  border-radius: 8px;
+                  overflow: hidden;
+                }
+                body.theme-ledger .cards-detail-header .cards-caption {
+                  position: absolute;
+                  color: #fff;
+                }
+                body.theme-ledger .cards-detail-header .cards-eyebrow,
+                body.theme-ledger .cards-detail-header .cards-title,
+                body.theme-ledger .cards-detail-header .cards-subtitle,
+                body.theme-ledger .cards-detail-header .cards-date {
+                  color: #fff;
+                  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.44);
+                }
+                body.theme-ledger .cards-detail-header .cards-title,
+                body.theme-ledger .cards-article-title {
+                  font-size: clamp(1.65rem, 4vw, 2.45rem);
+                  line-height: 1.08;
+                }
+                body.theme-ledger .cards-detail-header--text {
+                  max-width: 760px;
+                }
+                body.theme-ledger .cards-detail-header--text .cards-text-card,
+                body.theme-ledger .cards-detail-header--quote .cards-quote-card {
+                  border: 1px solid var(--ledger-separator);
+                  border-radius: 8px;
+                  background: var(--ledger-surface);
+                  box-shadow: var(--ledger-shadow);
+                }
+                body.theme-ledger .cards-book-cover,
+                body.theme-ledger .cards-music-artwork,
+                body.theme-ledger .cards-article-body img,
+                body.theme-ledger .cards-body img {
+                  border-radius: 8px;
+                  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1), 0 10px 24px rgba(15, 23, 42, 0.12);
+                }
+                body.theme-ledger .cards-body,
+                body.theme-ledger .cards-article-detail {
+                  max-width: 760px;
+                }
+                body.theme-ledger .cards-article-header {
+                  border-bottom-color: var(--ledger-separator);
+                }
+                body.theme-ledger footer.site-footer {
+                  border-top-color: var(--ledger-separator);
+                }
+                @media (max-width: 560px) {
+                  body.theme-ledger header.site-header {
+                    align-items: flex-start;
+                  }
+                  body.theme-ledger .site-header-left {
+                    width: 100%;
+                    justify-content: space-between;
+                  }
+                  body.theme-ledger .site-header-right {
+                    align-items: flex-start;
+                  }
+                  body.theme-ledger .cards-feed {
+                    border-left: 0;
+                    border-right: 0;
+                    border-radius: 0;
+                    margin-left: -1.25rem;
+                    margin-right: -1.25rem;
+                  }
+                  body.theme-ledger .cards-hero {
+                    grid-template-columns: 5.8rem minmax(0, 1fr);
+                  }
+                  body.theme-ledger .cards-hero img {
+                    width: 5.8rem;
+                  }
+                  body.theme-ledger .cards-caption,
+                  body.theme-ledger .cards-text-card,
+                  body.theme-ledger .cards-quote-card,
+                  body.theme-ledger .cards-link-card {
+                    padding: 0.9rem 1rem;
+                  }
+                }
+              `,
+            }}
+          />
+        ) : null}
       </head>
       <body
         className={
@@ -1177,7 +1577,9 @@ export function Layout({
               ? "theme-washi"
               : theme === "prism"
                 ? "theme-cards theme-prism"
-                : undefined
+                : theme === "ledger"
+                  ? "theme-cards theme-ledger"
+                  : undefined
         }
         data-theme={theme}
         data-cards-detail={usesCardsInteraction && cardsDetail ? "true" : undefined}
