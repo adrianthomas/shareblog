@@ -886,6 +886,12 @@ export function Layout({
                 body.theme-prism .cards-item--quote:hover .cards-quote-card {
                   transform: translateY(-2px);
                 }
+                body.theme-prism .cards-quote-badge {
+                  background: color-mix(in srgb, var(--prism-pink) 12%, var(--prism-surface));
+                  color: var(--prism-pink);
+                  font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+                  font-weight: 800;
+                }
                 body.theme-prism .cards-quote-text,
                 body.theme-prism .cards-quote-author {
                   font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;

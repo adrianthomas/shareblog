@@ -155,6 +155,7 @@ function TextCard({
 // regardless of light/dark mode, the same way a photo doesn't invert for
 // dark mode — it's a physical object, not interface chrome.
 function QuoteCard({
+  eyebrow,
   title,
   subtitle,
   dateLabel,
@@ -162,6 +163,7 @@ function QuoteCard({
   titleTag: TitleTag = "h2",
   full = false,
 }: {
+  eyebrow?: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   dateLabel?: React.ReactNode;
@@ -173,6 +175,7 @@ function QuoteCard({
   const style = { "--cards-quote-tilt": `${tilt}deg` } as React.CSSProperties;
   return (
     <div className={`cards-quote-card${full ? " cards-quote-card--full" : ""}`} style={style}>
+      {eyebrow ? <p className="cards-quote-badge">{eyebrow}</p> : null}
       <TitleTag className="cards-quote-text">{title}</TitleTag>
       {subtitle ? <p className="cards-quote-author">{subtitle}</p> : null}
       {dateLabel ? <p className="cards-quote-date">{dateLabel}</p> : null}
@@ -287,7 +290,7 @@ export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, vari
       {hero.imageUrl ? (
         <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
       ) : variant === "quote" ? (
-        <QuoteCard title={title} subtitle={subtitle} seed={hero.gradientSeed} />
+        <QuoteCard eyebrow={eyebrow} title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       ) : (
         <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} type={type} />
       )}
@@ -344,7 +347,15 @@ export function CardsDetailHeader({
         <CloseButton backHref={backHref} backLabel={backLabel} />
         <header className={headerClass}>
           {variant === "quote" ? (
-            <QuoteCard title={title} subtitle={subtitle} dateLabel={dateLabel} seed={hero.gradientSeed} titleTag="h1" full />
+            <QuoteCard
+              eyebrow={eyebrow}
+              title={title}
+              subtitle={subtitle}
+              dateLabel={dateLabel}
+              seed={hero.gradientSeed}
+              titleTag="h1"
+              full
+            />
           ) : (
             <TextCard
               eyebrow={eyebrow}
@@ -779,6 +790,15 @@ export const cardsStyles = `
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .cards-item--quote:hover .cards-quote-card { transform: rotate(0deg) translateY(-2px); box-shadow: 0 2px 4px rgba(30,20,5,0.14), 0 18px 36px rgba(30,20,5,0.22); }
+  .cards-quote-badge {
+    display: inline-flex; align-items: center;
+    margin: 0 0 0.95rem; padding: 0.26em 0.72em;
+    border-radius: 999px;
+    background: rgba(138,109,59,0.12);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #6b5a3d;
+  }
   /* A typewritten letter rather than a handwritten one — ink-struck,
      slightly irregular type from a manual machine, still a personal note
      but a different idea of "letter" than a script face gives. Special
