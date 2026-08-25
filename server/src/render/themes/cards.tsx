@@ -515,7 +515,7 @@ export function CardsCategoryFilter({
 }
 
 export const cardsStyles = `
-  body.theme-cards { max-width: none; padding: 0; }
+  body.theme-cards { max-width: none; padding: 0; background-color: var(--bg); }
   body.theme-cards main { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 2rem; }
   body.theme-cards header.site-header { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 0; }
   /* Leaves the feed clear of the page edge while the category filter sits

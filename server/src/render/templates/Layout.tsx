@@ -86,12 +86,8 @@ export function Layout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
-        <meta name="theme-color" content={chromeColors.light} data-light={chromeColors.light} data-dark={chromeColors.dark} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var m=document.querySelector('meta[name="theme-color"][data-light]');if(!m||!window.matchMedia)return;var q=window.matchMedia('(prefers-color-scheme: dark)');var a=function(){m.setAttribute('content',q.matches?m.dataset.dark:m.dataset.light);};a();if(q.addEventListener)q.addEventListener('change',a);else if(q.addListener)q.addListener(a);}());`,
-          }}
-        />
+        <meta name="theme-color" content={chromeColors.light} media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content={chromeColors.dark} media="(prefers-color-scheme: dark)" />
         <title>{pageTitle}</title>
         {site.tagline ? <meta name="description" content={site.tagline} /> : null}
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
@@ -185,7 +181,7 @@ export function Layout({
                 :root { --fg: #f0f0f0; --bg: #111; --muted: #b8b8b8; --border: #3a3a3a; --focus: #6ea8ff; }
               }
               * { box-sizing: border-box; }
-              html, body { background: var(--bg); color: var(--fg); }
+              html, body { background-color: var(--bg); color: var(--fg); }
               body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
                      max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem; line-height: 1.55; }
               .skip-link { position: absolute; left: -9999px; top: 0; background: var(--bg); color: var(--fg);
@@ -391,7 +387,7 @@ export function Layout({
                   margin-bottom: 2.5rem;
                   padding-top: 1.1rem;
                   padding-bottom: 0.9rem;
-                  background: color-mix(in srgb, var(--bg) 84%, transparent);
+                  background-color: var(--bg);
                   backdrop-filter: blur(18px);
                   -webkit-backdrop-filter: blur(18px);
                   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
@@ -655,11 +651,11 @@ export function Layout({
                   margin: 0;
                   padding: 0;
                   font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
-                  background:
+                  background-color: var(--bg);
+                  background-image:
                     linear-gradient(180deg, color-mix(in srgb, var(--focus) 8%, transparent), transparent 22rem),
                     radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--prism-pink) 14%, transparent), transparent 18rem),
-                    radial-gradient(circle at 12% 28%, color-mix(in srgb, var(--prism-cyan) 12%, transparent), transparent 18rem),
-                    var(--bg);
+                    radial-gradient(circle at 12% 28%, color-mix(in srgb, var(--prism-cyan) 12%, transparent), transparent 18rem);
                   line-height: 1.6;
                 }
                 html[data-theme="prism"] header.site-header,
