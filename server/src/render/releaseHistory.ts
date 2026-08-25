@@ -15,6 +15,7 @@ export const RELEASE_HISTORY: ReleaseEntry[] = [
     date: "2026-08-25",
     changes: [
       "Added \"Prism,\" a bright, playful site theme with crisp cards, rounded typography, and blue-pink accents.",
+      "Prism now uses the same animated card-opening interaction as the Cards theme.",
       "Refined \"Washi\" into a richer paper-card layout with a more composed header, navigation, media, and quote treatment.",
     ],
   },

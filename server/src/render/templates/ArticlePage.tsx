@@ -20,7 +20,7 @@ export function ArticleCard({
 }) {
   const metadata = object.metadata as ArticleMetadata;
 
-  if (theme === "cards") {
+  if (theme === "cards" || theme === "prism") {
     return (
       <CardsFeedItem
         href={`/articles/${object.slug}`}
@@ -64,7 +64,7 @@ export function ArticlePage({
   const metadata = object.metadata as ArticleMetadata;
   const bodyHtml = formatRichText(object.body ?? "");
 
-  if (theme === "cards") {
+  if (theme === "cards" || theme === "prism") {
     return (
       <>
         <CardsDetailHeader

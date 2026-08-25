@@ -28,36 +28,6 @@ const amazonRegionScript = `
 })();
 `;
 
-const prismCardScript = `
-(function () {
-  function isInteractiveTarget(target) {
-    return target && target.closest && target.closest('a, button, input, select, textarea');
-  }
-  var cards = document.querySelectorAll('.prism-feed > .card');
-  for (var i = 0; i < cards.length; i += 1) {
-    var card = cards[i];
-    var link = card.querySelector('a[href]');
-    if (!link) continue;
-    card.setAttribute('role', 'link');
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', (link.textContent || '').trim() || link.getAttribute('href'));
-    card.setAttribute('data-card-href', link.getAttribute('href'));
-    card.addEventListener('click', function (event) {
-      if (event.defaultPrevented || isInteractiveTarget(event.target)) return;
-      var href = this.getAttribute('data-card-href');
-      if (href) window.location.href = href;
-    });
-    card.addEventListener('keydown', function (event) {
-      if (event.defaultPrevented || isInteractiveTarget(event.target)) return;
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      var href = this.getAttribute('data-card-href');
-      if (href) window.location.href = href;
-    });
-  }
-})();
-`;
-
 function navItems(site: Site, availablePaths?: string[]) {
   const items = [
     { href: "/posts", label: t(site.locale, "posts") },
@@ -93,6 +63,7 @@ export function Layout({
 }) {
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
+  const usesCardsInteraction = theme === "cards" || theme === "prism";
   const hasAbout = Boolean(site.about && site.about.trim());
   // Not siteOrigin() from render.ts — that file imports Layout, so
   // importing back would be circular. Same computation, just the host
@@ -337,7 +308,7 @@ export function Layout({
             `,
           }}
         />
-        {theme === "cards" ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
+        {usesCardsInteraction ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
         {theme === "washi" ? (
           // Washi keeps the classic templates but gives list pages their own
           // feed wrapper in render.ts, so it can be more composed than classic
@@ -620,10 +591,9 @@ export function Layout({
           />
         ) : null}
         {theme === "prism" ? (
-          // Prism is an original bright/rounded theme inspired by playful
-          // technical blogs: compact cards, saturated accent colors, and
-          // friendly system typography. It reuses classic detail markup and
-          // adds only a list wrapper plus a small card-click enhancement.
+          // Prism is an original bright/rounded restyle of the cards theme:
+          // same animated feed/detail interaction, with brighter surfaces,
+          // saturated accents, and friendly system typography.
           <style
             dangerouslySetInnerHTML={{
               __html: `
@@ -731,47 +701,49 @@ export function Layout({
                 html[data-theme="prism"] main {
                   padding-bottom: 1rem;
                 }
-                html[data-theme="prism"] .prism-feed {
-                  display: grid;
+                body.theme-prism main {
+                  max-width: 1120px;
+                  margin: 0 auto;
+                  padding: 1.25rem 1.25rem 6rem;
+                }
+                body.theme-prism header.site-header {
+                  max-width: 1120px;
+                  margin: 0 auto;
+                  padding: 1.1rem 1.25rem 0;
+                }
+                body.theme-prism footer.site-footer {
+                  max-width: 1120px;
+                  margin: 0 auto;
+                  padding: 1.5rem 1.25rem 6rem;
+                  border-top: 1px solid var(--border);
+                }
+                body.theme-prism .cards-feed {
                   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
                   gap: 1.2rem;
-                  align-items: start;
                 }
-                html[data-theme="prism"] .prism-feed > .card {
-                  position: relative;
-                  margin: 0;
-                  padding: 1.25rem;
-                  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-                  border-bottom-color: color-mix(in srgb, var(--border) 80%, transparent);
+                body.theme-prism .cards-item {
                   border-radius: 8px;
+                  background: var(--prism-surface);
+                  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
                   background: linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 34%, var(--prism-surface)));
                   box-shadow: var(--prism-shadow);
-                  overflow: hidden;
                   -webkit-tap-highlight-color: transparent;
-                  cursor: pointer;
                   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
                 }
-                html[data-theme="prism"] .prism-feed > .card::before {
+                body.theme-prism .cards-item::before {
                   content: "";
                   position: absolute;
                   inset: 0 0 auto;
+                  z-index: 3;
                   height: 0.36rem;
                   background: linear-gradient(90deg, var(--focus), var(--prism-pink), var(--prism-cyan));
                 }
-                html[data-theme="prism"] .prism-feed > .card:focus-visible {
-                  outline: 3px solid var(--focus);
-                  outline-offset: 3px;
-                }
                 @media (hover: hover) and (pointer: fine) {
-                  html[data-theme="prism"] .prism-feed > .card:hover {
+                  body.theme-prism .cards-item:hover {
                     transform: translateY(-3px);
                     box-shadow: var(--prism-shadow-hover);
                     border-color: color-mix(in srgb, var(--focus) 32%, var(--border));
                   }
-                }
-                html[data-theme="prism"] .prism-feed > .card > * {
-                  position: relative;
-                  z-index: 1;
                 }
                 html[data-theme="prism"] h1,
                 html[data-theme="prism"] h2,
@@ -790,6 +762,96 @@ export function Layout({
                   margin-top: 0.25rem;
                   font-size: 1.35rem;
                   line-height: 1.22;
+                }
+                body.theme-prism .cards-hero {
+                  aspect-ratio: 16 / 10;
+                }
+                body.theme-prism .cards-scrim {
+                  background: linear-gradient(to top, rgba(10, 12, 16, 0.78) 0%, rgba(10, 12, 16, 0.34) 48%, rgba(10, 12, 16, 0) 76%);
+                }
+                body.theme-prism .cards-caption {
+                  padding: 1.1rem 1.25rem 1.2rem;
+                }
+                body.theme-prism .cards-eyebrow,
+                body.theme-prism .cards-photo-eyebrow,
+                body.theme-prism .cards-book-eyebrow {
+                  color: color-mix(in srgb, var(--prism-yellow) 82%, white);
+                  font-weight: 800;
+                }
+                body.theme-prism .cards-title,
+                body.theme-prism .cards-photo-title,
+                body.theme-prism .cards-book-title {
+                  font-weight: 850;
+                  letter-spacing: 0;
+                }
+                body.theme-prism .cards-text-card {
+                  padding: 1.5rem 1.35rem 1.25rem;
+                  background: transparent;
+                }
+                body.theme-prism .cards-text-badge {
+                  background: color-mix(in srgb, var(--cards-accent) 14%, var(--prism-surface));
+                  color: color-mix(in srgb, var(--cards-accent) 86%, var(--fg));
+                  font-weight: 800;
+                }
+                body.theme-prism .cards-text-title {
+                  font-size: 1.22rem;
+                  font-weight: 750;
+                  line-height: 1.42;
+                }
+                body.theme-prism .cards-text-subtitle,
+                body.theme-prism .cards-text-date,
+                body.theme-prism .cards-photo-subtitle,
+                body.theme-prism .cards-photo-date,
+                body.theme-prism .cards-book-author,
+                body.theme-prism .cards-book-date {
+                  color: var(--muted);
+                }
+                body.theme-prism .cards-quote-card {
+                  background:
+                    linear-gradient(135deg, color-mix(in srgb, var(--prism-pink) 10%, transparent), transparent 45%),
+                    var(--prism-surface);
+                  border: 1px solid color-mix(in srgb, var(--prism-pink) 26%, var(--border));
+                  border-left: 0;
+                  border-radius: 8px;
+                  box-shadow: inset 0.34rem 0 0 var(--prism-pink), 0 10px 24px rgba(230, 0, 103, 0.08);
+                  transform: none;
+                }
+                body.theme-prism .cards-item--quote:hover .cards-quote-card {
+                  transform: translateY(-2px);
+                }
+                body.theme-prism .cards-quote-text,
+                body.theme-prism .cards-quote-author {
+                  font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+                  color: var(--fg);
+                  text-transform: none;
+                  letter-spacing: 0;
+                }
+                body.theme-prism .cards-quote-text {
+                  font-size: 1.16rem;
+                  font-weight: 700;
+                  line-height: 1.48;
+                }
+                body.theme-prism .cards-quote-author,
+                body.theme-prism .cards-quote-date {
+                  color: var(--muted);
+                }
+                body.theme-prism .cards-detail-header:not(.cards-detail-header--text):not(.cards-detail-header--photo) {
+                  border-radius: 8px;
+                }
+                body.theme-prism .cards-detail-header--text .cards-text-card,
+                body.theme-prism .cards-detail-header--quote .cards-quote-card {
+                  border-radius: 8px;
+                  box-shadow: var(--prism-shadow);
+                }
+                body.theme-prism .cards-book-cover,
+                body.theme-prism .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image {
+                  border-radius: 8px;
+                }
+                body.theme-prism .cards-tabbar {
+                  background: color-mix(in srgb, var(--prism-surface) 84%, transparent);
+                }
+                body.theme-prism .cards-tabbar a[aria-current="page"] {
+                  color: var(--prism-pink);
                 }
                 html[data-theme="prism"] .body-content h2 {
                   margin-top: 2rem;
@@ -813,10 +875,6 @@ export function Layout({
                 html[data-theme="prism"] .meta {
                   color: var(--muted);
                   font-size: 0.84rem;
-                }
-                html[data-theme="prism"] .prism-feed > .card .meta:first-child,
-                html[data-theme="prism"] .prism-feed > .card h2 + .meta {
-                  font-weight: 600;
                 }
                 html[data-theme="prism"] .quote-text {
                   margin: 0 0 1rem;
@@ -855,34 +913,6 @@ export function Layout({
                 html[data-theme="prism"] .music img.artwork {
                   border-radius: 8px;
                   box-shadow: 0 1px 2px rgba(38, 45, 64, 0.12), 0 10px 24px rgba(38, 45, 64, 0.14);
-                }
-                html[data-theme="prism"] .prism-feed > .card > a:first-child {
-                  display: block;
-                  width: calc(100% + 2.5rem);
-                  max-width: none;
-                  margin: -1.25rem -1.25rem 1rem;
-                  overflow: hidden;
-                  border-radius: 8px 8px 0 0;
-                }
-                html[data-theme="prism"] .prism-feed > .card > a:first-child img {
-                  display: block;
-                  width: 100%;
-                  max-width: none;
-                  margin: 0;
-                  aspect-ratio: 16 / 10;
-                  object-fit: cover;
-                  border-radius: 0;
-                  box-shadow: none;
-                }
-                html[data-theme="prism"] .prism-feed > .card > img:first-child {
-                  display: block;
-                  width: calc(100% + 2.5rem);
-                  max-width: none;
-                  margin: -1.25rem -1.25rem 1rem;
-                  aspect-ratio: 16 / 10;
-                  object-fit: cover;
-                  border-radius: 8px 8px 0 0;
-                  box-shadow: none;
                 }
                 html[data-theme="prism"] .music-links,
                 html[data-theme="prism"] .meta {
@@ -929,7 +959,7 @@ export function Layout({
                   html[data-theme="prism"] nav {
                     justify-content: flex-start;
                   }
-                  html[data-theme="prism"] .prism-feed {
+                  body.theme-prism .cards-feed {
                     grid-template-columns: 1fr;
                   }
                 }
@@ -946,10 +976,16 @@ export function Layout({
       </head>
       <body
         className={
-          theme === "cards" ? "theme-cards" : theme === "washi" ? "theme-washi" : theme === "prism" ? "theme-prism" : undefined
+          theme === "cards"
+            ? "theme-cards"
+            : theme === "washi"
+              ? "theme-washi"
+              : theme === "prism"
+                ? "theme-cards theme-prism"
+                : undefined
         }
         data-theme={theme}
-        data-cards-detail={theme === "cards" && cardsDetail ? "true" : undefined}
+        data-cards-detail={usesCardsInteraction && cardsDetail ? "true" : undefined}
       >
         <a className="skip-link" href="#main-content">
           {t(site.locale, "skipToContent")}
@@ -986,16 +1022,15 @@ export function Layout({
           </div>
         </header>
         <main id="main-content">{children}</main>
-        {hasAbout && !(theme === "cards" && cardsDetail) ? (
+        {hasAbout && !(usesCardsInteraction && cardsDetail) ? (
           <footer className="site-footer">
             <a href="/about">{t(site.locale, "about")}</a>
           </footer>
         ) : null}
-        {theme === "cards" && !cardsDetail ? (
+        {usesCardsInteraction && !cardsDetail ? (
           <CardsTabBar locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
         ) : null}
-        {theme === "cards" ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
-        {theme === "prism" ? <script dangerouslySetInnerHTML={{ __html: prismCardScript }} /> : null}
+        {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
         <script dangerouslySetInnerHTML={{ __html: amazonRegionScript }} />
         <script dangerouslySetInnerHTML={{ __html: copyButtonScript }} />
       </body>

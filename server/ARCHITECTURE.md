@@ -85,28 +85,22 @@ ES5-ish JS injected as an inline `<script>`.
 
 `render.ts` orchestrates: `renderCard`/`renderDetail` switch on
 `ContentType` to the matching template in `render/templates/*.tsx`, every
-page is wrapped via `wrap()` in `Layout.tsx`. **Every template renders two
-parallel themes from the same function** — `if (theme === "cards") {...}
-return <classic markup>` — there's no separate per-theme file, so adding a
-field to a content type means updating both branches (and the
-`CardsFeedItem`/`CardsDetailHeader` props in `themes/cards.tsx` if the cards
-branch needs new shared-header behavior). `washi` and `prism` are deliberately
-lighter than cards but richer than classic: templates still only check
-`=== "cards"`, while `renderList()` wraps list pages in `.<theme>-feed` so
-those themes can render responsive card grids. Detail pages reuse the classic
-markup. The rest of each theme lives in a gated `<style>` block in
-`Layout.tsx`. Washi uses shared color tokens, self-hosted display type
+page is wrapped via `wrap()` in `Layout.tsx`. Templates branch between the
+classic-style markup and the interactive cards pipeline: `cards` and `prism`
+both render `CardsFeedItem`/`CardsDetailHeader` from `themes/cards.tsx`, while
+classic and washi fall through to the simpler markup. Adding a field to a
+content type means updating both branches if the cards-derived themes need to
+display it. Washi is deliberately lighter: `renderList()` wraps list pages in
+`.washi-feed` so it can render a responsive paper-card grid, while detail pages
+reuse the classic markup. The rest of Washi lives in a gated `<style>` block in
+`Layout.tsx`: shared color tokens, self-hosted display type
 (`server/public/fonts/shippori-mincho-*`, same latin/latin-ext-only pattern as
 the cards theme's Special Elite), textured backgrounds, sticky translucent
-header, refined nav pills, paper cards, and media/quote treatments. Prism uses
-system rounded sans typography, high-contrast surfaces, saturated blue/pink
-accents, compact cards, and rounded navigation/link treatments, plus a tiny
-`prismCardScript` click/keyboard enhancement so tapping blank card space opens
-the card's detail link while real links/buttons keep their own behavior. Washi
-adds no JS. A future theme that needs actual detail layout or interaction
-changes, not just a feed wrapper plus CSS/small progressive enhancement, would
-need its own `themes/<name>.tsx` module the way `themes/cards.tsx` works, plus
-real branches in every template.
+header, refined nav pills, paper cards, and media/quote treatments. Prism is a
+proper cards-derived theme: it uses the cards animation/overlay script, tab
+bar, detail headers, and feed link semantics, then restyles the `.cards-*`
+surfaces in its own gated CSS block with rounded system typography,
+high-contrast surfaces, and saturated blue/pink accents.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:

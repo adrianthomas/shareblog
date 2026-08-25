@@ -38,7 +38,7 @@ export function QuotePost({
   // a personal reflection rather than part of the quote being shared.
   const quoteCopyText = `“${object.body ?? ""}” — ${metadata.author}`;
 
-  if (theme === "cards") {
+  if (theme === "cards" || theme === "prism") {
     const hero = { gradientSeed: object.slug, imageAlt: "" };
     if (linked) {
       return (
