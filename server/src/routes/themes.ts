@@ -23,6 +23,11 @@ const themeOptions = [
     name: "Washi",
     description: "A calmer paper-and-ink look with warm tones and serif headings.",
   },
+  {
+    id: "prism",
+    name: "Prism",
+    description: "A bright, playful theme with crisp cards, rounded typography, and blue-pink accents.",
+  },
 ] satisfies ThemeOption[];
 
 const missingThemeMetadata = themeValues.filter((theme) => !themeOptions.some((option) => option.id === theme));

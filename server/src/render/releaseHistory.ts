@@ -12,6 +12,13 @@ export interface ReleaseEntry {
 // site owner would notice. Keep both of those out of any future entry too.
 export const RELEASE_HISTORY: ReleaseEntry[] = [
   {
+    date: "2026-08-25",
+    changes: [
+      "Added \"Prism,\" a bright, playful site theme with crisp cards, rounded typography, and blue-pink accents.",
+      "Refined \"Washi\" into a richer paper-card layout with a more composed header, navigation, media, and quote treatment.",
+    ],
+  },
+  {
     date: "2026-08-24",
     changes: [
       "Added \"Washi,\" a calmer, paper-and-ink site theme with warm tones and serif headings.",

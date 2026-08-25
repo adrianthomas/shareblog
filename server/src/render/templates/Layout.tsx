@@ -589,9 +589,310 @@ export function Layout({
             }}
           />
         ) : null}
+        {theme === "prism" ? (
+          // Prism is an original bright/rounded theme inspired by playful
+          // technical blogs: compact cards, saturated accent colors, and
+          // friendly system typography. It reuses classic detail markup and
+          // adds only a list wrapper, so it stays script-free.
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                html[data-theme="prism"] {
+                  color-scheme: light;
+                  --fg: #0a0c10; --bg: #f7f8ff; --muted: #5a6072; --border: #dfe4f2; --focus: #4242fa;
+                  --prism-pink: #e60067;
+                  --prism-cyan: #00a8d8;
+                  --prism-yellow: #f6c945;
+                  --prism-surface: #ffffff;
+                  --prism-surface-soft: #f0f4ff;
+                  --prism-shadow: 0 1px 2px rgba(38, 45, 64, 0.08), 0 16px 38px rgba(38, 45, 64, 0.12);
+                  --prism-shadow-hover: 0 2px 4px rgba(38, 45, 64, 0.1), 0 22px 48px rgba(38, 45, 64, 0.16);
+                }
+                @media (prefers-color-scheme: dark) {
+                  html[data-theme="prism"] {
+                    color-scheme: dark;
+                    --fg: #f4f7ff; --bg: #101321; --muted: #a9b1c7; --border: #2c3348; --focus: #8d8dff;
+                    --prism-pink: #ff5aa5;
+                    --prism-cyan: #4bd8ff;
+                    --prism-yellow: #ffd86b;
+                    --prism-surface: #181d2f;
+                    --prism-surface-soft: #202842;
+                    --prism-shadow: 0 1px 2px rgba(0, 0, 0, 0.22), 0 16px 38px rgba(0, 0, 0, 0.26);
+                    --prism-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.28), 0 22px 48px rgba(0, 0, 0, 0.32);
+                  }
+                }
+                html[data-theme="prism"] body {
+                  max-width: none;
+                  margin: 0;
+                  padding: 0;
+                  font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+                  background:
+                    linear-gradient(180deg, color-mix(in srgb, var(--focus) 8%, transparent), transparent 22rem),
+                    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--prism-pink) 14%, transparent), transparent 18rem),
+                    radial-gradient(circle at 12% 28%, color-mix(in srgb, var(--prism-cyan) 12%, transparent), transparent 18rem),
+                    var(--bg);
+                  line-height: 1.6;
+                }
+                html[data-theme="prism"] header.site-header,
+                html[data-theme="prism"] main,
+                html[data-theme="prism"] footer.site-footer {
+                  width: min(100%, 1120px);
+                  margin-left: auto;
+                  margin-right: auto;
+                  padding-left: 1.25rem;
+                  padding-right: 1.25rem;
+                }
+                html[data-theme="prism"] header.site-header {
+                  align-items: center;
+                  margin-bottom: 2.4rem;
+                  padding-top: 1.1rem;
+                  padding-bottom: 1rem;
+                }
+                html[data-theme="prism"] header.site-header h1 {
+                  font-size: 1.55rem;
+                  font-weight: 800;
+                  letter-spacing: 0;
+                }
+                html[data-theme="prism"] header.site-header h1 a {
+                  position: relative;
+                  display: inline-flex;
+                  align-items: center;
+                  color: var(--focus);
+                }
+                html[data-theme="prism"] header.site-header h1 a::after {
+                  content: "";
+                  position: absolute;
+                  left: 0;
+                  right: 0;
+                  bottom: -0.22rem;
+                  height: 0.26rem;
+                  border-radius: 999px;
+                  background: linear-gradient(90deg, var(--focus), var(--prism-pink), var(--prism-yellow));
+                }
+                html[data-theme="prism"] .site-header-right {
+                  gap: 0.55rem;
+                }
+                html[data-theme="prism"] .header-links {
+                  font-size: 0.8rem;
+                }
+                html[data-theme="prism"] nav {
+                  gap: 0.35rem;
+                  justify-content: flex-end;
+                }
+                html[data-theme="prism"] nav a,
+                html[data-theme="prism"] .rss-link,
+                html[data-theme="prism"] .link-btn-reset {
+                  border-radius: 999px;
+                }
+                html[data-theme="prism"] nav a {
+                  padding: 0.34rem 0.72rem;
+                  background: color-mix(in srgb, var(--prism-surface) 74%, transparent);
+                  color: var(--muted);
+                  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 72%, transparent);
+                  transition: transform 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+                }
+                html[data-theme="prism"] nav a:hover,
+                html[data-theme="prism"] nav a:focus-visible {
+                  transform: translateY(-1px);
+                  background: var(--prism-surface);
+                  color: var(--fg);
+                  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--focus) 30%, var(--border)), 0 6px 16px rgba(66, 66, 250, 0.12);
+                }
+                html[data-theme="prism"] main {
+                  padding-bottom: 1rem;
+                }
+                html[data-theme="prism"] .prism-feed {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+                  gap: 1.2rem;
+                  align-items: start;
+                }
+                html[data-theme="prism"] .prism-feed > .card {
+                  position: relative;
+                  margin: 0;
+                  padding: 1.25rem;
+                  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+                  border-bottom-color: color-mix(in srgb, var(--border) 80%, transparent);
+                  border-radius: 8px;
+                  background: linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 34%, var(--prism-surface)));
+                  box-shadow: var(--prism-shadow);
+                  overflow: hidden;
+                  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+                }
+                html[data-theme="prism"] .prism-feed > .card::before {
+                  content: "";
+                  position: absolute;
+                  inset: 0 0 auto;
+                  height: 0.36rem;
+                  background: linear-gradient(90deg, var(--focus), var(--prism-pink), var(--prism-cyan));
+                }
+                html[data-theme="prism"] .prism-feed > .card:hover {
+                  transform: translateY(-3px);
+                  box-shadow: var(--prism-shadow-hover);
+                  border-color: color-mix(in srgb, var(--focus) 32%, var(--border));
+                }
+                html[data-theme="prism"] .prism-feed > .card > * {
+                  position: relative;
+                  z-index: 1;
+                }
+                html[data-theme="prism"] h1,
+                html[data-theme="prism"] h2,
+                html[data-theme="prism"] h3 {
+                  font-weight: 800;
+                  letter-spacing: 0;
+                  text-wrap: balance;
+                }
+                html[data-theme="prism"] article > h1 {
+                  margin: 0 0 0.65rem;
+                  max-width: 760px;
+                  font-size: clamp(2rem, 4vw, 3rem);
+                  line-height: 1.08;
+                }
+                html[data-theme="prism"] .card h2 {
+                  margin-top: 0.25rem;
+                  font-size: 1.35rem;
+                  line-height: 1.22;
+                }
+                html[data-theme="prism"] .body-content h2 {
+                  margin-top: 2rem;
+                  font-size: 1.45rem;
+                }
+                html[data-theme="prism"] .body-content h3 {
+                  font-size: 1.16rem;
+                }
+                html[data-theme="prism"] a {
+                  color: var(--focus);
+                  text-decoration-thickness: 0.09em;
+                  text-underline-offset: 0.18em;
+                }
+                html[data-theme="prism"] a.title-link {
+                  color: inherit;
+                }
+                html[data-theme="prism"] a.title-link:hover {
+                  color: var(--focus);
+                  text-decoration-color: var(--prism-pink);
+                }
+                html[data-theme="prism"] .meta {
+                  color: var(--muted);
+                  font-size: 0.84rem;
+                }
+                html[data-theme="prism"] .prism-feed > .card .meta:first-child,
+                html[data-theme="prism"] .prism-feed > .card h2 + .meta {
+                  font-weight: 600;
+                }
+                html[data-theme="prism"] .quote-text {
+                  margin: 0 0 1rem;
+                  padding: 1.35rem;
+                  border: 1px solid color-mix(in srgb, var(--prism-pink) 26%, var(--border));
+                  border-left: 0;
+                  border-radius: 8px;
+                  background:
+                    linear-gradient(135deg, color-mix(in srgb, var(--prism-pink) 10%, transparent), transparent 45%),
+                    var(--prism-surface);
+                  box-shadow: inset 0.34rem 0 0 var(--prism-pink), 0 10px 24px rgba(230, 0, 103, 0.08);
+                }
+                html[data-theme="prism"] .quote-text p {
+                  font-size: 1.17rem;
+                  font-style: normal;
+                  font-weight: 650;
+                  line-height: 1.48;
+                }
+                html[data-theme="prism"] .quote-text footer {
+                  color: var(--muted);
+                }
+                html[data-theme="prism"] .book,
+                html[data-theme="prism"] .music {
+                  gap: 1.15rem;
+                  align-items: flex-start;
+                }
+                html[data-theme="prism"] .book img {
+                  width: 112px;
+                }
+                html[data-theme="prism"] .music img.artwork {
+                  width: 112px;
+                }
+                html[data-theme="prism"] .card img,
+                html[data-theme="prism"] .body-content img,
+                html[data-theme="prism"] .book img,
+                html[data-theme="prism"] .music img.artwork {
+                  border-radius: 8px;
+                  box-shadow: 0 1px 2px rgba(38, 45, 64, 0.12), 0 10px 24px rgba(38, 45, 64, 0.14);
+                }
+                html[data-theme="prism"] .prism-feed > .card > a:first-child img,
+                html[data-theme="prism"] .prism-feed > .card > img:first-child {
+                  display: block;
+                  width: calc(100% + 2.5rem);
+                  max-width: none;
+                  margin: -1.25rem -1.25rem 1rem;
+                  aspect-ratio: 16 / 10;
+                  object-fit: cover;
+                  border-radius: 8px 8px 0 0;
+                  box-shadow: none;
+                }
+                html[data-theme="prism"] .music-links,
+                html[data-theme="prism"] .meta {
+                  gap: 0.45rem;
+                }
+                html[data-theme="prism"] .music-links a,
+                html[data-theme="prism"] .meta a {
+                  display: inline-flex;
+                  align-items: center;
+                  min-height: 1.9rem;
+                  margin-right: 0.2rem;
+                  margin-bottom: 0.25rem;
+                  border-radius: 999px;
+                  padding: 0.2rem 0.62rem;
+                  background: color-mix(in srgb, var(--focus) 10%, var(--prism-surface));
+                  text-decoration: none;
+                  font-weight: 650;
+                }
+                html[data-theme="prism"] .meta a:hover,
+                html[data-theme="prism"] .meta a:focus-visible,
+                html[data-theme="prism"] .music-links a:hover,
+                html[data-theme="prism"] .music-links a:focus-visible {
+                  background: color-mix(in srgb, var(--prism-pink) 12%, var(--prism-surface));
+                  color: var(--fg);
+                }
+                html[data-theme="prism"] .exif {
+                  border-top-color: color-mix(in srgb, var(--focus) 24%, var(--border));
+                }
+                html[data-theme="prism"] .exif-row dt {
+                  color: color-mix(in srgb, var(--focus) 70%, var(--muted));
+                }
+                html[data-theme="prism"] footer.site-footer {
+                  margin-top: 3.25rem;
+                  padding-top: 1.25rem;
+                  padding-bottom: 2rem;
+                }
+                @media (max-width: 720px) {
+                  html[data-theme="prism"] header.site-header {
+                    align-items: flex-start;
+                  }
+                  html[data-theme="prism"] .site-header-right {
+                    align-items: flex-start;
+                  }
+                  html[data-theme="prism"] nav {
+                    justify-content: flex-start;
+                  }
+                  html[data-theme="prism"] .prism-feed {
+                    grid-template-columns: 1fr;
+                  }
+                }
+                @media (max-width: 400px) {
+                  html[data-theme="prism"] .book img,
+                  html[data-theme="prism"] .music img.artwork {
+                    width: min(68vw, 170px);
+                  }
+                }
+              `,
+            }}
+          />
+        ) : null}
       </head>
       <body
-        className={theme === "cards" ? "theme-cards" : theme === "washi" ? "theme-washi" : undefined}
+        className={
+          theme === "cards" ? "theme-cards" : theme === "washi" ? "theme-washi" : theme === "prism" ? "theme-prism" : undefined
+        }
         data-theme={theme}
         data-cards-detail={theme === "cards" && cardsDetail ? "true" : undefined}
       >

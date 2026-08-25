@@ -67,7 +67,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
+| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`/`prism`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -90,19 +90,20 @@ parallel themes from the same function** — `if (theme === "cards") {...}
 return <classic markup>` — there's no separate per-theme file, so adding a
 field to a content type means updating both branches (and the
 `CardsFeedItem`/`CardsDetailHeader` props in `themes/cards.tsx` if the cards
-branch needs new shared-header behavior). `washi` is deliberately lighter
-than cards but richer than classic: templates still only check `=== "cards"`,
-while `renderList()` wraps list pages in `.washi-feed` so the theme can render
-a responsive paper-card grid. Detail pages reuse the classic markup. The rest
-of the theme lives in one `theme === "washi"` gated `<style>` block in
-`Layout.tsx` — shared color tokens on `<html data-theme="washi">`, self-hosted
-display type (`server/public/fonts/shippori-mincho-*`, same latin/
-latin-ext-only pattern as the cards theme's Special Elite), textured
-backgrounds, sticky translucent header, refined nav pills, paper cards, and
-media/quote treatments. No new JS. A future theme that needs actual detail
-layout or interaction changes, not just a feed wrapper plus CSS, would need
-its own `themes/<name>.tsx` module the way `themes/cards.tsx` works, plus real
-branches in every template.
+branch needs new shared-header behavior). `washi` and `prism` are deliberately
+lighter than cards but richer than classic: templates still only check
+`=== "cards"`, while `renderList()` wraps list pages in `.<theme>-feed` so
+those themes can render responsive card grids. Detail pages reuse the classic
+markup. The rest of each theme lives in a gated `<style>` block in
+`Layout.tsx`. Washi uses shared color tokens, self-hosted display type
+(`server/public/fonts/shippori-mincho-*`, same latin/latin-ext-only pattern as
+the cards theme's Special Elite), textured backgrounds, sticky translucent
+header, refined nav pills, paper cards, and media/quote treatments. Prism uses
+system rounded sans typography, high-contrast surfaces, saturated blue/pink
+accents, compact cards, and rounded navigation/link treatments. Neither adds
+JS. A future theme that needs actual detail layout or interaction changes, not
+just a feed wrapper plus CSS, would need its own `themes/<name>.tsx` module the
+way `themes/cards.tsx` works, plus real branches in every template.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:
