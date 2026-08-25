@@ -13,8 +13,8 @@ CLAUDE.md's "Working in this repo" note.
 1. Global plugins: `@fastify/compress`, `@fastify/etag`, `@fastify/cors`,
    `@fastify/cookie`, `@fastify/multipart`, `@fastify/rate-limit` (200/min
    baseline; auth routes set their own tighter limits).
-2. `/api/v1/*` — `authRoutes`, `siteRoutes`, `objectRoutes`, `assetRoutes`,
-   `resolveRoutes`.
+2. `/api/v1/*` — `authRoutes`, `siteRoutes`, `themeRoutes`,
+   `objectRoutes`, `assetRoutes`, `resolveRoutes`.
 3. `/files/*` (local storage driver only) and `/static/*` — plain
    filesystem serving with path-traversal guards.
 4. `activityPubRoutes` — WebFinger/actor/inbox, resolved by Host header,
@@ -33,12 +33,13 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
 ## Route map
 
-**`/api/v1` (auth: `authGuard`, bearer token)**
+**`/api/v1` (auth: `authGuard`, bearer token unless noted)**
 
 | File | Routes | Notes |
 |---|---|---|
 | `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see `ownerClaims` table, `ios/ARCHITECTURE.md`'s Auth/bootstrapping section). Logout revokes *every* token for the account. |
 | `routes/sites.ts` | site CRUD (create, update theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). |
+| `routes/themes.ts` | `GET /themes` (no auth) | Server-owned catalog of selectable site themes (`id`/`name`/`description`) used by iOS Settings. Keep this additive so newer servers can expose themes without requiring an iOS app update. |
 | `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks, cache invalidation, and triggers `deliverCreateActivity` on publish. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
 | `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. |

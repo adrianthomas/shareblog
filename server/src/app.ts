@@ -11,6 +11,7 @@ import { stat } from "node:fs/promises";
 import { join, resolve, normalize, extname, sep } from "node:path";
 import { authRoutes } from "./routes/auth.js";
 import { siteRoutes } from "./routes/sites.js";
+import { themeRoutes } from "./routes/themes.js";
 import { objectRoutes } from "./routes/objects.js";
 import { assetRoutes } from "./routes/assets.js";
 import { resolveRoutes } from "./routes/resolve.js";
@@ -83,6 +84,7 @@ export function buildApp() {
     async (api) => {
       api.register(authRoutes);
       api.register(siteRoutes);
+      api.register(themeRoutes);
       api.register(objectRoutes);
       api.register(assetRoutes);
       api.register(resolveRoutes);
