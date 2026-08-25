@@ -19,6 +19,19 @@ export const PLATFORM_LABELS: Record<string, string> = {
   bandcamp: "Bandcamp",
 };
 
+function MusicLink({ platform, url, locale }: { platform: string; url: string; locale: string }) {
+  return (
+    <a href={url}>
+      <span className="music-link-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="14" height="14" focusable="false">
+          <path d="M8 5.5v13l10-6.5-10-6.5z" fill="currentColor" />
+        </svg>
+      </span>
+      <span>{t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}</span>
+    </a>
+  );
+}
+
 export function MusicCard({
   object,
   variant = "card",
@@ -81,9 +94,7 @@ export function MusicCard({
             {links.length > 0 ? (
               <p className="music-links">
                 {links.map(([platform, url]) => (
-                  <a key={platform} href={url}>
-                    {t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}
-                  </a>
+                  <MusicLink key={platform} platform={platform} url={url} locale={locale} />
                 ))}
               </p>
             ) : null}
@@ -114,9 +125,7 @@ export function MusicCard({
           {links.length > 0 ? (
             <p className="music-links">
               {links.map(([platform, url]) => (
-                <a key={platform} href={url}>
-                  {t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}
-                </a>
+                <MusicLink key={platform} platform={platform} url={url} locale={locale} />
               ))}
             </p>
           ) : null}
@@ -145,9 +154,7 @@ export function MusicCard({
         {visibleLinks.length > 0 ? (
           <p className="music-links">
             {visibleLinks.map(([platform, url]) => (
-              <a key={platform} href={url}>
-                {t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}
-              </a>
+              <MusicLink key={platform} platform={platform} url={url} locale={locale} />
             ))}
           </p>
         ) : null}

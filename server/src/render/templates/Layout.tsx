@@ -245,6 +245,17 @@ export function Layout({
                 border-radius: 4px; flex-shrink: 0;
               }
               .music-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+              .music-links a {
+                display: inline-flex; align-items: center; gap: 0.42rem;
+              }
+              .music-link-icon {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 1.45rem; height: 1.45rem; border-radius: 999px;
+                color: var(--bg); background: var(--focus);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 6px 14px color-mix(in srgb, var(--focus) 24%, transparent);
+                flex-shrink: 0;
+              }
+              .music-link-icon svg { display: block; margin-left: 1px; }
               .quote-text { margin: 0 0 0.75rem; padding-left: 1rem; border-left: 3px solid var(--border); }
               .quote-text p { margin: 0 0 0.5rem; font-size: 1.15rem; font-style: italic; line-height: 1.4; }
               .quote-text footer { font-size: 0.9rem; color: var(--muted); }
@@ -769,11 +780,6 @@ export function Layout({
                 body.theme-prism .cards-scrim {
                   background: linear-gradient(to top, rgba(10, 12, 16, 0.78) 0%, rgba(10, 12, 16, 0.34) 48%, rgba(10, 12, 16, 0) 76%);
                 }
-                body.theme-prism .cards-play-button {
-                  color: var(--prism-pink);
-                  background: color-mix(in srgb, var(--prism-surface) 88%, transparent);
-                  box-shadow: 0 1px 2px rgba(66, 66, 250, 0.16), 0 12px 28px rgba(230, 0, 103, 0.22);
-                }
                 body.theme-prism .cards-caption {
                   padding: 1.1rem 1.25rem 1.2rem;
                 }
@@ -940,6 +946,11 @@ export function Layout({
                   background: color-mix(in srgb, var(--focus) 10%, var(--prism-surface));
                   text-decoration: none;
                   font-weight: 650;
+                }
+                html[data-theme="prism"] .music-link-icon {
+                  color: white;
+                  background: var(--prism-pink);
+                  box-shadow: 0 1px 2px rgba(66, 66, 250, 0.14), 0 8px 18px rgba(230, 0, 103, 0.22);
                 }
                 html[data-theme="prism"] .meta a:hover,
                 html[data-theme="prism"] .meta a:focus-visible,
