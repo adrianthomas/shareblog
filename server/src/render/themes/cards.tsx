@@ -472,11 +472,7 @@ const TAB_PATHS: Array<{ href: string; key: MessageKey }> = [
   { href: "/quotes", key: "quotes" },
 ];
 
-// A bottom tab bar stands in for the App Store's Today/Games/Apps row —
-// it's the one piece of the reference chrome that's a bottom bar rather
-// than a top one, and it reads as much more native to the full-bleed card
-// feed than squeezing the classic top nav row above it would.
-export function CardsTabBar({
+export function CardsCategoryFilter({
   locale,
   currentPath,
   availablePaths,
@@ -490,35 +486,48 @@ export function CardsTabBar({
     ? TAB_PATHS.filter((tab) => tab.href === "/" || availablePaths.includes(tab.href))
     : TAB_PATHS;
   return (
-    <nav className="cards-tabbar" aria-label={t(locale, "primaryNavigation")}>
-      {tabs.map((tab) => {
-        const active = tab.href === "/" ? currentPath === "/" : currentPath.startsWith(tab.href);
-        return (
-          <a key={tab.href} href={tab.href} aria-current={active ? "page" : undefined}>
-            {t(locale, tab.key)}
-          </a>
-        );
-      })}
-    </nav>
+    <details className="cards-category-filter">
+      <summary className="cards-filter-trigger" aria-label={t(locale, "filterCategories")}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+          <path
+            d="M4 7h10M18 7h2M4 17h2M10 17h10M8 4v6M16 14v6"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+        <span className="sr-only">{t(locale, "filterCategories")}</span>
+      </summary>
+      <nav className="cards-filter-menu" aria-label={t(locale, "primaryNavigation")}>
+        {tabs.map((tab) => {
+          const active = tab.href === "/" ? currentPath === "/" : currentPath.startsWith(tab.href);
+          return (
+            <a key={tab.href} href={tab.href} aria-current={active ? "page" : undefined}>
+              {t(locale, tab.key)}
+            </a>
+          );
+        })}
+      </nav>
+    </details>
   );
 }
 
 export const cardsStyles = `
   body.theme-cards { max-width: none; padding: 0; }
-  body.theme-cards main { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 6rem; }
+  body.theme-cards main { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 2rem; }
   body.theme-cards header.site-header { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 0; }
-  /* Sits right after main's own 6rem bottom padding (above), which already
-     clears the fixed tab bar for whatever content precedes the footer, so
-     the footer only needs its own clearance below its own content. */
+  /* Leaves the feed clear of the page edge while the category filter sits
+     in the header rather than reserving bottom-anchored toolbar space. */
   body.theme-cards footer.site-footer {
-    max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 6rem; border-top: 1px solid var(--border);
+    max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; border-top: 1px solid var(--border);
   }
   body.theme-cards .about-content { max-width: 640px; margin: 0 auto; }
-  /* The bottom tab bar is the only nav in this theme — the classic text-link
-     row would just repeat it at the top of every page. */
-  body.theme-cards header.site-header nav { display: none; }
+  /* Cards/prism render their categories as the filter popover below; hide
+     only the classic inline nav if it ever appears in this header. */
+  body.theme-cards header.site-header .site-header-right > nav { display: none; }
   body.theme-cards[data-cards-detail="true"] header.site-header,
-  body.theme-cards[data-cards-detail="true"] .cards-tabbar { display: none; }
+  body.theme-cards[data-cards-detail="true"] .cards-category-filter { display: none; }
 
   /* align-items: start (rather than the grid default of stretch) lets a
      short text card size to its own content instead of being stretched to
@@ -931,19 +940,35 @@ export const cardsStyles = `
   }
   .cards-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-  .cards-tabbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
-    display: flex; justify-content: space-around; gap: 0.25rem;
-    padding: 0.6rem max(0.5rem, env(safe-area-inset-left)) max(0.6rem, env(safe-area-inset-bottom));
-    background: color-mix(in srgb, var(--bg) 82%, transparent);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
+  .cards-category-filter { position: relative; align-self: flex-end; }
+  .cards-filter-trigger {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 999px;
+    color: var(--fg); background: color-mix(in srgb, var(--bg) 84%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.1);
+    backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    cursor: pointer; list-style: none;
   }
-  .cards-tabbar a {
-    font-size: 0.75rem; text-decoration: none; color: var(--muted); padding: 0.25rem 0.5rem; border-radius: 8px;
+  .cards-filter-trigger::-webkit-details-marker { display: none; }
+  .cards-filter-trigger:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .cards-filter-menu {
+    position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 950;
+    display: grid; gap: 0.15rem; min-width: 12rem;
+    padding: 0.45rem; border-radius: 16px;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 18px 42px rgba(0,0,0,0.16);
+    backdrop-filter: blur(22px) saturate(1.25); -webkit-backdrop-filter: blur(22px) saturate(1.25);
   }
-  .cards-tabbar a[aria-current="page"] { color: var(--focus); font-weight: 700; }
-  .cards-tabbar a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .cards-filter-menu a {
+    display: flex; align-items: center; min-height: 2.25rem;
+    padding: 0.45rem 0.7rem; border-radius: 11px;
+    color: var(--muted); text-decoration: none; font-size: 0.9rem;
+  }
+  .cards-filter-menu a:hover,
+  .cards-filter-menu a:focus-visible { color: var(--fg); background: color-mix(in srgb, var(--focus) 10%, transparent); }
+  .cards-filter-menu a[aria-current="page"] { color: var(--focus); font-weight: 700; background: color-mix(in srgb, var(--focus) 12%, transparent); }
 
   html.cards-lock-scroll, html.cards-lock-scroll body { overflow: hidden; }
 
@@ -1194,40 +1219,17 @@ export const cardsScript = `
     if (current) closeOverlay({ skipHistory: true });
   });
 
-  // iOS Safari's compact bottom toolbar collapses and expands as you
-  // scroll, and a plain \`position: fixed; bottom: 0\` element is meant to
-  // track that automatically — but on-device this bar can visibly detach
-  // and get left behind mid-page instead, landing wherever the layout
-  // viewport's bottom happened to be rather than the *visual* viewport's
-  // (confirmed on-device; a minimal fixed div with no other styling
-  // reproduces it too, so it's not particular to this bar's own CSS).
-  // The VisualViewport API reports the actual visible region directly, so
-  // nudge the bar to match it with a transform instead of trusting native
-  // fixed positioning alone to keep up with the toolbar's animation.
-  var tabbarEl = document.querySelector('.cards-tabbar');
-  if (tabbarEl && window.visualViewport) {
-    var syncTabbar = function () {
-      // The rubber-band bounce at the very top of the page (scrollY
-      // clamped to 0, but the WKWebView's scroll view still overscrolls
-      // past it) also perturbs the visual viewport's own geometry, which
-      // this was reading as "the toolbar changed" — nudging the bar along
-      // with the bounce instead of leaving it planted the way a plain
-      // position: fixed element normally would. The toolbar itself never
-      // actually collapses/expands while sitting at the top with nothing
-      // left to scroll, so skip the correction there entirely; it only
-      // matters once real scrolling has moved past scrollY 0.
-      if (window.scrollY <= 0) {
-        tabbarEl.style.transform = '';
-        return;
-      }
-      var vv = window.visualViewport;
-      var hiddenBelow = window.innerHeight - (vv.height + vv.offsetTop);
-      tabbarEl.style.transform = hiddenBelow > 0.5 ? 'translateY(' + (-hiddenBelow).toFixed(2) + 'px)' : '';
-    };
-    window.visualViewport.addEventListener('resize', syncTabbar);
-    window.visualViewport.addEventListener('scroll', syncTabbar);
-    syncTabbar();
-  }
+  document.addEventListener('click', function (e) {
+    document.querySelectorAll('.cards-category-filter[open]').forEach(function (filter) {
+      if (!filter.contains(e.target)) filter.removeAttribute('open');
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.cards-category-filter[open]').forEach(function (filter) {
+      filter.removeAttribute('open');
+    });
+  });
 
   function openCard(link) {
     var heroEl = link.querySelector('.cards-hero');
@@ -1304,8 +1306,8 @@ export const cardsScript = `
 
     var main = document.getElementById('main-content');
     if (main) main.inert = true;
-    var tabbar = document.querySelector('.cards-tabbar');
-    if (tabbar) tabbar.inert = true;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = true;
 
     requestAnimationFrame(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
@@ -1430,8 +1432,8 @@ export const cardsScript = `
 
     var main = document.getElementById('main-content');
     if (main) main.inert = true;
-    var tabbar = document.querySelector('.cards-tabbar');
-    if (tabbar) tabbar.inert = true;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = true;
 
     requestAnimationFrame(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
@@ -1644,8 +1646,8 @@ export const cardsScript = `
 
     var main = document.getElementById('main-content');
     if (main) main.inert = true;
-    var tabbar = document.querySelector('.cards-tabbar');
-    if (tabbar) tabbar.inert = true;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = true;
 
     requestAnimationFrame(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
@@ -1829,8 +1831,8 @@ export const cardsScript = `
 
     var main = document.getElementById('main-content');
     if (main) main.inert = true;
-    var tabbar = document.querySelector('.cards-tabbar');
-    if (tabbar) tabbar.inert = true;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = true;
 
     requestAnimationFrame(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
@@ -2025,8 +2027,8 @@ export const cardsScript = `
 
     var main = document.getElementById('main-content');
     if (main) main.inert = true;
-    var tabbar = document.querySelector('.cards-tabbar');
-    if (tabbar) tabbar.inert = true;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = true;
 
     requestAnimationFrame(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
@@ -2292,8 +2294,8 @@ export const cardsScript = `
 
     var main = document.getElementById('main-content');
     if (main) main.inert = false;
-    var tabbar = document.querySelector('.cards-tabbar');
-    if (tabbar) tabbar.inert = false;
+    var categoryFilter = document.querySelector('.cards-category-filter');
+    if (categoryFilter) categoryFilter.inert = false;
 
     function cleanup() {
       o.backdrop.remove();

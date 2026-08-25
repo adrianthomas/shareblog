@@ -1,7 +1,7 @@
 import React from "react";
 import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
-import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
+import { cardsStyles, cardsScript, CardsCategoryFilter } from "../themes/cards.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 
 const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }> = {
@@ -85,8 +85,13 @@ export function Layout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content={chromeColors.light} media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content={chromeColors.dark} media="(prefers-color-scheme: dark)" />
+        <meta name="color-scheme" content="light dark" />
+        <meta name="theme-color" content={chromeColors.light} data-light={chromeColors.light} data-dark={chromeColors.dark} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var m=document.querySelector('meta[name="theme-color"][data-light]');if(!m||!window.matchMedia)return;var q=window.matchMedia('(prefers-color-scheme: dark)');var a=function(){m.setAttribute('content',q.matches?m.dataset.dark:m.dataset.light);};a();if(q.addEventListener)q.addEventListener('change',a);else if(q.addListener)q.addListener(a);}());`,
+          }}
+        />
         <title>{pageTitle}</title>
         {site.tagline ? <meta name="description" content={site.tagline} /> : null}
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
@@ -727,7 +732,7 @@ export function Layout({
                 body.theme-prism main {
                   max-width: 1120px;
                   margin: 0 auto;
-                  padding: 1.25rem 1.25rem 6rem;
+                  padding: 1.25rem 1.25rem 2rem;
                 }
                 body.theme-prism header.site-header {
                   max-width: 1120px;
@@ -737,7 +742,7 @@ export function Layout({
                 body.theme-prism footer.site-footer {
                   max-width: 1120px;
                   margin: 0 auto;
-                  padding: 1.5rem 1.25rem 6rem;
+                  padding: 1.5rem 1.25rem 2rem;
                   border-top: 1px solid var(--border);
                 }
                 body.theme-prism .cards-feed {
@@ -875,11 +880,24 @@ export function Layout({
                 body.theme-prism .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image {
                   border-radius: 8px;
                 }
-                body.theme-prism .cards-tabbar {
+                body.theme-prism .cards-filter-trigger,
+                body.theme-prism .cards-filter-menu {
                   background: color-mix(in srgb, var(--prism-surface) 84%, transparent);
                 }
-                body.theme-prism .cards-tabbar a[aria-current="page"] {
+                body.theme-prism .cards-filter-menu a {
+                  background: transparent;
+                  box-shadow: none;
+                  transform: none;
+                }
+                body.theme-prism .cards-filter-menu a:hover,
+                body.theme-prism .cards-filter-menu a:focus-visible {
+                  background: color-mix(in srgb, var(--focus) 10%, var(--prism-surface));
+                  box-shadow: none;
+                  transform: none;
+                }
+                body.theme-prism .cards-filter-menu a[aria-current="page"] {
                   color: var(--prism-pink);
+                  background: color-mix(in srgb, var(--prism-pink) 12%, var(--prism-surface));
                 }
                 html[data-theme="prism"] .body-content h2 {
                   margin-top: 2rem;
@@ -1045,13 +1063,17 @@ export function Layout({
                 </>
               ) : null}
             </p>
-            <nav aria-label={t(site.locale, "primaryNavigation")}>
-              {navItems(site, availablePaths).map((item) => (
-                <a key={item.href} href={item.href}>
-                  {item.label}
-                </a>
-              ))}
-            </nav>
+            {usesCardsInteraction && !cardsDetail ? (
+              <CardsCategoryFilter locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
+            ) : (
+              <nav aria-label={t(site.locale, "primaryNavigation")}>
+                {navItems(site, availablePaths).map((item) => (
+                  <a key={item.href} href={item.href}>
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+            )}
           </div>
         </header>
         <main id="main-content">{children}</main>
@@ -1059,9 +1081,6 @@ export function Layout({
           <footer className="site-footer">
             <a href="/about">{t(site.locale, "about")}</a>
           </footer>
-        ) : null}
-        {usesCardsInteraction && !cardsDetail ? (
-          <CardsTabBar locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
         ) : null}
         {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
         <script dangerouslySetInnerHTML={{ __html: amazonRegionScript }} />

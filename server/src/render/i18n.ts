@@ -28,6 +28,7 @@ export type MessageKey =
   | "nothingHereYet"
   | "ratingLabel"
   | "primaryNavigation"
+  | "filterCategories"
   | "listenOn"
   | "closePost"
   | "backTo"
@@ -71,6 +72,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Nothing here yet.",
     ratingLabel: "Rating: {rating} out of 5 stars",
     primaryNavigation: "Primary",
+    filterCategories: "Filter categories",
     listenOn: "Listen on {platform}",
     closePost: "Close",
     backTo: "Back to {section}",
@@ -111,6 +113,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Hier gibt es noch nichts.",
     ratingLabel: "Bewertung: {rating} von 5 Sternen",
     primaryNavigation: "Hauptnavigation",
+    filterCategories: "Kategorien filtern",
     listenOn: "Hören auf {platform}",
     closePost: "Schließen",
     backTo: "Zurück zu {section}",
@@ -151,6 +154,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Rien ici pour l'instant.",
     ratingLabel: "Note : {rating} étoiles sur 5",
     primaryNavigation: "Navigation principale",
+    filterCategories: "Filtrer les catégories",
     listenOn: "Écouter sur {platform}",
     closePost: "Fermer",
     backTo: "Retour à {section}",
@@ -191,6 +195,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "Todavía no hay nada aquí.",
     ratingLabel: "Valoración: {rating} de 5 estrellas",
     primaryNavigation: "Navegación principal",
+    filterCategories: "Filtrar categorías",
     listenOn: "Escuchar en {platform}",
     closePost: "Cerrar",
     backTo: "Volver a {section}",
@@ -231,6 +236,7 @@ const MESSAGES: Record<string, Messages> = {
     nothingHereYet: "まだ何もありません。",
     ratingLabel: "評価: 5つ星中{rating}つ",
     primaryNavigation: "メインナビゲーション",
+    filterCategories: "カテゴリーを絞り込む",
     listenOn: "{platform}で聴く",
     closePost: "閉じる",
     backTo: "{section}に戻る",
