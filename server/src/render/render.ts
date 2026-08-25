@@ -11,6 +11,7 @@ import { PhotoPost, formatExif } from "./templates/PhotoPost.js";
 import { BookCard, flattenLinks } from "./templates/BookCard.js";
 import { MusicCard, PLATFORM_LABELS } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
+import { LinkPost } from "./templates/LinkPost.js";
 import { QuotePost } from "./templates/QuotePost.js";
 import { AboutPage } from "./templates/AboutPage.js";
 import { ReleaseHistoryPage } from "./templates/ReleaseHistoryPage.js";
@@ -19,6 +20,7 @@ import { currentCommit } from "../lib/version.js";
 import type {
   ContentObject,
   ArticleMetadata,
+  LinkMetadata,
   PhotoMetadata,
   BookMetadata,
   MusicMetadata,
@@ -83,6 +85,7 @@ export const PATH_PREFIX: Record<ContentObject["type"], string> = {
   book: "books",
   music: "music",
   article: "articles",
+  link: "links",
   quote: "quotes",
 };
 
@@ -109,6 +112,8 @@ async function renderCard(object: ContentObject, locale: string, theme: Site["th
         theme,
         coverImageUrl: await articleImageUrl(object),
       });
+    case "link":
+      return React.createElement(LinkPost, { object, locale, theme });
     case "quote":
       return React.createElement(QuotePost, { object, locale, theme });
   }
@@ -147,6 +152,8 @@ async function renderDetail(object: ContentObject, locale: string, theme: Site["
         coverImageUrl: await articleImageUrl(object),
         ...detailProps,
       });
+    case "link":
+      return React.createElement(LinkPost, { object, linked: false, locale, ...detailProps });
     case "quote":
       return React.createElement(QuotePost, { object, linked: false, locale, ...detailProps });
   }
@@ -221,6 +228,7 @@ export function siteOrigin(site: Site): string {
 const TYPE_LABEL_KEY: Record<ContentObject["type"], MessageKey> = {
   thought: "typeThought",
   article: "typeArticle",
+  link: "typeLink",
   book: "typeBook",
   music: "typeMusic",
   photo: "typePhoto",
@@ -245,6 +253,8 @@ function feedContentSummary(object: ContentObject): string {
     case "thought":
       return truncateSummary(stripBasicFormatting(object.body ?? ""));
     case "article":
+      return object.title ?? truncateSummary(stripBasicFormatting(object.body ?? ""));
+    case "link":
       return object.title ?? truncateSummary(stripBasicFormatting(object.body ?? ""));
     case "book":
       return object.title ?? "";
@@ -311,6 +321,13 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
       const image = cover ? `<p><img src="${escapeXml(cover)}" alt="" /></p>` : "";
       const excerpt = metadata.excerpt ? `<p><em>${escapeXml(metadata.excerpt)}</em></p>` : "";
       return image + excerpt + formatRichText(object.body ?? "");
+    }
+    case "link": {
+      const metadata = object.metadata as LinkMetadata;
+      const title = object.title ? `<p><strong>${escapeXml(object.title)}</strong></p>` : "";
+      const source = object.sourceUrl ? linkList([{ label: t(locale, "openLink"), url: object.sourceUrl }]) : "";
+      const excerpt = metadata.excerpt ? `<p><em>${escapeXml(metadata.excerpt)}</em></p>` : "";
+      return title + excerpt + formatBasicText(object.body ?? "") + source;
     }
     case "book": {
       const metadata = object.metadata as BookMetadata;

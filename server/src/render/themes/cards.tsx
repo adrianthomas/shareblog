@@ -20,6 +20,7 @@ function hashSeed(seed: string): number {
 const TYPE_ACCENTS: Record<ContentType, string> = {
   thought: "#ea580c",
   article: "#2563eb",
+  link: "#0f766e",
   book: "#b45309",
   music: "#7c3aed",
   quote: "#8a6d3b",
@@ -466,6 +467,7 @@ const TAB_PATHS: Array<{ href: string; key: MessageKey }> = [
   { href: "/", key: "home" },
   { href: "/posts", key: "posts" },
   { href: "/articles", key: "articles" },
+  { href: "/links", key: "links" },
   { href: "/books", key: "books" },
   { href: "/music", key: "music" },
   { href: "/photos", key: "photos" },
@@ -646,6 +648,30 @@ export const cardsStyles = `
   .cards-detail-header--text .cards-text-card { padding: 1.75rem 1.75rem 1.5rem; border-radius: 16px; }
   .cards-detail-header--text .cards-text-card--full .cards-text-title { -webkit-line-clamp: unset; }
   .cards-detail-header--text .cards-text-title { font-size: clamp(1.3rem, 3.2vw, 1.75rem); }
+
+  .cards-link-card {
+    margin: 0; padding: 1.15rem 1.2rem 1.2rem; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .cards-link-card--full {
+    max-width: 680px; margin: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) auto 0;
+  }
+  .cards-link-eyebrow {
+    margin: 0 0 0.45rem; font-size: 0.7rem; font-weight: 750; letter-spacing: 0.06em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .cards-link-title { margin: 0; font-size: 1.18rem; line-height: 1.28; }
+  .cards-link-title a { color: var(--fg); text-decoration: none; }
+  .cards-link-title a:hover, .cards-link-title a:focus-visible { color: var(--focus); text-decoration: underline; }
+  .cards-link-excerpt {
+    margin: 0.55rem 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.42;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cards-link-comment { margin: 0.75rem 0 0; font-size: 0.96rem; line-height: 1.45; color: var(--fg); }
+  .cards-link-comment p:last-child { margin-bottom: 0; }
+  .cards-link-date { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  .cards-link-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.9rem; }
 
   /* Book detail header: a cover has its own fixed portrait shape, unlike
      a photo — forcing it into the generic hero's 4:3 landscape crop (the

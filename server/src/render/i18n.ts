@@ -2,6 +2,7 @@ export type MessageKey =
   | "home"
   | "posts"
   | "articles"
+  | "links"
   | "books"
   | "music"
   | "photos"
@@ -15,11 +16,13 @@ export type MessageKey =
   | "releaseHistory"
   | "currentlyRunning"
   | "copyLink"
+  | "openLink"
   | "urlCopied"
   | "copyQuote"
   | "quoteCopied"
   | "typeThought"
   | "typeArticle"
+  | "typeLink"
   | "typeBook"
   | "typeMusic"
   | "typePhoto"
@@ -46,6 +49,7 @@ const MESSAGES: Record<string, Messages> = {
     home: "Home",
     posts: "Posts",
     articles: "Articles",
+    links: "Links",
     books: "Books",
     music: "Music",
     photos: "Photos",
@@ -59,11 +63,13 @@ const MESSAGES: Record<string, Messages> = {
     releaseHistory: "Release history",
     currentlyRunning: "Currently running {commit}",
     copyLink: "Copy link",
+    openLink: "Open Link",
     urlCopied: "URL copied",
     copyQuote: "Copy quote",
     quoteCopied: "Quote copied",
     typeThought: "Post",
     typeArticle: "Article",
+    typeLink: "Link",
     typeBook: "Book",
     typeMusic: "Music",
     typePhoto: "Photo",
@@ -87,6 +93,7 @@ const MESSAGES: Record<string, Messages> = {
     home: "Start",
     posts: "Beiträge",
     articles: "Artikel",
+    links: "Links",
     books: "Bücher",
     music: "Musik",
     photos: "Fotos",
@@ -100,11 +107,13 @@ const MESSAGES: Record<string, Messages> = {
     releaseHistory: "Versionshistorie",
     currentlyRunning: "Aktuell läuft {commit}",
     copyLink: "Link kopieren",
+    openLink: "Link öffnen",
     urlCopied: "URL kopiert",
     copyQuote: "Zitat kopieren",
     quoteCopied: "Zitat kopiert",
     typeThought: "Beitrag",
     typeArticle: "Artikel",
+    typeLink: "Link",
     typeBook: "Buch",
     typeMusic: "Musik",
     typePhoto: "Foto",
@@ -128,6 +137,7 @@ const MESSAGES: Record<string, Messages> = {
     home: "Accueil",
     posts: "Billets",
     articles: "Articles",
+    links: "Liens",
     books: "Livres",
     music: "Musique",
     photos: "Photos",
@@ -141,11 +151,13 @@ const MESSAGES: Record<string, Messages> = {
     releaseHistory: "Historique des versions",
     currentlyRunning: "Version actuelle : {commit}",
     copyLink: "Copier le lien",
+    openLink: "Ouvrir le lien",
     urlCopied: "URL copiée",
     copyQuote: "Copier la citation",
     quoteCopied: "Citation copiée",
     typeThought: "Billet",
     typeArticle: "Article",
+    typeLink: "Lien",
     typeBook: "Livre",
     typeMusic: "Musique",
     typePhoto: "Photo",
@@ -169,6 +181,7 @@ const MESSAGES: Record<string, Messages> = {
     home: "Inicio",
     posts: "Publicaciones",
     articles: "Artículos",
+    links: "Enlaces",
     books: "Libros",
     music: "Música",
     photos: "Fotos",
@@ -182,11 +195,13 @@ const MESSAGES: Record<string, Messages> = {
     releaseHistory: "Historial de versiones",
     currentlyRunning: "Ejecutando actualmente {commit}",
     copyLink: "Copiar enlace",
+    openLink: "Abrir enlace",
     urlCopied: "URL copiada",
     copyQuote: "Copiar cita",
     quoteCopied: "Cita copiada",
     typeThought: "Publicación",
     typeArticle: "Artículo",
+    typeLink: "Enlace",
     typeBook: "Libro",
     typeMusic: "Música",
     typePhoto: "Foto",
@@ -210,6 +225,7 @@ const MESSAGES: Record<string, Messages> = {
     home: "ホーム",
     posts: "投稿",
     articles: "記事",
+    links: "リンク",
     books: "本",
     music: "音楽",
     photos: "写真",
@@ -223,11 +239,13 @@ const MESSAGES: Record<string, Messages> = {
     releaseHistory: "更新履歴",
     currentlyRunning: "現在のバージョン: {commit}",
     copyLink: "リンクをコピー",
+    openLink: "リンクを開く",
     urlCopied: "URLをコピーしました",
     copyQuote: "引用をコピー",
     quoteCopied: "引用をコピーしました",
     typeThought: "投稿",
     typeArticle: "記事",
+    typeLink: "リンク",
     typeBook: "本",
     typeMusic: "音楽",
     typePhoto: "写真",

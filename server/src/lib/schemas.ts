@@ -43,6 +43,10 @@ export const articleMetadataSchema = z.object({
   excerpt: z.string().optional(),
 });
 
+export const linkMetadataSchema = z.object({
+  excerpt: z.string().optional(),
+});
+
 export const musicMetadataSchema = z.object({
   artist: z.string(),
   releaseTitle: z.string(),
@@ -68,6 +72,7 @@ export const metadataSchemaByType = {
   photo: photoMetadataSchema,
   book: bookMetadataSchema,
   article: articleMetadataSchema,
+  link: linkMetadataSchema,
   music: musicMetadataSchema,
   quote: quoteMetadataSchema,
 } as const;

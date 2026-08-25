@@ -150,7 +150,7 @@ export const ownerClaims = sqliteTable("owner_claims", {
   createdAt: createdAt(),
 });
 
-export const contentTypeValues = ["thought", "photo", "book", "article", "music", "quote"] as const;
+export const contentTypeValues = ["thought", "photo", "book", "article", "link", "music", "quote"] as const;
 export type ContentType = (typeof contentTypeValues)[number];
 
 export const contentObjects = sqliteTable(

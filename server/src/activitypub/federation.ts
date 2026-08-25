@@ -145,6 +145,7 @@ const AP_TYPE_FOR_CONTENT_TYPE: Record<ContentObject["type"], typeof Note | type
   quote: Note,
   photo: Image,
   article: Article,
+  link: Article,
   book: Article,
   music: Article,
 };

@@ -49,7 +49,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | Path | Renders |
 |---|---|
 | `/` | Home — all types mixed, latest 20 (`renderList`) |
-| `/posts`, `/articles`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listing (`LISTING_TYPES`), full list |
+| `/posts`, `/articles`, `/links`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listing (`LISTING_TYPES`), full list |
 | `/<listing>/feed.xml`, `/feed.xml` | RSS (`renderFeed`) |
 | `/<prefix>/:slug` (`DETAIL_TYPES`) | Detail page (`renderObjectPage`) — 404s if not published |
 | `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` 404s if the site has no About text |
@@ -87,8 +87,10 @@ ES5-ish JS injected as an inline `<script>`.
 `ContentType` to the matching template in `render/templates/*.tsx`, every
 page is wrapped via `wrap()` in `Layout.tsx`. Templates branch between the
 classic-style markup and the interactive cards pipeline: `cards` and `prism`
-both render `CardsFeedItem`/`CardsDetailHeader` from `themes/cards.tsx`, while
-classic and washi fall through to the simpler markup. Adding a field to a
+both usually render `CardsFeedItem`/`CardsDetailHeader` from `themes/cards.tsx`, while
+classic and washi fall through to the simpler markup. Link posts are the main
+exception: they use their own slim card with a direct external open action
+instead of the cards overlay opener. Adding a field to a
 content type means updating both branches if the cards-derived themes need to
 display it. Washi is deliberately lighter: `renderList()` wraps list pages in
 `.washi-feed` so it can render a responsive paper-card grid, while detail pages

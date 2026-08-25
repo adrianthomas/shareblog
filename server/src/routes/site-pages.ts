@@ -86,6 +86,7 @@ async function sendCachedFeed(
 const LISTING_TYPES: Array<{ path: string; type?: ContentType; titleKey: MessageKey }> = [
   { path: "/posts", type: "thought", titleKey: "posts" },
   { path: "/articles", type: "article", titleKey: "articles" },
+  { path: "/links", type: "link", titleKey: "links" },
   { path: "/books", type: "book", titleKey: "books" },
   { path: "/music", type: "music", titleKey: "music" },
   { path: "/photos", type: "photo", titleKey: "photos" },
@@ -95,6 +96,7 @@ const LISTING_TYPES: Array<{ path: string; type?: ContentType; titleKey: Message
 const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
   { prefix: "/posts", type: "thought" },
   { prefix: "/articles", type: "article" },
+  { prefix: "/links", type: "link" },
   { prefix: "/books", type: "book" },
   { prefix: "/music", type: "music" },
   { prefix: "/photos", type: "photo" },

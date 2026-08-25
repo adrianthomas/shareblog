@@ -79,9 +79,9 @@ export function AboutProductPage() {
 
       <h2>Features</h2>
       <ul>
-        <li>Six structured content types — Thought, Article, Photo, Book, Music, Quote — each with its own fields, not a blog post with tags bolted on.</li>
+        <li>Seven structured content types — Thought, Article, Link, Photo, Book, Music, Quote — each with its own fields, not a blog post with tags bolted on.</li>
         <li>Share-sheet-first authoring on iOS: publish from wherever the content already is.</li>
-        <li>Automatic metadata: book covers/ratings/retailer links, music artwork/streaming links, photo EXIF, article excerpts.</li>
+        <li>Automatic metadata: book covers/ratings/retailer links, music artwork/streaming links, photo EXIF, and link/article excerpts.</li>
         <li>Drafts, editing after publishing, and unpublishing — nothing is set in stone the moment you tap Publish.</li>
         <li>Works offline: if the server can't be reached, a post is saved on your device and sent automatically once it can.</li>
         <li>RSS feeds, site-wide and per content type.</li>

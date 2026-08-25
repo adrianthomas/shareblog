@@ -39,6 +39,7 @@ function navItems(site: Site, availablePaths?: string[]) {
   const items = [
     { href: "/posts", label: t(site.locale, "posts") },
     { href: "/articles", label: t(site.locale, "articles") },
+    { href: "/links", label: t(site.locale, "links") },
     { href: "/books", label: t(site.locale, "books") },
     { href: "/music", label: t(site.locale, "music") },
     { href: "/photos", label: t(site.locale, "photos") },
@@ -270,6 +271,24 @@ export function Layout({
                 flex-shrink: 0;
               }
               .music-link-icon { padding-left: 1px; }
+              .link-card {
+                padding: 1rem 1rem 1.2rem;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+              }
+              .link-card h2 { margin-top: 0.2rem; margin-bottom: 0.55rem; }
+              .link-excerpt { color: var(--muted); margin-bottom: 0.65rem; }
+              .link-comment p:last-child { margin-bottom: 0; }
+              .link-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 0.9rem 0 0; }
+              .open-link-button {
+                display: inline-flex; align-items: center; gap: 0.35rem;
+                border: 1px solid var(--border); border-radius: 999px;
+                padding: 0.42rem 0.7rem; text-decoration: none;
+                color: var(--fg); font-size: 0.9rem;
+              }
+              .open-link-button:hover, .open-link-button:focus-visible {
+                border-color: var(--focus); color: var(--focus);
+              }
               .quote-text { margin: 0 0 0.75rem; padding-left: 1rem; border-left: 3px solid var(--border); }
               .quote-text p { margin: 0 0 0.5rem; font-size: 1.15rem; font-style: italic; line-height: 1.4; }
               .quote-text footer { font-size: 0.9rem; color: var(--muted); }

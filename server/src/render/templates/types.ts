@@ -36,6 +36,10 @@ export interface ArticleMetadata {
   excerpt?: string;
 }
 
+export interface LinkMetadata {
+  excerpt?: string;
+}
+
 export interface QuoteMetadata {
   author: string;
   comment?: string;
