@@ -941,7 +941,8 @@ export const cardsStyles = `
   }
   .cards-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-  .cards-category-filter { position: relative; align-self: flex-end; }
+  body.theme-cards .site-header-left { gap: 0.7rem; }
+  .cards-category-filter { position: relative; align-self: flex-start; }
   .cards-filter-trigger {
     display: inline-flex; align-items: center; justify-content: center;
     width: 38px; height: 38px; border-radius: 999px;
@@ -954,7 +955,7 @@ export const cardsStyles = `
   .cards-filter-trigger::-webkit-details-marker { display: none; }
   .cards-filter-trigger:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .cards-filter-menu {
-    position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 950;
+    position: absolute; top: calc(100% + 0.5rem); left: 0; z-index: 950;
     display: grid; gap: 0.15rem; min-width: 12rem;
     padding: 0.45rem; border-radius: 16px;
     background: color-mix(in srgb, var(--bg) 92%, transparent);

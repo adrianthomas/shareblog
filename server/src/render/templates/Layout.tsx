@@ -199,6 +199,7 @@ export function Layout({
                        flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-bottom: 2rem; }
               header.site-header h1 { font-size: 1.1rem; margin: 0; }
               header.site-header h1 a { text-decoration: none; color: inherit; }
+              .site-header-left { display: flex; flex-direction: column; align-items: flex-start; gap: 0.55rem; min-width: 0; }
               .site-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; min-width: 0; }
               .header-links { margin: 0; display: flex; align-items: center; gap: 0.35rem; }
               .rss-link { font-size: 0.7rem; color: var(--muted); text-decoration: none; }
@@ -1042,9 +1043,14 @@ export function Layout({
           {t(site.locale, "skipToContent")}
         </a>
         <header className="site-header">
-          <h1>
-            <a href="/">{site.title}</a>
-          </h1>
+          <div className="site-header-left">
+            <h1>
+              <a href="/">{site.title}</a>
+            </h1>
+            {usesCardsInteraction && !cardsDetail ? (
+              <CardsCategoryFilter locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
+            ) : null}
+          </div>
           <div className="site-header-right">
             <p className="header-links">
               <a className="rss-link" href="/feed.xml">
@@ -1063,9 +1069,7 @@ export function Layout({
                 </>
               ) : null}
             </p>
-            {usesCardsInteraction && !cardsDetail ? (
-              <CardsCategoryFilter locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
-            ) : (
+            {usesCardsInteraction && !cardsDetail ? null : (
               <nav aria-label={t(site.locale, "primaryNavigation")}>
                 {navItems(site, availablePaths).map((item) => (
                   <a key={item.href} href={item.href}>
