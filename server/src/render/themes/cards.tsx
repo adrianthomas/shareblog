@@ -924,8 +924,10 @@ export const cardsStyles = `
     position: fixed; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));
     z-index: 1100; width: 34px; height: 34px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(20,20,20,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    color: #fff; text-decoration: none;
+    background: rgba(255,255,255,0.88); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    color: #111827; text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.62);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 10px 24px rgba(0,0,0,0.2);
   }
   .cards-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 

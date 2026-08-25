@@ -4,6 +4,13 @@ import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsTabBar } from "../themes/cards.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 
+const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }> = {
+  classic: { light: "#ffffff", dark: "#111111" },
+  cards: { light: "#ffffff", dark: "#111111" },
+  washi: { light: "#f6efe1", dark: "#1c1a15" },
+  prism: { light: "#f7f8ff", dark: "#101321" },
+};
+
 // Promotes the Amazon storefront closest to the visitor's browser-reported
 // language (navigator.language — never sent to the server, never logged),
 // among the region links BookCard renders with a data-amazon-region
@@ -63,6 +70,7 @@ export function Layout({
 }) {
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
+  const chromeColors = THEME_CHROME_COLORS[theme];
   const usesCardsInteraction = theme === "cards" || theme === "prism";
   const hasAbout = Boolean(site.about && site.about.trim());
   // Not siteOrigin() from render.ts — that file imports Layout, so
@@ -77,6 +85,8 @@ export function Layout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content={chromeColors.light} media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content={chromeColors.dark} media="(prefers-color-scheme: dark)" />
         <title>{pageTitle}</title>
         {site.tagline ? <meta name="description" content={site.tagline} /> : null}
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
