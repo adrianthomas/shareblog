@@ -47,6 +47,7 @@ export interface CardsItemData {
   eyebrow: string;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  actionLabel?: React.ReactNode;
   /** Drives the badge color on the text-only card treatment (see TextCard) — unused by the photo/quote variants, which have their own dedicated looks. */
   type: ContentType;
   hero: CardsHero;
@@ -83,12 +84,14 @@ function Caption({
   eyebrow,
   title,
   subtitle,
+  actionLabel,
   dateLabel,
   titleTag: TitleTag = "h2",
 }: {
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  actionLabel?: React.ReactNode;
   dateLabel?: React.ReactNode;
   titleTag?: "h1" | "h2";
 }) {
@@ -97,6 +100,7 @@ function Caption({
       <p className="cards-eyebrow">{eyebrow}</p>
       <TitleTag className="cards-title">{title}</TitleTag>
       {subtitle ? <p className="cards-subtitle">{subtitle}</p> : null}
+      {actionLabel ? <span className="cards-caption-action">{actionLabel}</span> : null}
       {dateLabel ? <p className="cards-date">{dateLabel}</p> : null}
     </div>
   );
@@ -118,6 +122,7 @@ function TextCard({
   eyebrow,
   title,
   subtitle,
+  actionLabel,
   type,
   dateLabel,
   titleTag: TitleTag = "h2",
@@ -126,6 +131,7 @@ function TextCard({
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  actionLabel?: React.ReactNode;
   type: ContentType;
   dateLabel?: React.ReactNode;
   titleTag?: "h1" | "h2";
@@ -133,13 +139,14 @@ function TextCard({
 }) {
   const style = { "--cards-accent": TYPE_ACCENTS[type] } as React.CSSProperties;
   return (
-    <div className={`cards-text-card${full ? " cards-text-card--full" : ""}`} style={style}>
+    <div className={`cards-text-card cards-text-card--${type}${full ? " cards-text-card--full" : ""}`} style={style}>
       <p className="cards-text-badge">
         <span className="cards-text-badge-dot" aria-hidden="true" />
         {eyebrow}
       </p>
       <TitleTag className="cards-text-title">{title}</TitleTag>
       {subtitle ? <p className="cards-text-subtitle">{subtitle}</p> : null}
+      {actionLabel ? <span className="cards-text-action">{actionLabel}</span> : null}
       {dateLabel ? <p className="cards-text-date">{dateLabel}</p> : null}
     </div>
   );
@@ -264,7 +271,7 @@ function PhotoCard({
   );
 }
 
-function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: string }) {
+export function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: string }) {
   return (
     <a className="cards-close" href={backHref} aria-label={backLabel}>
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
@@ -278,7 +285,7 @@ function CloseButton({ backHref, backLabel }: { backHref: string; backLabel: str
 // <a> (works with JS disabled — it's a normal link to the detail page).
 // `data-cards-card` is the hook the client script uses to intercept the
 // click and animate into the detail view instead of a hard navigation.
-export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, variant }: CardsItemData) {
+export function CardsFeedItem({ href, eyebrow, title, subtitle, actionLabel, type, hero, variant }: CardsItemData) {
   return (
     <a
       className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`}
@@ -288,11 +295,11 @@ export function CardsFeedItem({ href, eyebrow, title, subtitle, type, hero, vari
       data-cards-type={type}
     >
       {hero.imageUrl ? (
-        <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} />} />
+        <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} actionLabel={actionLabel} />} />
       ) : variant === "quote" ? (
         <QuoteCard eyebrow={eyebrow} title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       ) : (
-        <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} type={type} />
+        <TextCard eyebrow={eyebrow} title={title} subtitle={subtitle} actionLabel={actionLabel} type={type} />
       )}
     </a>
   );
@@ -587,6 +594,12 @@ export const cardsStyles = `
     margin: 0.4rem 0 0; font-size: 0.95rem; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
+  .cards-caption-action {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    margin-top: 0.8rem; padding: 0.42rem 0.72rem; border-radius: 999px;
+    background: rgba(255,255,255,0.9); color: #111827;
+    font-size: 0.84rem; font-weight: 750; text-shadow: none;
+  }
   .cards-date { margin: 0.6rem 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.75); }
 
   /* Detail header: the same hero+caption language, stretched taller and
@@ -643,8 +656,21 @@ export const cardsStyles = `
     margin: 0; font-size: 1.2rem; line-height: 1.45; font-weight: 600; color: var(--fg);
     display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .cards-text-subtitle { margin: 0.6rem 0 0; font-size: 0.9rem; color: var(--muted); }
-  .cards-text-date { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  .cards-text-card--article .cards-text-title {
+    font-size: 1.22rem; line-height: 1.28; font-weight: 760;
+  }
+  .cards-text-subtitle {
+    margin: 0.8rem 0 0; font-size: 0.94rem; line-height: 1.48; color: var(--muted);
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cards-text-action {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    margin-top: 1rem; padding: 0.46rem 0.78rem; border-radius: 999px;
+    background: color-mix(in srgb, var(--cards-accent) 12%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--cards-accent) 30%, transparent);
+    color: var(--cards-accent); font-size: 0.88rem; font-weight: 750;
+  }
+  .cards-text-date { margin: 0.85rem 0 0; font-size: 0.8rem; color: var(--muted); }
 
   /* The detail page's version of the same card: unclamped (see the note
      on .cards-detail-header .cards-title above — this is the whole page's
@@ -993,6 +1019,62 @@ export const cardsStyles = `
      rather than staying full-bleed, same as the classic theme's article body. */
   .cards-body { max-width: 680px; margin: 1.75rem auto 0; padding: 0 1.25rem; }
   .cards-body p { margin: 0 0 1rem; }
+
+  .cards-article-detail {
+    --cards-accent: #2563eb;
+    max-width: 680px;
+    margin: max(4.75rem, calc(env(safe-area-inset-top) + 3.75rem)) auto 0;
+    padding: 0 1.25rem 4rem;
+  }
+  .cards-article-header {
+    padding-bottom: 1.45rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  }
+  .cards-article-title {
+    margin: 0; color: var(--fg);
+    font-size: 2.35rem; line-height: 1.06; letter-spacing: 0;
+    font-weight: 800;
+  }
+  .cards-article-excerpt {
+    margin: 0.9rem 0 0; color: var(--muted); font-size: 1.05rem; line-height: 1.45;
+  }
+  .cards-article-date {
+    margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem;
+  }
+  .cards-article-body {
+    margin-top: 1.75rem;
+    font-size: 1.05rem;
+    line-height: 1.68;
+  }
+  .cards-article-body h2 {
+    margin: 2rem 0 0.7rem;
+    font-size: 1.65rem;
+    line-height: 1.16;
+  }
+  .cards-article-body h3 {
+    margin: 1.6rem 0 0.55rem;
+    font-size: 1.32rem;
+    line-height: 1.22;
+  }
+  .cards-article-body h4,
+  .cards-article-body h5,
+  .cards-article-body h6 {
+    margin: 1.35rem 0 0.45rem;
+    font-size: 1.04rem;
+    line-height: 1.28;
+  }
+  .cards-article-body img {
+    width: 100%;
+    margin: 1.35rem 0 1.45rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12);
+  }
+  @media (max-width: 520px) {
+    .cards-article-title { font-size: 1.95rem; }
+    .cards-article-body { font-size: 1rem; line-height: 1.64; }
+    .cards-article-body h2 { font-size: 1.42rem; }
+    .cards-article-body h3 { font-size: 1.18rem; }
+  }
 
   .cards-close {
     position: fixed; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));

@@ -17,6 +17,7 @@ export type MessageKey =
   | "currentlyRunning"
   | "copyLink"
   | "openLink"
+  | "readMore"
   | "urlCopied"
   | "copyQuote"
   | "quoteCopied"
@@ -64,6 +65,7 @@ const MESSAGES: Record<string, Messages> = {
     currentlyRunning: "Currently running {commit}",
     copyLink: "Copy link",
     openLink: "Open Link",
+    readMore: "Read more",
     urlCopied: "URL copied",
     copyQuote: "Copy quote",
     quoteCopied: "Quote copied",
@@ -108,6 +110,7 @@ const MESSAGES: Record<string, Messages> = {
     currentlyRunning: "Aktuell läuft {commit}",
     copyLink: "Link kopieren",
     openLink: "Link öffnen",
+    readMore: "Weiterlesen",
     urlCopied: "URL kopiert",
     copyQuote: "Zitat kopieren",
     quoteCopied: "Zitat kopiert",
@@ -152,6 +155,7 @@ const MESSAGES: Record<string, Messages> = {
     currentlyRunning: "Version actuelle : {commit}",
     copyLink: "Copier le lien",
     openLink: "Ouvrir le lien",
+    readMore: "Lire la suite",
     urlCopied: "URL copiée",
     copyQuote: "Copier la citation",
     quoteCopied: "Citation copiée",
@@ -196,6 +200,7 @@ const MESSAGES: Record<string, Messages> = {
     currentlyRunning: "Ejecutando actualmente {commit}",
     copyLink: "Copiar enlace",
     openLink: "Abrir enlace",
+    readMore: "Leer más",
     urlCopied: "URL copiada",
     copyQuote: "Copiar cita",
     quoteCopied: "Cita copiada",
@@ -240,6 +245,7 @@ const MESSAGES: Record<string, Messages> = {
     currentlyRunning: "現在のバージョン: {commit}",
     copyLink: "リンクをコピー",
     openLink: "リンクを開く",
+    readMore: "続きを読む",
     urlCopied: "URLをコピーしました",
     copyQuote: "引用をコピー",
     quoteCopied: "引用をコピーしました",

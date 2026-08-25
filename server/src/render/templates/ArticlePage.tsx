@@ -3,9 +3,17 @@ import type { ContentObject, ArticleMetadata } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
-import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
-import { formatRichText } from "../format.js";
+import { CardsFeedItem, CardsDetailHeader, CloseButton } from "../themes/cards.js";
+import { formatRichText, stripBasicFormatting } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
+
+function articleExcerpt(object: ContentObject, metadata: ArticleMetadata): string | undefined {
+  const excerpt = metadata.excerpt?.trim();
+  if (excerpt) return excerpt;
+  const text = stripBasicFormatting(object.body ?? "");
+  if (!text) return undefined;
+  return text.length > 220 ? `${text.slice(0, 220).trim()}…` : text;
+}
 
 export function ArticleCard({
   object,
@@ -19,6 +27,7 @@ export function ArticleCard({
   coverImageUrl?: string;
 }) {
   const metadata = object.metadata as ArticleMetadata;
+  const excerpt = articleExcerpt(object, metadata);
 
   if (theme === "cards" || theme === "prism") {
     return (
@@ -26,7 +35,12 @@ export function ArticleCard({
         href={`/articles/${object.slug}`}
         eyebrow={t(locale, "articles")}
         title={object.title}
-        subtitle={metadata.excerpt}
+        subtitle={excerpt}
+        actionLabel={
+          <>
+            {t(locale, "readMore")} <span aria-hidden="true">→</span>
+          </>
+        }
         type={object.type}
         hero={{ imageUrl: coverImageUrl, imageAlt: "", gradientSeed: object.slug }}
       />
@@ -63,8 +77,31 @@ export function ArticlePage({
 }) {
   const metadata = object.metadata as ArticleMetadata;
   const bodyHtml = formatRichText(object.body ?? "");
+  const metadataExcerpt = metadata.excerpt?.trim();
 
   if (theme === "cards" || theme === "prism") {
+    if (!coverImageUrl) {
+      return (
+        <>
+          <CloseButton backHref={backHref!} backLabel={backLabel!} />
+          <article className="cards-article-detail">
+            <header className="cards-article-header">
+              <p className="cards-text-badge">
+                <span className="cards-text-badge-dot" aria-hidden="true" />
+                {t(locale, "articles")}
+              </p>
+              <h1 className="cards-article-title">{object.title}</h1>
+              {metadataExcerpt ? <p className="cards-article-excerpt">{metadataExcerpt}</p> : null}
+              <p className="cards-article-date">
+                {formatDate(object.publishedAt, locale)}
+                <CopyLinkButton locale={locale} />
+              </p>
+            </header>
+            <div className="cards-article-body body-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          </article>
+        </>
+      );
+    }
     return (
       <>
         <CardsDetailHeader

@@ -339,7 +339,12 @@ export function Layout({
               .body-content p, .about-content p { margin: 0 0 1rem; }
               .body-content h2 { font-size: 1.3rem; margin: 1.75rem 0 0.75rem; line-height: 1.3; }
               .body-content h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; line-height: 1.3; }
-              .body-content h2:first-child, .body-content h3:first-child { margin-top: 0; }
+              .body-content h4, .body-content h5, .body-content h6 {
+                font-size: 1rem; margin: 1.35rem 0 0.45rem; line-height: 1.3;
+              }
+              .body-content h2:first-child, .body-content h3:first-child,
+              .body-content h4:first-child, .body-content h5:first-child,
+              .body-content h6:first-child { margin-top: 0; }
               .body-content img { max-width: 100%; height: auto; border-radius: 6px; margin: 0 0 1rem; display: block; }
               .release-entry { margin: 0 0 1.75rem; }
               .release-entry:last-child { margin-bottom: 0; }
