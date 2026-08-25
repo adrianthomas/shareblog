@@ -176,7 +176,9 @@ export async function renderList(
   const list =
     site.theme === "cards"
       ? React.createElement("div", { className: "cards-feed" }, ...cards)
-      : React.createElement(React.Fragment, null, ...cards);
+      : site.theme === "washi"
+        ? React.createElement("div", { className: "washi-feed" }, ...cards)
+        : React.createElement(React.Fragment, null, ...cards);
   return wrap(site, title, list, wrapOpts);
 }
 

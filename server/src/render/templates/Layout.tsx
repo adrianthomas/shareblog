@@ -309,59 +309,281 @@ export function Layout({
         />
         {theme === "cards" ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
         {theme === "washi" ? (
-          // The washi theme is a pure CSS reskin of the classic template
-          // branch — no markup or client-script changes anywhere (unlike
-          // cards, which also needs cardsStyles/cardsScript/CardsTabBar for
-          // its distinct layout and behavior). Every other template file
-          // only branches on theme === "cards", so a washi site renders the
-          // exact same markup as classic; this block is the entire theme.
-          // Recolors via the same --fg/--bg/--muted/--border/--focus tokens
-          // every other rule above already reads (including --focus, which
-          // doubles as the link/accent color — see the plain `a` rule
-          // above), so this only needs to add typography, a paper-grain
-          // texture, and a "mounted print" treatment for images/quotes.
+          // Washi keeps the classic templates but gives list pages their own
+          // feed wrapper in render.ts, so it can be more composed than classic
+          // without taking on the cards theme's JS overlay/detail machinery.
           <style
             dangerouslySetInnerHTML={{
               __html: `
                 html[data-theme="washi"] {
-                  --fg: #33302a; --bg: #f7f2e7; --muted: #746a58; --border: #ddd0b6; --focus: #a8462f;
+                  --fg: #2f2a23; --bg: #f6efe1; --muted: #736855; --border: #d8c8aa; --focus: #a8422b;
+                  --washi-paper: #fffaf0;
+                  --washi-paper-warm: #fbf1de;
+                  --washi-ink-soft: rgba(47, 42, 35, 0.12);
+                  --washi-shadow: 0 1px 2px rgba(45, 31, 13, 0.08), 0 14px 34px rgba(45, 31, 13, 0.12);
+                  --washi-shadow-hover: 0 2px 5px rgba(45, 31, 13, 0.12), 0 20px 42px rgba(45, 31, 13, 0.16);
                 }
                 @media (prefers-color-scheme: dark) {
-                  html[data-theme="washi"] { --fg: #e8e1d2; --bg: #1c1a15; --muted: #a89b83; --border: #3c362b; --focus: #dd8f6f; }
+                  html[data-theme="washi"] {
+                    --fg: #e8e1d2; --bg: #1c1a15; --muted: #a89b83; --border: #3c362b; --focus: #dd8f6f;
+                    --washi-paper: #272218;
+                    --washi-paper-warm: #211d15;
+                    --washi-ink-soft: rgba(232, 225, 210, 0.12);
+                    --washi-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 14px 34px rgba(0, 0, 0, 0.24);
+                    --washi-shadow-hover: 0 2px 5px rgba(0, 0, 0, 0.26), 0 20px 42px rgba(0, 0, 0, 0.3);
+                  }
                 }
                 html[data-theme="washi"] body {
                   background-color: var(--bg);
-                  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+                  background-image:
+                    radial-gradient(circle at 12% 8%, rgba(168, 66, 43, 0.08), transparent 22rem),
+                    linear-gradient(115deg, rgba(255, 250, 240, 0.6), transparent 42%),
+                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
                   background-repeat: repeat;
                   line-height: 1.65;
+                  max-width: none;
+                  padding: 0;
+                }
+                html[data-theme="washi"] header.site-header,
+                html[data-theme="washi"] main,
+                html[data-theme="washi"] footer.site-footer {
+                  width: min(100%, 1080px);
+                  margin-left: auto;
+                  margin-right: auto;
+                  padding-left: 1.25rem;
+                  padding-right: 1.25rem;
+                }
+                html[data-theme="washi"] header.site-header {
+                  position: sticky;
+                  top: 0;
+                  z-index: 20;
+                  align-items: center;
+                  margin-bottom: 2.5rem;
+                  padding-top: 1.1rem;
+                  padding-bottom: 0.9rem;
+                  background: color-mix(in srgb, var(--bg) 84%, transparent);
+                  backdrop-filter: blur(18px);
+                  -webkit-backdrop-filter: blur(18px);
+                  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
                 }
                 html[data-theme="washi"] header.site-header h1 {
                   font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
-                  font-weight: 600; font-size: 1.3rem; letter-spacing: 0.03em;
+                  font-weight: 600; font-size: 1.45rem; letter-spacing: 0.03em;
+                }
+                html[data-theme="washi"] header.site-header h1 a {
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 0.55rem;
+                }
+                html[data-theme="washi"] header.site-header h1 a::before {
+                  content: "";
+                  width: 0.64rem;
+                  height: 1.65rem;
+                  border-radius: 999px;
+                  background: linear-gradient(180deg, var(--focus), color-mix(in srgb, var(--focus) 38%, var(--bg)));
+                  box-shadow: 0 0 0 1px color-mix(in srgb, var(--focus) 18%, transparent);
+                }
+                html[data-theme="washi"] .site-header-right {
+                  gap: 0.55rem;
+                }
+                html[data-theme="washi"] nav {
+                  gap: 0.25rem;
+                  justify-content: flex-end;
+                }
+                html[data-theme="washi"] nav a {
+                  border-radius: 999px;
+                  padding: 0.34rem 0.72rem;
+                  color: var(--muted);
+                  transition: background 0.18s ease, color 0.18s ease;
+                }
+                html[data-theme="washi"] nav a:hover,
+                html[data-theme="washi"] nav a:focus-visible {
+                  background: color-mix(in srgb, var(--focus) 12%, transparent);
+                  color: var(--fg);
+                }
+                html[data-theme="washi"] .header-links {
+                  font-size: 0.8rem;
+                }
+                html[data-theme="washi"] .rss-link {
+                  color: var(--muted);
+                }
+                html[data-theme="washi"] main {
+                  padding-bottom: 1rem;
+                }
+                html[data-theme="washi"] .washi-feed {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                  gap: 1.25rem;
+                  align-items: start;
+                }
+                html[data-theme="washi"] .washi-feed > .card {
+                  position: relative;
+                  margin: 0;
+                  padding: 1.2rem;
+                  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+                  border-bottom-color: color-mix(in srgb, var(--border) 72%, transparent);
+                  border-radius: 10px 6px 12px 5px;
+                  background:
+                    linear-gradient(150deg, color-mix(in srgb, var(--washi-paper) 96%, var(--bg)), var(--washi-paper-warm)),
+                    var(--washi-paper);
+                  box-shadow: var(--washi-shadow);
+                  overflow: hidden;
+                  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+                }
+                html[data-theme="washi"] .washi-feed > .card::before {
+                  content: "";
+                  position: absolute;
+                  inset: 0;
+                  pointer-events: none;
+                  background:
+                    repeating-linear-gradient(90deg, transparent 0, transparent 18px, var(--washi-ink-soft) 19px, transparent 20px),
+                    repeating-linear-gradient(0deg, transparent 0, transparent 22px, rgba(255, 255, 255, 0.1) 23px, transparent 24px);
+                  opacity: 0.18;
+                  mix-blend-mode: multiply;
+                }
+                @media (prefers-color-scheme: dark) {
+                  html[data-theme="washi"] .washi-feed > .card::before { mix-blend-mode: screen; opacity: 0.08; }
+                }
+                html[data-theme="washi"] .washi-feed > .card:hover {
+                  transform: translateY(-2px);
+                  box-shadow: var(--washi-shadow-hover);
+                  border-color: color-mix(in srgb, var(--focus) 28%, var(--border));
+                }
+                html[data-theme="washi"] .washi-feed > .card > * {
+                  position: relative;
+                  z-index: 1;
+                }
+                html[data-theme="washi"] h1,
+                html[data-theme="washi"] h2,
+                html[data-theme="washi"] h3 {
+                  text-wrap: balance;
                 }
                 html[data-theme="washi"] .body-content h2,
                 html[data-theme="washi"] .body-content h3,
+                html[data-theme="washi"] article > h1,
+                html[data-theme="washi"] article > h2,
+                html[data-theme="washi"] .card h2,
                 html[data-theme="washi"] .about-product h2,
                 html[data-theme="washi"] .faq-entry h3,
                 html[data-theme="washi"] .release-date {
                   font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
                   font-weight: 600; letter-spacing: 0.02em;
                 }
+                html[data-theme="washi"] .card h2,
+                html[data-theme="washi"] article > h1 {
+                  margin-top: 0;
+                  line-height: 1.22;
+                }
+                html[data-theme="washi"] .card h2 {
+                  font-size: 1.28rem;
+                }
+                html[data-theme="washi"] article > h1 {
+                  font-size: clamp(1.9rem, 4vw, 2.75rem);
+                  max-width: 760px;
+                }
+                html[data-theme="washi"] .meta {
+                  color: var(--muted);
+                  font-size: 0.78rem;
+                  letter-spacing: 0.04em;
+                }
+                html[data-theme="washi"] a.title-link:hover {
+                  text-decoration-thickness: 0.08em;
+                  text-underline-offset: 0.18em;
+                }
                 html[data-theme="washi"] .quote-text {
-                  border-left-color: var(--focus); border-left-width: 2px;
+                  position: relative;
+                  margin: 0 0 1rem;
+                  padding: 1.45rem 1.35rem 1.1rem;
+                  border: 1px solid var(--border);
+                  border-left: 3px solid var(--focus);
+                  border-radius: 4px;
+                  background:
+                    repeating-linear-gradient(to bottom, transparent 0, transparent 1.75rem, color-mix(in srgb, var(--border) 35%, transparent) calc(1.75rem + 1px), transparent calc(1.75rem + 2px)),
+                    color-mix(in srgb, var(--washi-paper) 92%, var(--bg));
+                  box-shadow: 0 8px 20px rgba(45, 31, 13, 0.08);
                 }
                 html[data-theme="washi"] .quote-text p {
                   font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
                   font-weight: 400; letter-spacing: 0.01em;
+                  font-size: 1.22rem;
+                }
+                html[data-theme="washi"] .book,
+                html[data-theme="washi"] .music {
+                  gap: 1.2rem;
+                  align-items: flex-start;
+                }
+                html[data-theme="washi"] .book img {
+                  width: 116px;
+                }
+                html[data-theme="washi"] .music img.artwork {
+                  width: 112px;
+                }
+                html[data-theme="washi"] .music-links a,
+                html[data-theme="washi"] .meta a {
+                  display: inline-flex;
+                  align-items: center;
+                  min-height: 1.85rem;
+                  margin-bottom: 0.25rem;
+                  border-radius: 999px;
+                  padding: 0.18rem 0.58rem;
+                  background: color-mix(in srgb, var(--focus) 10%, transparent);
+                  text-decoration: none;
+                }
+                html[data-theme="washi"] .meta a:hover,
+                html[data-theme="washi"] .meta a:focus-visible,
+                html[data-theme="washi"] .music-links a:hover,
+                html[data-theme="washi"] .music-links a:focus-visible {
+                  background: color-mix(in srgb, var(--focus) 18%, transparent);
                 }
                 html[data-theme="washi"] .card img,
                 html[data-theme="washi"] .body-content img,
                 html[data-theme="washi"] .book img,
                 html[data-theme="washi"] .music img.artwork {
-                  border-radius: 2px;
-                  outline: 1px solid var(--border);
+                  border-radius: 4px 2px 5px 2px;
+                  outline: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
                   outline-offset: -1px;
-                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+                  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 10px 24px rgba(45, 31, 13, 0.14);
+                }
+                html[data-theme="washi"] .washi-feed > .card > a:first-child img,
+                html[data-theme="washi"] .washi-feed > .card > img:first-child {
+                  display: block;
+                  width: calc(100% + 2.4rem);
+                  max-width: none;
+                  margin: -1.2rem -1.2rem 1rem;
+                  aspect-ratio: 4 / 3;
+                  object-fit: cover;
+                  border-radius: 9px 5px 0 0;
+                  outline: 0;
+                  box-shadow: none;
+                }
+                html[data-theme="washi"] .exif {
+                  border-top-style: dashed;
+                }
+                html[data-theme="washi"] footer.site-footer {
+                  margin-top: 3.25rem;
+                  padding-top: 1.25rem;
+                  padding-bottom: 2rem;
+                }
+                @media (max-width: 720px) {
+                  html[data-theme="washi"] header.site-header {
+                    position: static;
+                    align-items: flex-start;
+                  }
+                  html[data-theme="washi"] .site-header-right {
+                    align-items: flex-start;
+                  }
+                  html[data-theme="washi"] nav {
+                    justify-content: flex-start;
+                  }
+                  html[data-theme="washi"] .washi-feed {
+                    grid-template-columns: 1fr;
+                  }
+                }
+                @media (max-width: 400px) {
+                  html[data-theme="washi"] .book img,
+                  html[data-theme="washi"] .music img.artwork {
+                    width: min(68vw, 180px);
+                  }
                 }
               `,
             }}
@@ -369,7 +591,7 @@ export function Layout({
         ) : null}
       </head>
       <body
-        className={theme === "cards" ? "theme-cards" : undefined}
+        className={theme === "cards" ? "theme-cards" : theme === "washi" ? "theme-washi" : undefined}
         data-theme={theme}
         data-cards-detail={theme === "cards" && cardsDetail ? "true" : undefined}
       >

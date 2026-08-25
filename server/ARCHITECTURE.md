@@ -90,18 +90,19 @@ parallel themes from the same function** — `if (theme === "cards") {...}
 return <classic markup>` — there's no separate per-theme file, so adding a
 field to a content type means updating both branches (and the
 `CardsFeedItem`/`CardsDetailHeader` props in `themes/cards.tsx` if the cards
-branch needs new shared-header behavior). `washi` is not a third branch:
-every template only ever checks `=== "cards"`, so a washi site renders the
-same markup as classic. The whole theme lives in one `theme === "washi"`
-gated `<style>` block in `Layout.tsx` — recolors via the shared
-`--fg`/`--bg`/`--muted`/`--border`/`--focus` tokens (set on `<html
-data-theme="washi">` so they cascade to `<body>` too — see the block's own
-comment for why that split matters) plus self-hosted display type
-(`server/public/fonts/shippori-mincho-*`, same latin/latin-ext-only,
-self-hosted pattern as the cards theme's Special Elite). No new JS, no new
-markup branch. A future theme that needs actual layout or interaction
-changes, not just a reskin, would need its own `themes/<name>.tsx` module
-the way `themes/cards.tsx` works, plus real branches in every template.
+branch needs new shared-header behavior). `washi` is deliberately lighter
+than cards but richer than classic: templates still only check `=== "cards"`,
+while `renderList()` wraps list pages in `.washi-feed` so the theme can render
+a responsive paper-card grid. Detail pages reuse the classic markup. The rest
+of the theme lives in one `theme === "washi"` gated `<style>` block in
+`Layout.tsx` — shared color tokens on `<html data-theme="washi">`, self-hosted
+display type (`server/public/fonts/shippori-mincho-*`, same latin/
+latin-ext-only pattern as the cards theme's Special Elite), textured
+backgrounds, sticky translucent header, refined nav pills, paper cards, and
+media/quote treatments. No new JS. A future theme that needs actual detail
+layout or interaction changes, not just a feed wrapper plus CSS, would need
+its own `themes/<name>.tsx` module the way `themes/cards.tsx` works, plus real
+branches in every template.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:
