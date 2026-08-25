@@ -52,6 +52,21 @@ async function assertOwnedAssets(siteId: string, metadata: unknown): Promise<voi
   }
 }
 
+type CreateObjectBody = z.infer<typeof createObjectSchema>;
+
+function normalizeLegacyArticle(body: CreateObjectBody): CreateObjectBody {
+  if (body.type !== "thought" || body.title || !body.body) return body;
+  const normalizedBody = body.body.replace(/\r\n/g, "\n");
+  const match = normalizedBody.match(/^#\s+([^\n]+)(?:\n+([\s\S]*))?$/);
+  if (!match) return body;
+  return {
+    ...body,
+    type: "article",
+    title: match[1].trim(),
+    body: match[2]?.trim() || undefined,
+  };
+}
+
 function clientSupportsLinkContentType(header: string | string[] | undefined): boolean {
   const value = Array.isArray(header) ? header.join(",") : header;
   return value?.split(",").map((feature) => feature.trim()).includes("link-content-type") ?? false;
@@ -96,7 +111,7 @@ export async function objectRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: { code: "no_site", message: "Create a site before publishing." } });
     }
 
-    const body = createObjectSchema.parse(request.body);
+    const body = normalizeLegacyArticle(createObjectSchema.parse(request.body));
     await assertOwnedAssets(site.id, body.metadata);
     const slugSource = slugSourceText(body);
     const baseSlug = body.title ? slugify(slugSource) : slugFromBody(slugSource);
