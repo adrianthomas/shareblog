@@ -10,11 +10,21 @@ function externalUrl(object: ContentObject): string {
   return object.sourceUrl ?? `/links/${object.slug}`;
 }
 
+function linkHost(object: ContentObject): string | undefined {
+  if (!object.sourceUrl) return undefined;
+  try {
+    return new URL(object.sourceUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return undefined;
+  }
+}
+
 function ExternalTitle({ object }: { object: ContentObject }) {
+  const title = object.title || linkHost(object) || object.sourceUrl || "Link";
   return (
     <a className="title-link link-title-link" href={externalUrl(object)} target="_blank" rel="noopener noreferrer">
-      {object.title}
-      <span aria-hidden="true"> -&gt;</span>
+      {title}
+      <span className="external-arrow" aria-hidden="true">↗</span>
     </a>
   );
 }
@@ -22,7 +32,7 @@ function ExternalTitle({ object }: { object: ContentObject }) {
 function OpenLinkButton({ object, locale }: { object: ContentObject; locale: string }) {
   return (
     <a className="open-link-button" href={externalUrl(object)} target="_blank" rel="noopener noreferrer">
-      {t(locale, "openLink")} <span aria-hidden="true">-&gt;</span>
+      {t(locale, "openLink")} <span aria-hidden="true">↗</span>
     </a>
   );
 }
@@ -44,6 +54,7 @@ export function LinkPost({
 }) {
   const metadata = object.metadata as LinkMetadata;
   const bodyHtml = formatBasicText(object.body ?? "");
+  const host = linkHost(object);
 
   if (theme === "cards" || theme === "prism") {
     return (
@@ -54,7 +65,10 @@ export function LinkPost({
           </a>
         ) : null}
         <article className={`cards-link-card${linked ? "" : " cards-link-card--full"}`}>
-          <p className="cards-link-eyebrow">{t(locale, "links")}</p>
+          <div className="cards-link-topline">
+            <p className="cards-link-eyebrow">{t(locale, "links")}</p>
+            {host ? <p className="cards-link-host">{host}</p> : null}
+          </div>
           <h2 className="cards-link-title">
             <ExternalTitle object={object} />
           </h2>
@@ -72,7 +86,10 @@ export function LinkPost({
 
   return (
     <article className="card link-card">
-      <p className="meta">{t(locale, "links")}</p>
+      <div className="link-topline">
+        <p className="meta">{t(locale, "links")}</p>
+        {host ? <p className="link-host">{host}</p> : null}
+      </div>
       <h2>
         <ExternalTitle object={object} />
       </h2>

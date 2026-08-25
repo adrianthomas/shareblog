@@ -272,22 +272,41 @@ export function Layout({
               }
               .music-link-icon { padding-left: 1px; }
               .link-card {
-                padding: 1rem 1rem 1.2rem;
+                position: relative;
+                padding: 1.05rem 1.15rem 1.15rem;
                 border: 1px solid var(--border);
                 border-radius: 6px;
+                background:
+                  linear-gradient(90deg, color-mix(in srgb, var(--focus) 10%, transparent), transparent 35%),
+                  color-mix(in srgb, var(--bg) 96%, var(--fg));
               }
-              .link-card h2 { margin-top: 0.2rem; margin-bottom: 0.55rem; }
-              .link-excerpt { color: var(--muted); margin-bottom: 0.65rem; }
+              .link-topline {
+                display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem;
+                margin-bottom: 0.4rem;
+              }
+              .link-topline .meta { margin: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+              .link-host {
+                margin: 0; min-width: 0; color: var(--muted); font-size: 0.8rem;
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+              }
+              .link-card h2 { margin-top: 0; margin-bottom: 0.6rem; line-height: 1.25; }
+              .link-title-link .external-arrow { margin-left: 0.35rem; }
+              .external-arrow { display: inline-block; font-size: 0.82em; color: var(--focus); vertical-align: 0.08em; }
+              .link-excerpt { color: var(--muted); margin-bottom: 0.7rem; line-height: 1.45; }
+              .link-comment {
+                margin-top: 0.75rem; padding-left: 0.85rem; border-left: 3px solid var(--focus);
+              }
               .link-comment p:last-child { margin-bottom: 0; }
-              .link-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 0.9rem 0 0; }
+              .link-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0 0; }
               .open-link-button {
                 display: inline-flex; align-items: center; gap: 0.35rem;
-                border: 1px solid var(--border); border-radius: 999px;
-                padding: 0.42rem 0.7rem; text-decoration: none;
-                color: var(--fg); font-size: 0.9rem;
+                border: 1px solid color-mix(in srgb, var(--focus) 38%, var(--border)); border-radius: 999px;
+                padding: 0.44rem 0.76rem; text-decoration: none;
+                color: var(--focus); font-size: 0.9rem; font-weight: 650;
+                background: color-mix(in srgb, var(--focus) 8%, transparent);
               }
               .open-link-button:hover, .open-link-button:focus-visible {
-                border-color: var(--focus); color: var(--focus);
+                border-color: var(--focus); background: color-mix(in srgb, var(--focus) 14%, transparent);
               }
               .quote-text { margin: 0 0 0.75rem; padding-left: 1rem; border-left: 3px solid var(--border); }
               .quote-text p { margin: 0 0 0.5rem; font-size: 1.15rem; font-style: italic; line-height: 1.4; }

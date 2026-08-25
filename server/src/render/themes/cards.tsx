@@ -650,25 +650,45 @@ export const cardsStyles = `
   .cards-detail-header--text .cards-text-title { font-size: clamp(1.3rem, 3.2vw, 1.75rem); }
 
   .cards-link-card {
-    margin: 0; padding: 1.15rem 1.2rem 1.2rem; background: var(--bg);
-    border: 1px solid var(--border); border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    position: relative; margin: 0; padding: 1.2rem 1.25rem 1.25rem; overflow: hidden;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--cards-accent) 13%, transparent), transparent 48%),
+      var(--bg);
+    border: 1px solid color-mix(in srgb, var(--cards-accent) 24%, var(--border));
+    border-radius: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 10px 26px rgba(0,0,0,0.08);
+  }
+  .cards-link-card::before {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 4px;
+    background: var(--cards-accent);
   }
   .cards-link-card--full {
     max-width: 680px; margin: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) auto 0;
   }
-  .cards-link-eyebrow {
-    margin: 0 0 0.45rem; font-size: 0.7rem; font-weight: 750; letter-spacing: 0.06em;
-    color: var(--muted); text-transform: uppercase;
+  .cards-link-topline {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem;
+    margin-bottom: 0.45rem;
   }
-  .cards-link-title { margin: 0; font-size: 1.18rem; line-height: 1.28; }
+  .cards-link-eyebrow {
+    margin: 0; font-size: 0.7rem; font-weight: 780; letter-spacing: 0.06em;
+    color: var(--cards-accent); text-transform: uppercase;
+  }
+  .cards-link-host {
+    margin: 0; min-width: 0; color: var(--muted); font-size: 0.78rem;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cards-link-title { margin: 0; font-size: 1.2rem; line-height: 1.28; letter-spacing: 0; }
   .cards-link-title a { color: var(--fg); text-decoration: none; }
   .cards-link-title a:hover, .cards-link-title a:focus-visible { color: var(--focus); text-decoration: underline; }
+  .cards-link-title .external-arrow { font-size: 0.82em; color: var(--cards-accent); }
   .cards-link-excerpt {
-    margin: 0.55rem 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.42;
+    margin: 0.6rem 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.43;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .cards-link-comment { margin: 0.75rem 0 0; font-size: 0.96rem; line-height: 1.45; color: var(--fg); }
+  .cards-link-comment {
+    margin: 0.8rem 0 0; padding-left: 0.85rem; border-left: 3px solid var(--cards-accent);
+    font-size: 0.96rem; line-height: 1.45; color: var(--fg);
+  }
   .cards-link-comment p:last-child { margin-bottom: 0; }
   .cards-link-date { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--muted); }
   .cards-link-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.9rem; }
