@@ -44,8 +44,8 @@ open Shareblog.xcodeproj
 
 Three pieces:
 - `ShareblogKit` — local Swift package, shared models/API client/Keychain wrapper.
-- `Shareblog` — main app (onboarding, feed, settings).
-- `ShareblogShareExtension` — the share-sheet flow (type picker → per-type compose screen → publish).
+- `Shareblog` — main app (onboarding, feed, settings, editing/deleting existing objects, theme selection).
+- `ShareblogShareExtension` — the share-sheet flow (type picker → per-type compose screen → save draft or publish).
 
 Both app targets need the same Apple Developer Team selected in Xcode (Signing &
 Capabilities) for the App Group (`group.com.adrianthomas.shareblog`) and Keychain
