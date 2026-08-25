@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { and, eq, inArray, lt, desc } from "drizzle-orm";
+import { and, eq, inArray, lt, desc, ne } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { assets, contentObjects, contentTypeValues } from "../db/schema.js";
 import { authGuard } from "../middleware/auth-guard.js";
@@ -50,6 +50,11 @@ async function assertOwnedAssets(siteId: string, metadata: unknown): Promise<voi
   if (owned.length !== ids.length) {
     throw Object.assign(new Error("Referenced asset does not belong to this site."), { statusCode: 400 });
   }
+}
+
+function clientSupportsLinkContentType(header: string | string[] | undefined): boolean {
+  const value = Array.isArray(header) ? header.join(",") : header;
+  return value?.split(",").map((feature) => feature.trim()).includes("link-content-type") ?? false;
 }
 
 async function uniqueSlug(siteId: string, base: string): Promise<string> {
@@ -136,6 +141,9 @@ export async function objectRoutes(app: FastifyInstance) {
     if (query.type) conditions.push(eq(contentObjects.type, query.type));
     if (query.status) conditions.push(eq(contentObjects.status, query.status));
     if (query.cursor) conditions.push(lt(contentObjects.createdAt, new Date(query.cursor)));
+    if (!query.type && !clientSupportsLinkContentType(request.headers["x-shareblog-features"])) {
+      conditions.push(ne(contentObjects.type, "link"));
+    }
 
     const rows = await db
       .select()
@@ -160,6 +168,9 @@ export async function objectRoutes(app: FastifyInstance) {
       .limit(1);
 
     if (!object) return reply.code(404).send({ error: { code: "not_found", message: "Object not found." } });
+    if (object.type === "link" && !clientSupportsLinkContentType(request.headers["x-shareblog-features"])) {
+      return reply.code(404).send({ error: { code: "not_found", message: "Object not found." } });
+    }
     return reply.send({ object });
   });
 
