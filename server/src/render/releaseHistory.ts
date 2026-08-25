@@ -16,6 +16,7 @@ export const RELEASE_HISTORY: ReleaseEntry[] = [
     changes: [
       "Added \"Prism,\" a bright, playful site theme with crisp cards, rounded typography, and blue-pink accents.",
       "Prism now uses the same animated card-opening interaction as the Cards theme.",
+      "Music cards now open into a square album-art detail view instead of stretching artwork into a background image.",
       "Refined \"Washi\" into a richer paper-card layout with a more composed header, navigation, media, and quote treatment.",
     ],
   },

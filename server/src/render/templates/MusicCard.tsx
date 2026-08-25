@@ -3,7 +3,7 @@ import type { ContentObject, MusicMetadata } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
-import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { CardsFeedItem, CardsDetailHeader, CardsMusicDetailHeader } from "../themes/cards.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
@@ -56,6 +56,39 @@ export function MusicCard({
           type={object.type}
           hero={hero}
         />
+      );
+    }
+    if (metadata.artworkUrl) {
+      return (
+        <>
+          <CardsMusicDetailHeader
+            eyebrow={t(locale, "music")}
+            title={metadata.releaseTitle}
+            artist={metadata.artist}
+            dateLabel={
+              <>
+                {formatDate(object.publishedAt, locale)}
+                <CopyLinkButton locale={locale} />
+              </>
+            }
+            artworkUrl={metadata.artworkUrl}
+            artworkAlt={hero.imageAlt}
+            backHref={backHref!}
+            backLabel={backLabel!}
+          />
+          <div className="cards-body">
+            <Note body={object.body} />
+            {links.length > 0 ? (
+              <p className="music-links">
+                {links.map(([platform, url]) => (
+                  <a key={platform} href={url}>
+                    {t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}
+                  </a>
+                ))}
+              </p>
+            ) : null}
+          </div>
+        </>
       );
     }
     return (

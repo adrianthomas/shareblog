@@ -102,6 +102,13 @@ bar, detail headers, and feed link semantics, then restyles the `.cards-*`
 surfaces in its own gated CSS block with rounded system typography,
 high-contrast surfaces, and saturated blue/pink accents.
 
+The cards pipeline has specialized media openers where the feed card and
+detail page have genuinely different geometry: photos fly the photo into the
+viewer, books fly a portrait cover into `CardsBookDetailHeader`, and music
+flies square album art into `CardsMusicDetailHeader`. Keep square/portrait art
+out of the generic cover-image hero path, which is meant for article-like
+landscape imagery.
+
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:
 - `formatBasicText` — paragraphs, `**bold**`, `*italic*`, `[text](url)`.

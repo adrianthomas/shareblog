@@ -427,6 +427,41 @@ export function CardsBookDetailHeader({
   );
 }
 
+export function CardsMusicDetailHeader({
+  eyebrow,
+  title,
+  artist,
+  dateLabel,
+  artworkUrl,
+  artworkAlt,
+  backHref,
+  backLabel,
+}: {
+  eyebrow: React.ReactNode;
+  title: React.ReactNode;
+  artist?: React.ReactNode;
+  dateLabel?: React.ReactNode;
+  artworkUrl: string;
+  artworkAlt: string;
+  backHref: string;
+  backLabel: string;
+}) {
+  return (
+    <>
+      <CloseButton backHref={backHref} backLabel={backLabel} />
+      <header className="cards-music-header">
+        <img className="cards-music-artwork" src={artworkUrl} alt={artworkAlt} loading="lazy" />
+        <div className="cards-music-meta">
+          <p className="cards-music-eyebrow">{eyebrow}</p>
+          <h1 className="cards-music-title">{title}</h1>
+          {artist ? <p className="cards-music-artist">{artist}</p> : null}
+          {dateLabel ? <p className="cards-music-date">{dateLabel}</p> : null}
+        </div>
+      </header>
+    </>
+  );
+}
+
 const TAB_PATHS: Array<{ href: string; key: MessageKey }> = [
   { href: "/", key: "home" },
   { href: "/posts", key: "posts" },
@@ -632,6 +667,32 @@ export const cardsStyles = `
   @media (min-width: 720px) {
     .cards-book-header { flex-direction: row; align-items: flex-start; text-align: left; gap: 2rem; }
     .cards-book-cover { width: 220px; }
+  }
+
+  /* Music detail: album artwork is square cover art, not a landscape
+     background. Keep it intact and pair it with real metadata instead of
+     forcing it through the generic article hero crop. */
+  .cards-music-header {
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+    max-width: 680px; margin: 0 auto; text-align: center;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) 1.25rem 0;
+  }
+  .cards-music-artwork {
+    width: min(62vw, 240px); aspect-ratio: 1 / 1; object-fit: cover;
+    border-radius: 10px; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.25);
+  }
+  .cards-music-meta { min-width: 0; }
+  .cards-music-eyebrow {
+    margin: 0 0 0.3rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .cards-music-title { margin: 0; font-size: clamp(1.3rem, 3.2vw, 1.75rem); line-height: 1.25; }
+  .cards-music-artist { margin: 0.4rem 0 0; font-size: 1rem; color: var(--muted); }
+  .cards-music-date { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  @media (min-width: 720px) {
+    .cards-music-header { flex-direction: row; align-items: flex-start; text-align: left; gap: 2rem; }
+    .cards-music-artwork { width: 240px; }
   }
 
   /* Quote card: a piece of writing paper rather than a UI rectangle. The
@@ -1186,6 +1247,7 @@ export const cardsScript = `
     // type. This whole-panel FLIP now only ever runs for text/quote clones.
     if (link.dataset.cardsVariant === 'photo') { openPhotoCard(link); return; }
     if (link.dataset.cardsType === 'book' && heroEl) { openBookCard(link); return; }
+    if (link.dataset.cardsType === 'music' && heroEl) { openMusicCard(link); return; }
     if (heroEl) { openHeroCard(link); return; }
 
     var rect = link.getBoundingClientRect();
@@ -1707,8 +1769,181 @@ export const cardsScript = `
     document.addEventListener('keydown', onKeydown);
   }
 
-  // A cover-image card (article or music with artwork — photos and
-  // covered books have their own dedicated versions of this same idea)
+  // Music artwork is square, so it follows the same specialized idea as
+  // book covers but with a 1:1 target instead of a paperback shape. The
+  // artwork flies to its real detail position while metadata fades in.
+  function openMusicCard(link) {
+    var heroImg = link.querySelector('.cards-hero img');
+    var fromRect = heroImg.getBoundingClientRect();
+    var eyebrowEl = link.querySelector('.cards-eyebrow');
+    var titleEl = link.querySelector('.cards-title');
+    var artistEl = link.querySelector('.cards-subtitle');
+
+    lockPageScroll();
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'cards-overlay-backdrop';
+    document.body.appendChild(backdrop);
+
+    var panel = document.createElement('div');
+    panel.className = 'cards-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.style.opacity = '0';
+
+    var header = document.createElement('header');
+    header.className = 'cards-music-header';
+
+    var imgClone = document.createElement('img');
+    imgClone.className = 'cards-music-artwork';
+    imgClone.src = heroImg.currentSrc || heroImg.src;
+    imgClone.alt = '';
+
+    var meta = document.createElement('div');
+    meta.className = 'cards-music-meta';
+    meta.style.opacity = '0';
+    meta.style.transform = 'translateY(10px)';
+    if (eyebrowEl) {
+      var eyebrowClone = document.createElement('p');
+      eyebrowClone.className = 'cards-music-eyebrow';
+      eyebrowClone.textContent = eyebrowEl.textContent;
+      meta.appendChild(eyebrowClone);
+    }
+    var titleClone = document.createElement('h1');
+    titleClone.className = 'cards-music-title';
+    titleClone.textContent = titleEl ? titleEl.textContent : '';
+    meta.appendChild(titleClone);
+    if (artistEl) {
+      var artistClone = document.createElement('p');
+      artistClone.className = 'cards-music-artist';
+      artistClone.textContent = artistEl.textContent;
+      meta.appendChild(artistClone);
+    }
+
+    header.appendChild(imgClone);
+    header.appendChild(meta);
+    panel.appendChild(header);
+    document.body.appendChild(panel);
+
+    var main = document.getElementById('main-content');
+    if (main) main.inert = true;
+    var tabbar = document.querySelector('.cards-tabbar');
+    if (tabbar) tabbar.inert = true;
+
+    requestAnimationFrame(function () {
+      backdrop.classList.add('cards-overlay-backdrop--visible');
+      var toRect = imgClone.getBoundingClientRect();
+
+      if (reduceMotion) {
+        panel.style.opacity = '1';
+        meta.style.opacity = '';
+        meta.style.transform = '';
+      } else {
+        var scaleX = fromRect.width / toRect.width;
+        var scaleY = fromRect.height / toRect.height;
+        var dx = (fromRect.left + fromRect.width / 2) - (toRect.left + toRect.width / 2);
+        var dy = (fromRect.top + fromRect.height / 2) - (toRect.top + toRect.height / 2);
+        imgClone.style.transform =
+          'translate(' + dx.toFixed(2) + 'px, ' + dy.toFixed(2) + 'px) scale(' + scaleX.toFixed(4) + ', ' + scaleY.toFixed(4) + ')';
+        void imgClone.offsetWidth;
+
+        var metaDelay = Math.round(OPEN_MS * 0.45);
+        panel.style.transition = 'opacity ' + Math.round(OPEN_MS * 0.6) + 'ms ease';
+        imgClone.style.transition = 'transform ' + OPEN_MS + 'ms cubic-bezier(0.22, 1, 0.36, 1)';
+        meta.style.transition = 'opacity 260ms ease ' + metaDelay + 'ms, transform 320ms ease ' + metaDelay + 'ms';
+
+        panel.style.opacity = '1';
+        imgClone.style.transform = 'none';
+        meta.style.opacity = '1';
+        meta.style.transform = 'none';
+
+        setTimeout(function () {
+          panel.style.transition = '';
+          imgClone.style.transition = '';
+          meta.style.transition = '';
+        }, OPEN_MS);
+      }
+    });
+
+    finishOpenMusic(link, panel, header, meta, titleClone, backdrop);
+  }
+
+  function finishOpenMusic(link, panel, header, meta, titleClone, backdrop) {
+    var controller = new AbortController();
+    current = { link: link, backdrop: backdrop, panel: panel, controller: controller };
+    history.pushState({ cardsOverlay: true }, '', link.href);
+    var openStartedAt = Date.now();
+
+    fetch(link.href, { signal: controller.signal })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad response');
+        return res.text();
+      })
+      .then(function (html) {
+        if (!current || current.panel !== panel) return;
+        var elapsed = Date.now() - openStartedAt;
+        var remaining = OPEN_MS - elapsed;
+        if (remaining > 0) {
+          setTimeout(function () { applyFetchedMusicHtml(html); }, remaining);
+        } else {
+          applyFetchedMusicHtml(html);
+        }
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        window.location.href = link.href;
+      });
+
+    function applyFetchedMusicHtml(html) {
+      if (!current || current.panel !== panel) return;
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var fetchedMain = doc.getElementById('main-content');
+      if (!fetchedMain) { window.location.href = link.href; return; }
+      document.title = doc.title;
+
+      var fetchedDate = fetchedMain.querySelector('.cards-music-date');
+      if (fetchedDate) meta.appendChild(fetchedDate);
+      var fetchedBody = fetchedMain.querySelector('.cards-body');
+
+      var scroller = document.createElement('div');
+      scroller.className = 'cards-panel-scroll';
+      scroller.setAttribute('tabindex', '-1');
+      var closeLink = fetchedMain.querySelector('.cards-close');
+      if (closeLink) scroller.appendChild(closeLink);
+      scroller.appendChild(header);
+      if (fetchedBody) scroller.appendChild(fetchedBody);
+      panel.appendChild(scroller);
+
+      if (!reduceMotion) {
+        [closeLink, fetchedDate, fetchedBody].forEach(function (el) {
+          if (!el) return;
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.2s ease';
+          requestAnimationFrame(function () { el.style.opacity = '1'; });
+          setTimeout(function () { el.style.transition = ''; el.style.opacity = ''; }, 260);
+        });
+      }
+
+      if (closeLink) {
+        closeLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          closeOverlay({});
+        });
+      }
+
+      wireDismissGesture(scroller, panel, backdrop);
+
+      if (!titleClone.id) titleClone.id = 'cards-panel-heading';
+      panel.setAttribute('aria-labelledby', titleClone.id);
+      titleClone.setAttribute('tabindex', '-1');
+      titleClone.focus({ preventScroll: true });
+    }
+
+    document.addEventListener('keydown', onKeydown);
+  }
+
+  // A cover-image card (currently articles with cover art — photos,
+  // covered books, and music artwork have their own dedicated versions)
   // used to get the same whole-panel WAAPI FLIP as a text card: one
   // animation combining transform *and* border-radius, sampled across 30
   // keyframes. border-radius isn't compositor-only the way a plain

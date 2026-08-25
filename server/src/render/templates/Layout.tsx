@@ -763,7 +763,7 @@ export function Layout({
                   font-size: 1.35rem;
                   line-height: 1.22;
                 }
-                body.theme-prism .cards-hero {
+                body.theme-prism .cards-feed .cards-hero {
                   aspect-ratio: 16 / 10;
                 }
                 body.theme-prism .cards-scrim {
@@ -774,13 +774,15 @@ export function Layout({
                 }
                 body.theme-prism .cards-eyebrow,
                 body.theme-prism .cards-photo-eyebrow,
-                body.theme-prism .cards-book-eyebrow {
+                body.theme-prism .cards-book-eyebrow,
+                body.theme-prism .cards-music-eyebrow {
                   color: color-mix(in srgb, var(--prism-yellow) 82%, white);
                   font-weight: 800;
                 }
                 body.theme-prism .cards-title,
                 body.theme-prism .cards-photo-title,
-                body.theme-prism .cards-book-title {
+                body.theme-prism .cards-book-title,
+                body.theme-prism .cards-music-title {
                   font-weight: 850;
                   letter-spacing: 0;
                 }
@@ -803,7 +805,9 @@ export function Layout({
                 body.theme-prism .cards-photo-subtitle,
                 body.theme-prism .cards-photo-date,
                 body.theme-prism .cards-book-author,
-                body.theme-prism .cards-book-date {
+                body.theme-prism .cards-book-date,
+                body.theme-prism .cards-music-artist,
+                body.theme-prism .cards-music-date {
                   color: var(--muted);
                 }
                 body.theme-prism .cards-quote-card {
@@ -844,6 +848,7 @@ export function Layout({
                   box-shadow: var(--prism-shadow);
                 }
                 body.theme-prism .cards-book-cover,
+                body.theme-prism .cards-music-artwork,
                 body.theme-prism .cards-photo-card:not(.cards-photo-card--full) .cards-photo-image {
                   border-radius: 8px;
                 }
