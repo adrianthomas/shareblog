@@ -39,6 +39,9 @@ async function api(baseURL: string, token: string, path: string, body: unknown, 
 // render, not a stand-in.
 const TINY_JPEG_BASE64 =
   "/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAAIAAgBAREA/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAA/AKp//9k=";
+const PORTRAIT_COVER_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="124" viewBox="0 0 80 124"><rect width="80" height="124" fill="#83512e"/><rect x="9" y="12" width="62" height="100" rx="2" fill="#f7ead7"/><text x="40" y="43" text-anchor="middle" font-size="12" font-family="serif" fill="#2f2217">Test</text><text x="40" y="60" text-anchor="middle" font-size="12" font-family="serif" fill="#2f2217">Book</text></svg>',
+).toString("base64")}`;
 
 async function uploadAsset(baseURL: string, token: string): Promise<string> {
   const bytes = Buffer.from(TINY_JPEG_BASE64, "base64");
@@ -86,7 +89,7 @@ test.beforeAll(async ({ baseURL }) => {
     metadata: {
       author: "Test Author",
       rating: 4,
-      coverUrl: `data:image/jpeg;base64,${TINY_JPEG_BASE64}`,
+      coverUrl: PORTRAIT_COVER_DATA_URI,
       links: {},
       source: "manual",
     },
@@ -210,9 +213,10 @@ async function expectBookCardKeepsDetailAnimation(page: Page) {
   expect(coverBox).not.toBeNull();
   expect(heroBox).not.toBeNull();
   expect(musicHeroBox).not.toBeNull();
-  await expect(bookCard.locator(".cards-rating")).toHaveText("★★★★☆");
   expect(coverBox!.height / coverBox!.width).toBeGreaterThan(1.3);
   expect(coverBox!.width).toBeLessThan(heroBox!.width * 0.6);
+  expect(coverBox!.y - heroBox!.y).toBeGreaterThan(4);
+  expect(heroBox!.y + heroBox!.height - (coverBox!.y + coverBox!.height)).toBeGreaterThan(4);
   expect(heroBox!.height).toBeGreaterThan(musicHeroBox!.height);
 
   await bookCard.click();

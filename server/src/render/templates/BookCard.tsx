@@ -98,8 +98,6 @@ export function BookCard({
           eyebrow={t(locale, "books")}
           title={object.title}
           subtitle={metadata.author}
-          rating={stars}
-          ratingLabel={metadata.rating ? t(locale, "ratingLabel", { rating: metadata.rating }) : undefined}
           type={object.type}
           hero={hero}
         />

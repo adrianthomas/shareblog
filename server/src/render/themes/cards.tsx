@@ -47,8 +47,6 @@ export interface CardsItemData {
   eyebrow: string;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
-  rating?: React.ReactNode;
-  ratingLabel?: string;
   actionLabel?: React.ReactNode;
   /** Drives the badge color on the text-only card treatment (see TextCard) — unused by the photo/quote variants, which have their own dedicated looks. */
   type: ContentType;
@@ -86,8 +84,6 @@ function Caption({
   eyebrow,
   title,
   subtitle,
-  rating,
-  ratingLabel,
   actionLabel,
   dateLabel,
   titleTag: TitleTag = "h2",
@@ -95,8 +91,6 @@ function Caption({
   eyebrow: React.ReactNode;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
-  rating?: React.ReactNode;
-  ratingLabel?: string;
   actionLabel?: React.ReactNode;
   dateLabel?: React.ReactNode;
   titleTag?: "h1" | "h2";
@@ -106,11 +100,6 @@ function Caption({
       <p className="cards-eyebrow">{eyebrow}</p>
       <TitleTag className="cards-title">{title}</TitleTag>
       {subtitle ? <p className="cards-subtitle">{subtitle}</p> : null}
-      {rating ? (
-        <p className="cards-rating" aria-label={ratingLabel}>
-          {rating}
-        </p>
-      ) : null}
       {actionLabel ? <span className="cards-caption-action">{actionLabel}</span> : null}
       {dateLabel ? <p className="cards-date">{dateLabel}</p> : null}
     </div>
@@ -300,7 +289,7 @@ export function CloseButton({ backHref, backLabel }: { backHref: string; backLab
 // <a> (works with JS disabled — it's a normal link to the detail page).
 // `data-cards-card` is the hook the client script uses to intercept the
 // click and animate into the detail view instead of a hard navigation.
-export function CardsFeedItem({ href, eyebrow, title, subtitle, rating, ratingLabel, actionLabel, type, hero, variant }: CardsItemData) {
+export function CardsFeedItem({ href, eyebrow, title, subtitle, actionLabel, type, hero, variant }: CardsItemData) {
   return (
     <a
       className={`cards-item${variant === "quote" ? " cards-item--quote" : ""}`}
@@ -310,7 +299,7 @@ export function CardsFeedItem({ href, eyebrow, title, subtitle, rating, ratingLa
       data-cards-type={type}
     >
       {hero.imageUrl ? (
-        <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} rating={rating} ratingLabel={ratingLabel} actionLabel={actionLabel} />} />
+        <Hero hero={hero} caption={<Caption eyebrow={eyebrow} title={title} subtitle={subtitle} actionLabel={actionLabel} />} />
       ) : variant === "quote" ? (
         <QuoteCard eyebrow={eyebrow} title={title} subtitle={subtitle} seed={hero.gradientSeed} />
       ) : (
@@ -679,11 +668,11 @@ export const cardsStyles = `
   .cards-item[data-cards-type="book"] .cards-hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(8.5rem, 36%) minmax(0, 1fr);
+    grid-template-columns: minmax(7.75rem, 35%) minmax(0, 1fr);
     gap: 0;
     align-items: center;
-    height: 10.75rem;
-    min-height: 10.75rem;
+    height: 9.9rem;
+    min-height: 9.9rem;
     aspect-ratio: auto;
     padding: 0;
     background: color-mix(in srgb, var(--bg) 96%, var(--fg));
@@ -692,7 +681,7 @@ export const cardsStyles = `
     content: "";
     position: absolute;
     inset: 0 auto 0 0;
-    width: 36%;
+    width: 35%;
     pointer-events: none;
     background:
       linear-gradient(135deg, color-mix(in srgb, #b45309 22%, var(--bg)), color-mix(in srgb, #b45309 8%, var(--bg)));
@@ -702,10 +691,12 @@ export const cardsStyles = `
     position: relative;
     z-index: 1;
     inset: auto;
+    align-self: center;
     justify-self: center;
     width: auto;
-    max-width: calc(100% - 1.7rem);
-    height: calc(100% - 1.05rem);
+    max-width: min(5.4rem, calc(100% - 1.8rem));
+    height: auto;
+    max-height: calc(100% - 1.2rem);
     object-fit: contain;
     border-radius: 4px 7px 7px 4px;
     box-shadow:
@@ -719,20 +710,14 @@ export const cardsStyles = `
   .cards-item[data-cards-type="book"] .cards-caption {
     position: relative;
     z-index: 1;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "eyebrow rating"
-      "title title"
-      "subtitle subtitle";
-    align-content: center;
-    column-gap: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-width: 0;
     padding: 1rem 1.1rem;
     color: var(--fg);
   }
   .cards-item[data-cards-type="book"] .cards-eyebrow {
-    grid-area: eyebrow;
     width: fit-content;
     margin-bottom: 0.5rem;
     border-radius: 4px;
@@ -742,7 +727,6 @@ export const cardsStyles = `
     text-shadow: none;
   }
   .cards-item[data-cards-type="book"] .cards-title {
-    grid-area: title;
     color: var(--fg);
     text-shadow: none;
     font-family: inherit;
@@ -752,22 +736,10 @@ export const cardsStyles = `
     -webkit-line-clamp: 2;
   }
   .cards-item[data-cards-type="book"] .cards-subtitle {
-    grid-area: subtitle;
     color: var(--muted);
     text-shadow: none;
     font-size: 0.95rem;
     -webkit-line-clamp: 2;
-  }
-  .cards-item[data-cards-type="book"] .cards-rating {
-    grid-area: rating;
-    justify-self: end;
-    margin: 0 0 0.5rem;
-    color: #c9971f;
-    font-size: 0.9rem;
-    line-height: 1;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    text-shadow: none;
   }
 
   /* Detail header: the same hero+caption language, stretched taller and
@@ -1346,18 +1318,19 @@ export const cardsStyles = `
       font-size: 1.16rem;
     }
     .cards-item[data-cards-type="book"] .cards-hero {
-      grid-template-columns: 8.35rem minmax(0, 1fr);
-      height: 8.35rem;
-      min-height: 8.35rem;
+      grid-template-columns: 7.35rem minmax(0, 1fr);
+      height: 7.85rem;
+      min-height: 7.85rem;
       padding: 0;
     }
     .cards-item[data-cards-type="book"] .cards-hero::before {
-      width: 8.35rem;
+      width: 7.35rem;
     }
     .cards-item[data-cards-type="book"] .cards-hero img {
       width: auto;
-      max-width: calc(100% - 1.45rem);
-      height: calc(100% - 0.7rem);
+      max-width: min(4.85rem, calc(100% - 1.55rem));
+      height: auto;
+      max-height: calc(100% - 1rem);
     }
     .cards-item[data-cards-type="book"] .cards-caption {
       padding: 0.75rem 1rem;
@@ -1374,11 +1347,6 @@ export const cardsStyles = `
       margin-top: 0.28rem;
       font-size: 0.88rem;
       line-height: 1.15;
-    }
-    .cards-item[data-cards-type="book"] .cards-rating {
-      margin-bottom: 0.34rem;
-      font-size: 0.78rem;
-      letter-spacing: 0.02em;
     }
   }
 `;
