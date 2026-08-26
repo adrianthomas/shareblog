@@ -122,6 +122,10 @@ choice, not a default:
 - `stripBasicFormatting` — strips back to plain text (RSS `<title>`, a
   cards-theme feed tile).
 
+Photo metadata deliberately separates visible `caption` from image `altText`;
+renderers and RSS image markup use `altText` for the `<img alt>` value, not the
+caption.
+
 i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
 `site.locale` threads through every render call. Add a string here, not as
 a hardcoded literal in a template (see CLAUDE.md's accessibility/i18n bar).

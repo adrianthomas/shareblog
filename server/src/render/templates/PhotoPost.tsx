@@ -66,10 +66,11 @@ export function PhotoPost({
   backLabel?: string;
 }) {
   const metadata = object.metadata as PhotoMetadata;
+  const imageAlt = metadata.altText ?? "";
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const title = metadata.caption || formatDate(object.publishedAt, locale);
-    const hero = { imageUrl, imageAlt: metadata.caption ?? "", gradientSeed: object.slug };
+    const hero = { imageUrl, imageAlt, gradientSeed: object.slug };
     if (linked) {
       return (
         <CardsFeedItem
@@ -103,7 +104,7 @@ export function PhotoPost({
     );
   }
 
-  const image = <img src={imageUrl} alt={metadata.caption ?? ""} />;
+  const image = <img src={imageUrl} alt={imageAlt} />;
   const exifRows = formatExif(exif, locale);
 
   return (

@@ -358,7 +358,7 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
     case "photo": {
       const metadata = object.metadata as PhotoMetadata;
       const url = await photoImageUrl(object);
-      const alt = escapeXml(metadata.caption ?? "");
+      const alt = escapeXml(metadata.altText ?? "");
       const image = url ? `<p><img src="${escapeXml(url)}" alt="${alt}" /></p>` : "";
       const caption = metadata.caption ? `<p>${escapeXml(metadata.caption)}</p>` : "";
       const exif = exifList(formatExif(await photoExif(object), locale));

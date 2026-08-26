@@ -6,6 +6,7 @@ export const thoughtMetadataSchema = z.object({}).strict();
 export const photoMetadataSchema = z.object({
   assetId: z.string().uuid(),
   caption: z.string().optional(),
+  altText: z.string().optional(),
 });
 
 export const bookMetadataSchema = z.object({

@@ -29,6 +29,7 @@ export interface MusicMetadata {
 export interface PhotoMetadata {
   assetId: string;
   caption?: string;
+  altText?: string;
 }
 
 export interface ArticleMetadata {
