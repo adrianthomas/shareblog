@@ -606,6 +606,65 @@ export const cardsStyles = `
   }
   .cards-date { margin: 0.6rem 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.75); }
 
+  .cards-item[data-cards-type="music"] .cards-hero {
+    display: grid;
+    grid-template-columns: minmax(7.25rem, 34%) minmax(0, 1fr);
+    min-height: 9.25rem;
+    aspect-ratio: auto;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, #7c3aed 10%, transparent), transparent 54%),
+      color-mix(in srgb, var(--bg) 96%, var(--fg));
+  }
+  .cards-item[data-cards-type="music"] .cards-hero img {
+    position: static;
+    width: 100%;
+    height: 100%;
+    min-height: 9.25rem;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-right: 1px solid color-mix(in srgb, #7c3aed 22%, var(--border));
+    box-shadow: 8px 0 22px color-mix(in srgb, #7c3aed 14%, transparent);
+  }
+  .cards-item[data-cards-type="music"] .cards-scrim {
+    display: none;
+  }
+  .cards-item[data-cards-type="music"] .cards-caption {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 1rem 1.1rem;
+    color: var(--fg);
+  }
+  .cards-item[data-cards-type="music"] .cards-eyebrow {
+    width: fit-content;
+    margin-bottom: 0.42rem;
+    border-radius: 999px;
+    padding: 0.25rem 0.62rem;
+    background: color-mix(in srgb, #7c3aed 12%, var(--bg));
+    color: #7c3aed;
+    text-shadow: none;
+  }
+  .cards-item[data-cards-type="music"] .cards-eyebrow::before {
+    content: "▶";
+    margin-right: 0.36rem;
+    font-size: 0.72em;
+  }
+  .cards-item[data-cards-type="music"] .cards-title {
+    color: var(--fg);
+    text-shadow: none;
+    font-size: 1.28rem;
+    line-height: 1.13;
+    -webkit-line-clamp: 2;
+  }
+  .cards-item[data-cards-type="music"] .cards-subtitle {
+    color: var(--muted);
+    text-shadow: none;
+    font-weight: 620;
+    -webkit-line-clamp: 2;
+  }
+
   /* Detail header: the same hero+caption language, stretched taller and
      bled to the edges of the viewport regardless of main's centered
      max-width, to read as immersive rather than "a big card in a column." */
@@ -1171,6 +1230,16 @@ export const cardsStyles = `
 
   @media (max-width: 480px) {
     .cards-feed { grid-template-columns: 1fr; }
+    .cards-item[data-cards-type="music"] .cards-hero {
+      grid-template-columns: 7rem minmax(0, 1fr);
+      min-height: 7rem;
+    }
+    .cards-item[data-cards-type="music"] .cards-hero img {
+      min-height: 7rem;
+    }
+    .cards-item[data-cards-type="music"] .cards-title {
+      font-size: 1.16rem;
+    }
   }
 `;
 

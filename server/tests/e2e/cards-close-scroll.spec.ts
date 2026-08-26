@@ -142,11 +142,12 @@ async function expectCloseRestoresScroll(page: Page, cardIndexToOpen: number) {
 
 test("closing a generic card (openCard) restores the exact pre-open scroll position", async ({ page }) => {
   // The feed orders newest-first and the photo post is created last (see
-  // beforeAll), so index 0 is the photo and 1+ are the quote/thought posts —
+  // beforeAll), so index 0 is the photo, index 1 is music, and 2+ are
+  // the quote/thought posts —
   // any of those goes through the generic whole-panel FLIP path
   // (openCard/closeOverlay), the one lockPageScroll/unlockPageScroll were
   // added to directly.
-  await expectCloseRestoresScroll(page, 1);
+  await expectCloseRestoresScroll(page, 2);
 });
 
 test("closing a photo card (openPhotoCard) restores the exact pre-open scroll position", async ({ page }) => {
@@ -157,9 +158,7 @@ test("closing a photo card (openPhotoCard) restores the exact pre-open scroll po
   await expectCloseRestoresScroll(page, 0);
 });
 
-test("Prism music feed cards keep the music detail animation path", async ({ page }) => {
-  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "prism" }, "PATCH");
-
+async function expectMusicCardKeepsDetailAnimation(page: Page) {
   await page.goto(siteBaseURL + "/");
   const musicCard = page.locator('[data-cards-card][data-cards-type="music"]').first();
   await expect(musicCard).toBeVisible();
@@ -181,4 +180,14 @@ test("Prism music feed cards keep the music detail animation path", async ({ pag
 
   await page.locator(".cards-close").first().click();
   await page.waitForSelector(".cards-panel", { state: "detached" });
+}
+
+test("Cards music feed cards keep the music detail animation path", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
+  await expectMusicCardKeepsDetailAnimation(page);
+});
+
+test("Prism music feed cards keep the music detail animation path", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "prism" }, "PATCH");
+  await expectMusicCardKeepsDetailAnimation(page);
 });
