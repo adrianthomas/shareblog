@@ -665,6 +665,79 @@ export const cardsStyles = `
     -webkit-line-clamp: 2;
   }
 
+  .cards-item[data-cards-type="book"] .cards-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(7.75rem, 36%) minmax(0, 1fr);
+    gap: 1.05rem;
+    align-items: center;
+    min-height: 14.25rem;
+    aspect-ratio: auto;
+    padding: 1.05rem;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, #b45309 16%, var(--bg)) 0 38%, transparent 38%),
+      linear-gradient(180deg, color-mix(in srgb, var(--bg) 98%, #b45309), color-mix(in srgb, var(--bg) 93%, #b45309));
+  }
+  .cards-item[data-cards-type="book"] .cards-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, transparent 0, transparent 1.55rem, color-mix(in srgb, #b45309 12%, transparent) calc(1.55rem + 1px), transparent calc(1.55rem + 2px)),
+      linear-gradient(90deg, color-mix(in srgb, #b45309 18%, transparent), transparent 48%);
+    opacity: 0.42;
+  }
+  .cards-item[data-cards-type="book"] .cards-hero img {
+    position: relative;
+    z-index: 1;
+    inset: auto;
+    justify-self: center;
+    width: min(100%, 9.25rem);
+    height: auto;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 4px 7px 7px 4px;
+    box-shadow:
+      -0.42rem 0 0 color-mix(in srgb, #2f2217 32%, transparent),
+      0 1px 2px rgba(47, 34, 23, 0.16),
+      0 16px 32px rgba(47, 34, 23, 0.22);
+  }
+  .cards-item[data-cards-type="book"] .cards-scrim {
+    display: none;
+  }
+  .cards-item[data-cards-type="book"] .cards-caption {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    padding: 0;
+    color: var(--fg);
+  }
+  .cards-item[data-cards-type="book"] .cards-eyebrow {
+    width: fit-content;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    padding: 0.24rem 0.54rem;
+    background: color-mix(in srgb, #b45309 14%, var(--bg));
+    color: #92400e;
+    text-shadow: none;
+  }
+  .cards-item[data-cards-type="book"] .cards-title {
+    color: var(--fg);
+    text-shadow: none;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.34rem;
+    line-height: 1.12;
+    font-weight: 700;
+    -webkit-line-clamp: 3;
+  }
+  .cards-item[data-cards-type="book"] .cards-subtitle {
+    color: var(--muted);
+    text-shadow: none;
+    font-size: 0.95rem;
+    -webkit-line-clamp: 2;
+  }
+
   /* Detail header: the same hero+caption language, stretched taller and
      bled to the edges of the viewport regardless of main's centered
      max-width, to read as immersive rather than "a big card in a column." */
@@ -1238,6 +1311,18 @@ export const cardsStyles = `
       min-height: 7rem;
     }
     .cards-item[data-cards-type="music"] .cards-title {
+      font-size: 1.16rem;
+    }
+    .cards-item[data-cards-type="book"] .cards-hero {
+      grid-template-columns: 6.3rem minmax(0, 1fr);
+      gap: 0.9rem;
+      min-height: 10.4rem;
+      padding: 0.9rem;
+    }
+    .cards-item[data-cards-type="book"] .cards-hero img {
+      width: 5.8rem;
+    }
+    .cards-item[data-cards-type="book"] .cards-title {
       font-size: 1.16rem;
     }
   }

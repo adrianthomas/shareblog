@@ -79,6 +79,18 @@ test.beforeAll(async ({ baseURL }) => {
     await api(apiBaseURL, ownerToken, "/api/v1/objects", post);
   }
   await api(apiBaseURL, ownerToken, "/api/v1/objects", {
+    type: "book",
+    title: "Test Book",
+    status: "published",
+    body: "A reading note.",
+    metadata: {
+      author: "Test Author",
+      coverUrl: `data:image/jpeg;base64,${TINY_JPEG_BASE64}`,
+      links: {},
+      source: "manual",
+    },
+  });
+  await api(apiBaseURL, ownerToken, "/api/v1/objects", {
     type: "music",
     status: "published",
     body: "A listening note.",
@@ -142,12 +154,12 @@ async function expectCloseRestoresScroll(page: Page, cardIndexToOpen: number) {
 
 test("closing a generic card (openCard) restores the exact pre-open scroll position", async ({ page }) => {
   // The feed orders newest-first and the photo post is created last (see
-  // beforeAll), so index 0 is the photo, index 1 is music, and 2+ are
-  // the quote/thought posts —
+  // beforeAll), so index 0 is the photo, index 1 is music, index 2 is a
+  // book, and 3+ are the quote/thought posts —
   // any of those goes through the generic whole-panel FLIP path
   // (openCard/closeOverlay), the one lockPageScroll/unlockPageScroll were
   // added to directly.
-  await expectCloseRestoresScroll(page, 2);
+  await expectCloseRestoresScroll(page, 3);
 });
 
 test("closing a photo card (openPhotoCard) restores the exact pre-open scroll position", async ({ page }) => {
@@ -182,12 +194,47 @@ async function expectMusicCardKeepsDetailAnimation(page: Page) {
   await page.waitForSelector(".cards-panel", { state: "detached" });
 }
 
+async function expectBookCardKeepsDetailAnimation(page: Page) {
+  await page.goto(siteBaseURL + "/");
+  const bookCard = page.locator('[data-cards-card][data-cards-type="book"]').first();
+  await expect(bookCard).toBeVisible();
+
+  const bookHero = bookCard.locator(".cards-hero");
+  const heroDisplay = await bookHero.evaluate((el) => getComputedStyle(el).display);
+  expect(heroDisplay).toBe("grid");
+
+  const coverBox = await bookCard.locator(".cards-hero img").boundingBox();
+  const heroBox = await bookHero.boundingBox();
+  expect(coverBox).not.toBeNull();
+  expect(heroBox).not.toBeNull();
+  expect(coverBox!.height / coverBox!.width).toBeGreaterThan(1.3);
+  expect(coverBox!.width).toBeLessThan(heroBox!.width * 0.6);
+
+  await bookCard.click();
+  await page.waitForSelector(".cards-panel", { state: "attached" });
+  await expect(page.locator(".cards-book-header")).toBeVisible();
+  await expect(page.locator(".cards-book-cover")).toBeVisible();
+
+  await page.locator(".cards-close").first().click();
+  await page.waitForSelector(".cards-panel", { state: "detached" });
+}
+
 test("Cards music feed cards keep the music detail animation path", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
   await expectMusicCardKeepsDetailAnimation(page);
 });
 
+test("Cards book feed cards keep the book detail animation path", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
+  await expectBookCardKeepsDetailAnimation(page);
+});
+
 test("Prism music feed cards keep the music detail animation path", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "prism" }, "PATCH");
   await expectMusicCardKeepsDetailAnimation(page);
+});
+
+test("Prism book feed cards keep the book detail animation path", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "prism" }, "PATCH");
+  await expectBookCardKeepsDetailAnimation(page);
 });

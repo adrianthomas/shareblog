@@ -991,6 +991,57 @@ export function Layout({
                   font-weight: 650;
                   -webkit-line-clamp: 2;
                 }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-hero {
+                  grid-template-columns: minmax(7.5rem, 35%) minmax(0, 1fr);
+                  gap: 1rem;
+                  min-height: 14rem;
+                  background:
+                    linear-gradient(90deg, color-mix(in srgb, var(--prism-yellow) 28%, var(--prism-surface)) 0 38%, transparent 38%),
+                    linear-gradient(135deg, color-mix(in srgb, var(--prism-pink) 8%, transparent), transparent 54%),
+                    linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 42%, var(--prism-surface)));
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-hero::before {
+                  background:
+                    repeating-linear-gradient(0deg, transparent 0, transparent 1.5rem, color-mix(in srgb, var(--prism-pink) 10%, transparent) calc(1.5rem + 1px), transparent calc(1.5rem + 2px)),
+                    linear-gradient(90deg, color-mix(in srgb, var(--prism-yellow) 18%, transparent), transparent 48%);
+                  opacity: 0.48;
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
+                  width: min(100%, 9rem);
+                  border-radius: 4px 8px 8px 4px;
+                  box-shadow:
+                    -0.42rem 0 0 color-mix(in srgb, var(--prism-pink) 34%, transparent),
+                    0 1px 2px rgba(38, 45, 64, 0.14),
+                    0 16px 34px rgba(66, 66, 250, 0.16);
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-eyebrow {
+                  border-radius: 999px;
+                  background: color-mix(in srgb, var(--prism-yellow) 24%, var(--prism-surface));
+                  color: color-mix(in srgb, #7a4b00 74%, var(--fg));
+                  font-weight: 850;
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-eyebrow::before {
+                  content: "";
+                  display: inline-block;
+                  width: 0.42rem;
+                  height: 0.82rem;
+                  margin-right: 0.36rem;
+                  border-radius: 1px 3px 3px 1px;
+                  background: currentColor;
+                  vertical-align: -0.12em;
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-title {
+                  color: var(--fg);
+                  font-family: Georgia, "Times New Roman", serif;
+                  font-size: 1.32rem;
+                  line-height: 1.12;
+                  font-weight: 700;
+                  text-shadow: none;
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-subtitle {
+                  color: var(--muted);
+                  text-shadow: none;
+                }
                 body.theme-prism .cards-scrim {
                   background: linear-gradient(to top, rgba(10, 12, 16, 0.78) 0%, rgba(10, 12, 16, 0.34) 48%, rgba(10, 12, 16, 0) 76%);
                 }
@@ -1225,6 +1276,16 @@ export function Layout({
                   }
                   body.theme-prism .cards-item[data-cards-type="music"] .cards-title {
                     font-size: 1.18rem;
+                  }
+                  body.theme-prism .cards-item[data-cards-type="book"] .cards-hero {
+                    grid-template-columns: 6.2rem minmax(0, 1fr);
+                    min-height: 10.4rem;
+                  }
+                  body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
+                    width: 5.75rem;
+                  }
+                  body.theme-prism .cards-item[data-cards-type="book"] .cards-title {
+                    font-size: 1.16rem;
                   }
                 }
                 @media (max-width: 400px) {
