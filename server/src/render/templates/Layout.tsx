@@ -1002,13 +1002,13 @@ export function Layout({
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero::before {
                   width: 34%;
-                  background:
-                    repeating-linear-gradient(0deg, transparent 0, transparent 1.5rem, color-mix(in srgb, var(--prism-pink) 10%, transparent) calc(1.5rem + 1px), transparent calc(1.5rem + 2px)),
-                    linear-gradient(90deg, color-mix(in srgb, var(--prism-yellow) 16%, transparent), transparent 80%);
-                  opacity: 0.3;
+                  background: linear-gradient(135deg, color-mix(in srgb, var(--prism-yellow) 30%, var(--prism-surface)), color-mix(in srgb, var(--prism-pink) 10%, var(--prism-surface)));
+                  opacity: 1;
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
-                  width: min(70%, 5.2rem);
+                  width: auto;
+                  max-width: calc(100% - 1.6rem);
+                  height: calc(100% - 1rem);
                   border-radius: 4px 8px 8px 4px;
                   box-shadow:
                     -0.42rem 0 0 color-mix(in srgb, var(--prism-pink) 34%, transparent),
@@ -1033,10 +1033,10 @@ export function Layout({
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-title {
                   color: var(--fg);
-                  font-family: Georgia, "Times New Roman", serif;
+                  font-family: inherit;
                   font-size: 1.24rem;
-                  line-height: 1.12;
-                  font-weight: 700;
+                  line-height: 1.14;
+                  font-weight: 820;
                   -webkit-line-clamp: 2;
                   text-shadow: none;
                 }
@@ -1289,10 +1289,12 @@ export function Layout({
                     width: 7rem;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
-                    width: 4.1rem;
+                    width: auto;
+                    height: calc(100% - 0.5rem);
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-title {
-                    font-size: 1.08rem;
+                    font-size: 1.04rem;
+                    line-height: 1.08;
                   }
                 }
                 @media (max-width: 400px) {

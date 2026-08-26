@@ -684,17 +684,17 @@ export const cardsStyles = `
     width: 34%;
     pointer-events: none;
     background:
-      repeating-linear-gradient(0deg, transparent 0, transparent 1.55rem, color-mix(in srgb, #b45309 12%, transparent) calc(1.55rem + 1px), transparent calc(1.55rem + 2px)),
-      linear-gradient(90deg, color-mix(in srgb, #b45309 16%, transparent), transparent 80%);
-    opacity: 0.28;
+      linear-gradient(135deg, color-mix(in srgb, #b45309 22%, var(--bg)), color-mix(in srgb, #b45309 8%, var(--bg)));
+    opacity: 1;
   }
   .cards-item[data-cards-type="book"] .cards-hero img {
     position: relative;
     z-index: 1;
     inset: auto;
     justify-self: center;
-    width: min(70%, 5.2rem);
-    height: auto;
+    width: auto;
+    max-width: calc(100% - 1.6rem);
+    height: calc(100% - 1rem);
     aspect-ratio: 2 / 3;
     object-fit: cover;
     border-radius: 4px 7px 7px 4px;
@@ -709,6 +709,9 @@ export const cardsStyles = `
   .cards-item[data-cards-type="book"] .cards-caption {
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-width: 0;
     padding: 1rem 1.1rem;
     color: var(--fg);
@@ -725,10 +728,10 @@ export const cardsStyles = `
   .cards-item[data-cards-type="book"] .cards-title {
     color: var(--fg);
     text-shadow: none;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: inherit;
     font-size: 1.24rem;
-    line-height: 1.12;
-    font-weight: 700;
+    line-height: 1.14;
+    font-weight: 780;
     -webkit-line-clamp: 2;
   }
   .cards-item[data-cards-type="book"] .cards-subtitle {
@@ -1323,10 +1326,24 @@ export const cardsStyles = `
       width: 7rem;
     }
     .cards-item[data-cards-type="book"] .cards-hero img {
-      width: 4.1rem;
+      width: auto;
+      height: calc(100% - 0.5rem);
+    }
+    .cards-item[data-cards-type="book"] .cards-caption {
+      padding: 0.55rem 1rem;
+    }
+    .cards-item[data-cards-type="book"] .cards-eyebrow {
+      margin-bottom: 0.34rem;
+      padding: 0.2rem 0.5rem;
     }
     .cards-item[data-cards-type="book"] .cards-title {
-      font-size: 1.08rem;
+      font-size: 1.04rem;
+      line-height: 1.08;
+    }
+    .cards-item[data-cards-type="book"] .cards-subtitle {
+      margin-top: 0.28rem;
+      font-size: 0.88rem;
+      line-height: 1.15;
     }
   }
 `;
