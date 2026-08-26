@@ -204,15 +204,20 @@ async function expectBookCardKeepsDetailAnimation(page: Page) {
   await expect(bookCard).toBeVisible();
 
   const bookHero = bookCard.locator(".cards-hero");
+  const musicHero = page.locator('[data-cards-card][data-cards-type="music"] .cards-hero').first();
   const heroDisplay = await bookHero.evaluate((el) => getComputedStyle(el).display);
   expect(heroDisplay).toBe("grid");
 
   const coverBox = await bookCard.locator(".cards-hero img").boundingBox();
   const heroBox = await bookHero.boundingBox();
-  const musicHeroBox = await page.locator('[data-cards-card][data-cards-type="music"] .cards-hero').first().boundingBox();
+  const musicHeroBox = await musicHero.boundingBox();
+  const bookCoverColumnWidth = await bookHero.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ")[0]);
+  const musicCoverColumnWidth = await musicHero.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ")[0]);
   expect(coverBox).not.toBeNull();
   expect(heroBox).not.toBeNull();
   expect(musicHeroBox).not.toBeNull();
+  await expect(bookCard.locator(".cards-rating")).toHaveText("★★★★☆");
+  expect(bookCoverColumnWidth).toBe(musicCoverColumnWidth);
   expect(coverBox!.height / coverBox!.width).toBeGreaterThan(1.3);
   expect(coverBox!.width).toBeLessThan(heroBox!.width * 0.6);
   expect(coverBox!.y - heroBox!.y).toBeGreaterThan(4);

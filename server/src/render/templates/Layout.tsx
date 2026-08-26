@@ -992,24 +992,24 @@ export function Layout({
                   -webkit-line-clamp: 2;
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero {
-                  grid-template-columns: minmax(7.75rem, 35%) minmax(0, 1fr);
+                  grid-template-columns: minmax(7.25rem, 34%) minmax(0, 1fr);
                   gap: 0;
-                  height: 9.9rem;
-                  min-height: 9.9rem;
+                  height: 10.25rem;
+                  min-height: 10.25rem;
                   aspect-ratio: auto;
                   padding: 0;
                   background: linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 46%, var(--prism-surface)));
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero::before {
-                  width: 35%;
+                  width: 34%;
                   background: linear-gradient(135deg, color-mix(in srgb, var(--prism-yellow) 30%, var(--prism-surface)), color-mix(in srgb, var(--prism-pink) 10%, var(--prism-surface)));
                   opacity: 1;
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
                   width: auto;
-                  max-width: min(5.4rem, calc(100% - 1.8rem));
+                  max-width: min(5.15rem, calc(100% - 1.7rem));
                   height: auto;
-                  max-height: calc(100% - 1.2rem);
+                  max-height: calc(100% - 1.15rem);
                   border-radius: 4px 8px 8px 4px;
                   box-shadow:
                     -0.42rem 0 0 color-mix(in srgb, var(--prism-pink) 34%, transparent),
@@ -1044,6 +1044,9 @@ export function Layout({
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-subtitle {
                   color: var(--muted);
                   text-shadow: none;
+                }
+                body.theme-prism .cards-item[data-cards-type="book"] .cards-rating {
+                  color: color-mix(in srgb, var(--prism-yellow) 64%, #a16207);
                 }
                 body.theme-prism .cards-scrim {
                   background: linear-gradient(to top, rgba(10, 12, 16, 0.78) 0%, rgba(10, 12, 16, 0.34) 48%, rgba(10, 12, 16, 0) 76%);
@@ -1281,19 +1284,19 @@ export function Layout({
                     font-size: 1.18rem;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero {
-                    grid-template-columns: 7.35rem minmax(0, 1fr);
-                    height: 7.85rem;
-                    min-height: 7.85rem;
+                    grid-template-columns: 7rem minmax(0, 1fr);
+                    height: 8.75rem;
+                    min-height: 8.75rem;
                     padding: 0;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero::before {
-                    width: 7.35rem;
+                    width: 7rem;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
                     width: auto;
-                    max-width: min(4.85rem, calc(100% - 1.55rem));
+                    max-width: min(4.65rem, calc(100% - 1.45rem));
                     height: auto;
-                    max-height: calc(100% - 1rem);
+                    max-height: calc(100% - 1.05rem);
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-title {
                     font-size: 1.04rem;
