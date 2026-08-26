@@ -107,6 +107,15 @@ cards-derived, but presents the feed as a single-column professional index with
 separators and compact type labels; its branch in `cardsScript` uses an
 iOS-style right-to-left push detail panel instead of the expanding-card motion.
 
+`Layout.tsx` also owns the refinement baseline shared by every theme: the
+system reading type scale, visible site title/tagline identity, 44pt-equivalent
+header/filter targets, focus treatment, reduced-motion fallback, and the
+`--fg`/`--muted`/`--border`/`--focus` color contract. Theme-specific CSS should
+change the visual voice without shrinking those controls or replacing that
+accessibility contract. Cards-derived themes may override the shape of a
+control (Ledger's rounded-rectangle back/filter buttons, for example), but not
+its usable hit area.
+
 The cards pipeline has specialized media openers where the feed card and
 detail page have genuinely different geometry: photos fly the photo into the
 viewer, books fly a portrait cover into `CardsBookDetailHeader`, and music

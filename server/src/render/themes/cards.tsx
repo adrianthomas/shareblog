@@ -551,8 +551,10 @@ export function CardsCategoryFilter({
 
 export const cardsStyles = `
   body.theme-cards { max-width: none; padding: 0; background-color: var(--bg); }
-  body.theme-cards main { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 2rem; }
-  body.theme-cards header.site-header { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 0; }
+  body.theme-cards main { max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+  body.theme-cards header.site-header { max-width: 1120px; margin: 0 auto; padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem 0; }
+  body.theme-cards header.site-header h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em; }
+  body.theme-cards .site-tagline { max-width: 30rem; }
   /* Leaves the feed clear of the page edge while the category filter sits
      in the header rather than reserving bottom-anchored toolbar space. */
   body.theme-cards footer.site-footer {
@@ -570,15 +572,23 @@ export const cardsStyles = `
      match a taller photo card sharing its row — a compact card for a short
      thought reads as intentional, a short thought stretched to fill 400px
      of near-empty card reads as broken. */
-  .cards-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
+  .cards-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.3rem; align-items: start; }
 
   .cards-item {
-    position: relative; display: block; border-radius: 20px; overflow: hidden;
+    position: relative; display: block; border-radius: 18px; overflow: hidden;
     text-decoration: none; color: inherit; background: var(--bg);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.12);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 26px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
-  .cards-item:hover { transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.18), 0 14px 32px rgba(0,0,0,0.16); }
+  @media (hover: hover) and (pointer: fine) {
+    .cards-item:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--border) 88%, var(--fg));
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1), 0 16px 34px rgba(0,0,0,0.13);
+    }
+  }
   .cards-item:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   /* See lastInputWasKeyboard/cleanup() in cardsScript — suppresses the
      ring specifically on the one programmatic focus() that restores focus
@@ -597,11 +607,11 @@ export const cardsStyles = `
   .cards-scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 75%); }
   .cards-caption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 1.1rem 1.25rem 1.25rem; color: #fff; }
   .cards-eyebrow {
-    margin: 0 0 0.25rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    margin: 0 0 0.25rem; font-size: 0.7rem; font-weight: 720; letter-spacing: 0.065em;
     text-transform: uppercase; color: rgba(255,255,255,0.88); text-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
   .cards-title {
-    margin: 0; font-size: 1.4rem; line-height: 1.2; font-weight: 800;
+    margin: 0; font-size: 1.36rem; line-height: 1.18; font-weight: 760; letter-spacing: -0.025em;
     text-shadow: 0 1px 3px rgba(0,0,0,0.45);
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   }
@@ -613,9 +623,11 @@ export const cardsStyles = `
     display: inline-flex; align-items: center; gap: 0.35rem;
     margin-top: 0.8rem; padding: 0.42rem 0.72rem; border-radius: 999px;
     background: rgba(255,255,255,0.9); color: #111827;
-    font-size: 0.84rem; font-weight: 750; text-shadow: none;
+    font-size: 0.84rem; font-weight: 680; text-shadow: none;
   }
   .cards-date { margin: 0.6rem 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.75); }
+  .cards-date, .cards-text-date, .cards-link-date, .cards-book-date, .cards-music-date, .cards-photo-date,
+  .cards-article-date, .cards-quote-date { font-variant-numeric: tabular-nums; }
 
   .cards-item[data-cards-type="music"] .cards-hero {
     display: grid;
@@ -813,7 +825,7 @@ export const cardsStyles = `
   }
   .cards-text-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cards-accent); flex-shrink: 0; }
   .cards-text-title {
-    margin: 0; font-size: 1.2rem; line-height: 1.45; font-weight: 600; color: var(--fg);
+    margin: 0; font-size: 1.18rem; line-height: 1.48; font-weight: 570; letter-spacing: -0.012em; color: var(--fg);
     display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden;
   }
   .cards-text-card--article .cards-text-title {
@@ -828,7 +840,7 @@ export const cardsStyles = `
     margin-top: 1rem; padding: 0.46rem 0.78rem; border-radius: 999px;
     background: color-mix(in srgb, var(--cards-accent) 12%, var(--bg));
     border: 1px solid color-mix(in srgb, var(--cards-accent) 30%, transparent);
-    color: var(--cards-accent); font-size: 0.88rem; font-weight: 750;
+    color: var(--cards-accent); font-size: 0.88rem; font-weight: 680;
   }
   .cards-text-date { margin: 0.85rem 0 0; font-size: 0.8rem; color: var(--muted); }
 
@@ -1238,7 +1250,7 @@ export const cardsStyles = `
 
   .cards-close {
     position: fixed; top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));
-    z-index: 1100; width: 34px; height: 34px; border-radius: 50%;
+    z-index: 1100; width: 44px; height: 44px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.88); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
     color: #111827; text-decoration: none;
@@ -1249,16 +1261,16 @@ export const cardsStyles = `
   .cards-close-icon--back,
   .cards-close-label { display: none; }
 
-  body.theme-cards .site-header-left { gap: 0.7rem; }
+  body.theme-cards .site-header-left { gap: 0.85rem; }
   .cards-category-filter { position: relative; align-self: flex-start; }
   .cards-filter-trigger {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; border-radius: 999px;
+    width: 44px; height: 44px; border-radius: 999px;
     color: var(--fg); background: color-mix(in srgb, var(--bg) 84%, transparent);
     border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
     box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.1);
     backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    cursor: pointer; list-style: none;
+    cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
   .cards-filter-trigger::-webkit-details-marker { display: none; }
   .cards-filter-trigger:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -1272,9 +1284,9 @@ export const cardsStyles = `
     backdrop-filter: blur(22px) saturate(1.25); -webkit-backdrop-filter: blur(22px) saturate(1.25);
   }
   .cards-filter-menu a {
-    display: flex; align-items: center; min-height: 2.25rem;
+    display: flex; align-items: center; min-height: 2.75rem;
     padding: 0.45rem 0.7rem; border-radius: 11px;
-    color: var(--muted); text-decoration: none; font-size: 0.9rem;
+    color: var(--muted); text-decoration: none; font-size: 0.9rem; touch-action: manipulation;
   }
   .cards-filter-menu a:hover,
   .cards-filter-menu a:focus-visible { color: var(--fg); background: color-mix(in srgb, var(--focus) 10%, transparent); }
@@ -1289,8 +1301,8 @@ export const cardsStyles = `
      element via opacity instead, which fades the dim + blur together as
      one unit and animates reliably everywhere. */
   .cards-overlay-backdrop {
-    position: fixed; inset: 0; z-index: 1000; background: rgba(10,10,10,0.4);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    position: fixed; inset: 0; z-index: 1000; background: rgba(10,10,10,0.32);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     opacity: 0; transition: opacity 0.32s ease;
   }
   .cards-overlay-backdrop--visible { opacity: 1; }
