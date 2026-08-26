@@ -992,16 +992,13 @@ export function Layout({
                   -webkit-line-clamp: 2;
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero {
-                  grid-template-columns: minmax(6.5rem, 32%) minmax(0, 1fr);
-                  gap: 1rem;
+                  grid-template-columns: minmax(7.25rem, 34%) minmax(0, 1fr);
+                  gap: 0;
                   height: 9.25rem;
                   min-height: 9.25rem;
                   aspect-ratio: auto;
-                  padding: 0.85rem 1rem;
-                  background:
-                    linear-gradient(90deg, color-mix(in srgb, var(--prism-yellow) 28%, var(--prism-surface)) 0 34%, transparent 34%),
-                    linear-gradient(135deg, color-mix(in srgb, var(--prism-pink) 8%, transparent), transparent 54%),
-                    linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 42%, var(--prism-surface)));
+                  padding: 0;
+                  background: linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 46%, var(--prism-surface)));
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero::before {
                   width: 34%;
@@ -1011,7 +1008,7 @@ export function Layout({
                   opacity: 0.3;
                 }
                 body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
-                  width: min(100%, 5rem);
+                  width: min(70%, 5.2rem);
                   border-radius: 4px 8px 8px 4px;
                   box-shadow:
                     -0.42rem 0 0 color-mix(in srgb, var(--prism-pink) 34%, transparent),
@@ -1283,16 +1280,16 @@ export function Layout({
                     font-size: 1.18rem;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero {
-                    grid-template-columns: 5.1rem minmax(0, 1fr);
+                    grid-template-columns: 7rem minmax(0, 1fr);
                     height: 7rem;
                     min-height: 7rem;
-                    padding: 0.65rem 0.9rem;
+                    padding: 0;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero::before {
-                    width: 5.1rem;
+                    width: 7rem;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-hero img {
-                    width: 3.8rem;
+                    width: 4.1rem;
                   }
                   body.theme-prism .cards-item[data-cards-type="book"] .cards-title {
                     font-size: 1.08rem;

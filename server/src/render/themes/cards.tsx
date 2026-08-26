@@ -668,16 +668,14 @@ export const cardsStyles = `
   .cards-item[data-cards-type="book"] .cards-hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(6.5rem, 32%) minmax(0, 1fr);
-    gap: 1rem;
+    grid-template-columns: minmax(7.25rem, 34%) minmax(0, 1fr);
+    gap: 0;
     align-items: center;
     height: 9.25rem;
     min-height: 9.25rem;
     aspect-ratio: auto;
-    padding: 0.85rem 1rem;
-    background:
-      linear-gradient(90deg, color-mix(in srgb, #b45309 16%, var(--bg)) 0 34%, transparent 34%),
-      linear-gradient(180deg, color-mix(in srgb, var(--bg) 98%, #b45309), color-mix(in srgb, var(--bg) 93%, #b45309));
+    padding: 0;
+    background: color-mix(in srgb, var(--bg) 96%, var(--fg));
   }
   .cards-item[data-cards-type="book"] .cards-hero::before {
     content: "";
@@ -695,7 +693,7 @@ export const cardsStyles = `
     z-index: 1;
     inset: auto;
     justify-self: center;
-    width: min(100%, 5rem);
+    width: min(70%, 5.2rem);
     height: auto;
     aspect-ratio: 2 / 3;
     object-fit: cover;
@@ -712,7 +710,7 @@ export const cardsStyles = `
     position: relative;
     z-index: 1;
     min-width: 0;
-    padding: 0;
+    padding: 1rem 1.1rem;
     color: var(--fg);
   }
   .cards-item[data-cards-type="book"] .cards-eyebrow {
@@ -1316,17 +1314,16 @@ export const cardsStyles = `
       font-size: 1.16rem;
     }
     .cards-item[data-cards-type="book"] .cards-hero {
-      grid-template-columns: 5.1rem minmax(0, 1fr);
-      gap: 0.85rem;
+      grid-template-columns: 7rem minmax(0, 1fr);
       height: 7rem;
       min-height: 7rem;
-      padding: 0.65rem 0.9rem;
+      padding: 0;
     }
     .cards-item[data-cards-type="book"] .cards-hero::before {
-      width: 5.1rem;
+      width: 7rem;
     }
     .cards-item[data-cards-type="book"] .cards-hero img {
-      width: 3.8rem;
+      width: 4.1rem;
     }
     .cards-item[data-cards-type="book"] .cards-title {
       font-size: 1.08rem;
