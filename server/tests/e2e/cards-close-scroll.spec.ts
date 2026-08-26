@@ -85,6 +85,7 @@ test.beforeAll(async ({ baseURL }) => {
     body: "A reading note.",
     metadata: {
       author: "Test Author",
+      rating: 4,
       coverUrl: `data:image/jpeg;base64,${TINY_JPEG_BASE64}`,
       links: {},
       source: "manual",
@@ -209,9 +210,10 @@ async function expectBookCardKeepsDetailAnimation(page: Page) {
   expect(coverBox).not.toBeNull();
   expect(heroBox).not.toBeNull();
   expect(musicHeroBox).not.toBeNull();
+  await expect(bookCard.locator(".cards-rating")).toHaveText("★★★★☆");
   expect(coverBox!.height / coverBox!.width).toBeGreaterThan(1.3);
   expect(coverBox!.width).toBeLessThan(heroBox!.width * 0.6);
-  expect(Math.abs(heroBox!.height - musicHeroBox!.height)).toBeLessThanOrEqual(8);
+  expect(heroBox!.height).toBeGreaterThan(musicHeroBox!.height);
 
   await bookCard.click();
   await page.waitForSelector(".cards-panel", { state: "attached" });
