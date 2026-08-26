@@ -1355,6 +1355,12 @@ export function Layout({
                   border-radius: 0;
                   box-shadow: none;
                 }
+                body.theme-ledger .cards-feed > .cards-link-card {
+                  border-bottom: 1px solid var(--ledger-separator);
+                }
+                body.theme-ledger .cards-feed > .cards-link-card:last-child {
+                  border-bottom: 0;
+                }
                 body.theme-ledger .cards-link-card::before {
                   display: none;
                 }
