@@ -205,10 +205,13 @@ async function expectBookCardKeepsDetailAnimation(page: Page) {
 
   const coverBox = await bookCard.locator(".cards-hero img").boundingBox();
   const heroBox = await bookHero.boundingBox();
+  const musicHeroBox = await page.locator('[data-cards-card][data-cards-type="music"] .cards-hero').first().boundingBox();
   expect(coverBox).not.toBeNull();
   expect(heroBox).not.toBeNull();
+  expect(musicHeroBox).not.toBeNull();
   expect(coverBox!.height / coverBox!.width).toBeGreaterThan(1.3);
   expect(coverBox!.width).toBeLessThan(heroBox!.width * 0.6);
+  expect(Math.abs(heroBox!.height - musicHeroBox!.height)).toBeLessThanOrEqual(8);
 
   await bookCard.click();
   await page.waitForSelector(".cards-panel", { state: "attached" });
