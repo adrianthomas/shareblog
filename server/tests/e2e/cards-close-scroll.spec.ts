@@ -67,22 +67,35 @@ const POSTS = [
 ];
 
 let siteBaseURL: string;
+let apiBaseURL: string;
+let ownerToken: string;
 
 test.beforeAll(async ({ baseURL }) => {
-  const token = bootstrapOwnerToken();
-  const apiBase = baseURL!;
-  await api(apiBase, token, "/api/v1/sites", { subdomain: "e2ecards", title: "E2E Cards Site" });
-  await api(apiBase, token, "/api/v1/sites", { theme: "cards" }, "PATCH");
+  ownerToken = bootstrapOwnerToken();
+  apiBaseURL = baseURL!;
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { subdomain: "e2ecards", title: "E2E Cards Site" });
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
   for (const post of POSTS) {
-    await api(apiBase, token, "/api/v1/objects", post);
+    await api(apiBaseURL, ownerToken, "/api/v1/objects", post);
   }
-  const assetId = await uploadAsset(apiBase, token);
-  await api(apiBase, token, "/api/v1/objects", {
+  await api(apiBaseURL, ownerToken, "/api/v1/objects", {
+    type: "music",
+    status: "published",
+    body: "A listening note.",
+    metadata: {
+      artist: "Test Artist",
+      releaseTitle: "Test Album",
+      artworkUrl: `data:image/jpeg;base64,${TINY_JPEG_BASE64}`,
+      links: {},
+    },
+  });
+  const assetId = await uploadAsset(apiBaseURL, ownerToken);
+  await api(apiBaseURL, ownerToken, "/api/v1/objects", {
     type: "photo",
     status: "published",
     metadata: { assetId, caption: "A test photo." },
   });
-  siteBaseURL = apiBase.replace("localhost", "e2ecards.localhost");
+  siteBaseURL = apiBaseURL.replace("localhost", "e2ecards.localhost");
 });
 
 // Both signals checked independently: scrollY is the thing the fix in
@@ -142,4 +155,30 @@ test("closing a photo card (openPhotoCard) restores the exact pre-open scroll po
   // generic one above that calls the same lockPageScroll, worth its own
   // coverage rather than assuming the generic path's correctness transfers.
   await expectCloseRestoresScroll(page, 0);
+});
+
+test("Prism music feed cards keep the music detail animation path", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "prism" }, "PATCH");
+
+  await page.goto(siteBaseURL + "/");
+  const musicCard = page.locator('[data-cards-card][data-cards-type="music"]').first();
+  await expect(musicCard).toBeVisible();
+
+  const musicHero = musicCard.locator(".cards-hero");
+  const heroDisplay = await musicHero.evaluate((el) => getComputedStyle(el).display);
+  expect(heroDisplay).toBe("grid");
+
+  const artworkBox = await musicCard.locator(".cards-hero img").boundingBox();
+  const heroBox = await musicHero.boundingBox();
+  expect(artworkBox).not.toBeNull();
+  expect(heroBox).not.toBeNull();
+  expect(artworkBox!.width).toBeLessThan(heroBox!.width * 0.6);
+
+  await musicCard.click();
+  await page.waitForSelector(".cards-panel", { state: "attached" });
+  await expect(page.locator(".cards-music-header")).toBeVisible();
+  await expect(page.locator(".cards-music-artwork")).toBeVisible();
+
+  await page.locator(".cards-close").first().click();
+  await page.waitForSelector(".cards-panel", { state: "detached" });
 });

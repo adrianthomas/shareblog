@@ -933,6 +933,64 @@ export function Layout({
                 body.theme-prism .cards-feed .cards-hero {
                   aspect-ratio: 16 / 10;
                 }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-hero {
+                  display: grid;
+                  grid-template-columns: minmax(7.25rem, 34%) minmax(0, 1fr);
+                  min-height: 9.25rem;
+                  aspect-ratio: auto;
+                  background:
+                    linear-gradient(135deg, color-mix(in srgb, var(--prism-pink) 10%, transparent), transparent 52%),
+                    linear-gradient(180deg, var(--prism-surface), color-mix(in srgb, var(--prism-surface-soft) 46%, var(--prism-surface)));
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-hero img {
+                  position: static;
+                  width: 100%;
+                  height: 100%;
+                  min-height: 9.25rem;
+                  aspect-ratio: 1 / 1;
+                  object-fit: cover;
+                  border-right: 1px solid color-mix(in srgb, var(--prism-pink) 22%, var(--border));
+                  box-shadow: 8px 0 24px rgba(230, 0, 103, 0.1);
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-scrim {
+                  display: none;
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-caption {
+                  position: static;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  min-width: 0;
+                  padding: 1rem 1.1rem;
+                  color: var(--fg);
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-eyebrow {
+                  width: fit-content;
+                  margin-bottom: 0.42rem;
+                  border-radius: 999px;
+                  padding: 0.26rem 0.62rem;
+                  background: color-mix(in srgb, var(--prism-pink) 12%, var(--prism-surface));
+                  color: var(--prism-pink);
+                  text-shadow: none;
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-eyebrow::before {
+                  content: "▶";
+                  margin-right: 0.36rem;
+                  font-size: 0.72em;
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-title {
+                  color: var(--fg);
+                  text-shadow: none;
+                  font-size: 1.32rem;
+                  line-height: 1.12;
+                  -webkit-line-clamp: 2;
+                }
+                body.theme-prism .cards-item[data-cards-type="music"] .cards-subtitle {
+                  color: var(--muted);
+                  text-shadow: none;
+                  font-weight: 650;
+                  -webkit-line-clamp: 2;
+                }
                 body.theme-prism .cards-scrim {
                   background: linear-gradient(to top, rgba(10, 12, 16, 0.78) 0%, rgba(10, 12, 16, 0.34) 48%, rgba(10, 12, 16, 0) 76%);
                 }
@@ -1157,6 +1215,16 @@ export function Layout({
                   }
                   body.theme-prism .cards-feed {
                     grid-template-columns: 1fr;
+                  }
+                  body.theme-prism .cards-item[data-cards-type="music"] .cards-hero {
+                    grid-template-columns: 7rem minmax(0, 1fr);
+                    min-height: 7rem;
+                  }
+                  body.theme-prism .cards-item[data-cards-type="music"] .cards-hero img {
+                    min-height: 7rem;
+                  }
+                  body.theme-prism .cards-item[data-cards-type="music"] .cards-title {
+                    font-size: 1.18rem;
                   }
                 }
                 @media (max-width: 400px) {
