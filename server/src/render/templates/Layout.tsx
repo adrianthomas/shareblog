@@ -1759,6 +1759,14 @@ export function Layout({
                   body.theme-ledger .cards-hero img {
                     width: 5.8rem;
                   }
+                  body.theme-ledger .cards-item[data-cards-type="photo"] .cards-hero {
+                    grid-template-columns: 7rem minmax(0, 1fr);
+                    min-height: 7rem;
+                  }
+                  body.theme-ledger .cards-item[data-cards-type="photo"] .cards-hero img {
+                    width: 7rem;
+                    min-height: 7rem;
+                  }
                   body.theme-ledger .cards-caption,
                   body.theme-ledger .cards-text-card,
                   body.theme-ledger .cards-quote-card,
