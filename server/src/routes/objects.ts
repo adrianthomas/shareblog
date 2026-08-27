@@ -10,27 +10,42 @@ import { invalidateSitePages } from "../render/page-cache.js";
 import { storage } from "../storage/index.js";
 import { deliverCreateActivity } from "../activitypub/federation.js";
 
-// A Photo/Article/Book object's only link to its uploaded image is one of
-// these metadata fields (there's no DB relation — assets.contentObjectId is
-// never actually set on upload). Deleting the object needs to walk the same
-// fields to find what to purge from storage.
-function referencedAssetIds(metadata: unknown): string[] {
+// Structured image references live in metadata, while inline Article and
+// Thought images are stored only as rendered /files/... URLs in the body.
+// assets.contentObjectId is never set on upload, so deletion has to resolve
+// both representations by hand.
+function metadataAssetIds(metadata: unknown): string[] {
   if (!metadata || typeof metadata !== "object") return [];
   const record = metadata as Record<string, unknown>;
   return [record.assetId, record.coverAssetId].filter((value): value is string => typeof value === "string");
 }
 
-// Scoped to siteId, not just assetId — metadata.assetId is client-supplied
-// (see assertOwnedAssets below for why that's checked at write time too), so
-// without this a crafted object could get another site's asset deleted out
-// from under it.
-async function deleteAsset(assetId: string, siteId: string): Promise<void> {
-  const [asset] = await db.select().from(assets).where(and(eq(assets.id, assetId), eq(assets.siteId, siteId))).limit(1);
-  if (!asset) return;
+type Asset = typeof assets.$inferSelect;
+
+function assetStorageKeys(asset: Asset): string[] {
   const variants = asset.variants as Record<string, string>;
-  const keys = new Set([asset.storageKey, ...Object.values(variants)].filter(Boolean));
-  await Promise.all([...keys].map((key) => storage.delete(key)));
-  await db.delete(assets).where(eq(assets.id, assetId));
+  return [...new Set([asset.storageKey, ...Object.values(variants)].filter(Boolean))];
+}
+
+function bodyReferencesAsset(body: string | null, asset: Asset): boolean {
+  if (!body) return false;
+  return assetStorageKeys(asset).some((key) => {
+    // The first check follows the configured storage adapter. The /files/
+    // fallback also recognizes posts written before API_BASE_URL changed.
+    return body.includes(storage.getUrl(key)) || body.includes(`/files/${key}`);
+  });
+}
+
+function objectReferencesAsset(
+  object: Pick<typeof contentObjects.$inferSelect, "metadata" | "body">,
+  asset: Asset,
+): boolean {
+  return metadataAssetIds(object.metadata).includes(asset.id) || bodyReferencesAsset(object.body, asset);
+}
+
+async function deleteAsset(asset: Asset): Promise<void> {
+  await Promise.all(assetStorageKeys(asset).map((key) => storage.delete(key)));
+  await db.delete(assets).where(eq(assets.id, asset.id));
 }
 
 // createObjectSchema/updateObjectSchema only check that assetId/coverAssetId
@@ -41,7 +56,7 @@ async function deleteAsset(assetId: string, siteId: string): Promise<void> {
 // one account can exist today, so this is unreachable in practice — but
 // cheap to close now while it's still just a code review finding).
 async function assertOwnedAssets(siteId: string, metadata: unknown): Promise<void> {
-  const ids = [...new Set(referencedAssetIds(metadata))];
+  const ids = [...new Set(metadataAssetIds(metadata))];
   if (ids.length === 0) return;
   const owned = await db
     .select({ id: assets.id })
@@ -237,7 +252,22 @@ export async function objectRoutes(app: FastifyInstance) {
       .limit(1);
     if (!existing) return reply.code(404).send();
 
-    await Promise.all(referencedAssetIds(existing.metadata).map((id) => deleteAsset(id, site.id)));
+    const siteAssets = await db.select().from(assets).where(eq(assets.siteId, site.id));
+    const referencedAssets = siteAssets.filter((asset) => objectReferencesAsset(existing, asset));
+
+    // Assets normally belong to one post, but the API permits the same
+    // assetId/URL to be reused. Keep a shared asset until its final
+    // referencing post is deleted rather than breaking the survivor.
+    if (referencedAssets.length > 0) {
+      const otherObjects = await db
+        .select({ metadata: contentObjects.metadata, body: contentObjects.body })
+        .from(contentObjects)
+        .where(and(eq(contentObjects.siteId, site.id), ne(contentObjects.id, id)));
+      const orphanedAssets = referencedAssets.filter(
+        (asset) => !otherObjects.some((object) => objectReferencesAsset(object, asset)),
+      );
+      await Promise.all(orphanedAssets.map(deleteAsset));
+    }
     await db.delete(contentObjects).where(eq(contentObjects.id, id));
     invalidateSitePages(site.id);
     return reply.code(204).send();

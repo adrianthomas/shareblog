@@ -43,7 +43,7 @@ const PORTRAIT_COVER_DATA_URI = `data:image/svg+xml;base64,${Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="124" viewBox="0 0 80 124"><rect width="80" height="124" fill="#83512e"/><rect x="9" y="12" width="62" height="100" rx="2" fill="#f7ead7"/><text x="40" y="43" text-anchor="middle" font-size="12" font-family="serif" fill="#2f2217">Test</text><text x="40" y="60" text-anchor="middle" font-size="12" font-family="serif" fill="#2f2217">Book</text></svg>',
 ).toString("base64")}`;
 
-async function uploadAsset(baseURL: string, token: string): Promise<string> {
+async function uploadAsset(baseURL: string, token: string): Promise<{ id: string; url: string }> {
   const bytes = Buffer.from(TINY_JPEG_BASE64, "base64");
   const form = new FormData();
   form.append("file", new Blob([bytes], { type: "image/jpeg" }), "test.jpg");
@@ -54,7 +54,7 @@ async function uploadAsset(baseURL: string, token: string): Promise<string> {
   });
   if (!res.ok) throw new Error(`asset upload -> ${res.status}: ${await res.text()}`);
   const { asset } = await res.json();
-  return asset.id as string;
+  return { id: asset.id as string, url: asset.url as string };
 }
 
 // Enough cards to make the feed taller than one viewport — the bug this
@@ -105,7 +105,7 @@ test.beforeAll(async ({ baseURL }) => {
       links: {},
     },
   });
-  const assetId = await uploadAsset(apiBaseURL, ownerToken);
+  const { id: assetId } = await uploadAsset(apiBaseURL, ownerToken);
   await api(apiBaseURL, ownerToken, "/api/v1/objects", {
     type: "photo",
     status: "published",
@@ -172,6 +172,42 @@ test("closing a photo card (openPhotoCard) restores the exact pre-open scroll po
   // generic one above that calls the same lockPageScroll, worth its own
   // coverage rather than assuming the generic path's correctness transfers.
   await expectCloseRestoresScroll(page, 0);
+});
+
+test("deleting article and photo drafts removes their uploaded assets", async () => {
+  const articleAsset = await uploadAsset(apiBaseURL, ownerToken);
+  const { object: article } = await api(apiBaseURL, ownerToken, "/api/v1/objects", {
+    type: "article",
+    title: "Disposable article",
+    body: `Body with an inline image.\n\n![Alt text](${articleAsset.url})`,
+    status: "draft",
+    metadata: {},
+  });
+
+  const photoAsset = await uploadAsset(apiBaseURL, ownerToken);
+  const { object: photo } = await api(apiBaseURL, ownerToken, "/api/v1/objects", {
+    type: "photo",
+    status: "draft",
+    metadata: { assetId: photoAsset.id, caption: "Disposable photo" },
+  });
+
+  for (const { object, asset } of [
+    { object: article, asset: articleAsset },
+    { object: photo, asset: photoAsset },
+  ]) {
+    const deleteResponse = await fetch(
+      `${apiBaseURL.replace("localhost", "api.localhost")}/api/v1/objects/${object.id}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${ownerToken}` } },
+    );
+    expect(deleteResponse.status).toBe(204);
+
+    const assetResponse = await fetch(
+      `${apiBaseURL.replace("localhost", "api.localhost")}/api/v1/assets/${asset.id}`,
+      { headers: { Authorization: `Bearer ${ownerToken}` } },
+    );
+    expect(assetResponse.status).toBe(404);
+    expect((await fetch(asset.url)).status).toBe(404);
+  }
 });
 
 async function expectMusicCardKeepsDetailAnimation(page: Page) {

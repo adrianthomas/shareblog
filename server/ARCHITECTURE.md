@@ -40,7 +40,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see `ownerClaims` table, `ios/ARCHITECTURE.md`'s Auth/bootstrapping section). Logout revokes *every* token for the account. |
 | `routes/sites.ts` | site CRUD (create, update theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). |
 | `routes/themes.ts` | `GET /themes` (no auth) | Server-owned catalog of selectable site themes (`id`/`name`/`description`) used by iOS Settings. Keep this additive so newer servers can expose themes without requiring an iOS app update. |
-| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks, cache invalidation, and triggers `deliverCreateActivity` on publish. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
+| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images), cache invalidation, and triggers `deliverCreateActivity` on publish. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
 | `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. |
 
@@ -187,10 +187,11 @@ One real automated suite exists: `tests/e2e/` (Playwright, WebKit —
 matching the cards theme's real target browser, not Chromium), run via
 `npm run test:e2e` (`playwright.config.ts` spins up its own throwaway
 SQLite DB and dev server on port 3100, seeded through `bootstrap-owner.ts`
-+ the live API — see the spec file for the pattern). It exists specifically
-to catch regressions in `themes/cards.tsx`'s scroll-lock/restore mechanism
++ the live API — see the spec file for the pattern). Its primary coverage is
+`themes/cards.tsx`'s scroll-lock/restore mechanism
 around opening and closing a card (`lockPageScroll`/`unlockPageScroll`) —
-a bug class subtle enough to have regressed silently once already. It does
+a bug class subtle enough to have regressed silently once already — and it
+also exercises uploaded-asset cleanup through the live API. It does
 **not** catch every variant of that bug: the iOS Safari toolbar-reveal
 case (see `unlockPageScroll`'s own comment) is driven by the browser's own
 chrome animation, which a synthetic tap doesn't reliably provoke, so that
