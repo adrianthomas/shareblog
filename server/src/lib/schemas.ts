@@ -41,6 +41,7 @@ export const bookMetadataSchema = z.object({
 
 export const articleMetadataSchema = z.object({
   coverAssetId: z.string().uuid().optional(),
+  coverAltText: z.string().optional(),
   excerpt: z.string().optional(),
 });
 

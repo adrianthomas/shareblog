@@ -28,13 +28,14 @@ export function ArticleCard({
 }) {
   const metadata = object.metadata as ArticleMetadata;
   const excerpt = articleExcerpt(object, metadata);
+  const coverAltText = metadata.coverAltText ?? "";
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     if (coverImageUrl) {
       return (
         <a className="cards-item cards-article-feed-card" href={`/articles/${object.slug}`}>
           <div className="cards-hero cards-article-feed-image">
-            <img src={coverImageUrl} alt="" loading="lazy" />
+            <img src={coverImageUrl} alt={coverAltText} loading="lazy" />
           </div>
           <div className="cards-article-feed-copy">
             <p className="cards-text-badge">
@@ -60,7 +61,7 @@ export function ArticleCard({
           </>
         }
         type={object.type}
-        hero={{ imageUrl: coverImageUrl, imageAlt: "", gradientSeed: object.slug }}
+        hero={{ imageUrl: coverImageUrl, imageAlt: coverAltText, gradientSeed: object.slug }}
       />
     );
   }
@@ -69,7 +70,7 @@ export function ArticleCard({
     <article className="card article-card">
       {coverImageUrl ? (
         <a className="article-card-cover" href={`/articles/${object.slug}`} aria-label={object.title ?? t(locale, "articles")}>
-          <img src={coverImageUrl} alt="" loading="lazy" />
+          <img src={coverImageUrl} alt={coverAltText} loading="lazy" />
         </a>
       ) : null}
       <h2>
@@ -101,6 +102,7 @@ export function ArticlePage({
   const metadata = object.metadata as ArticleMetadata;
   const bodyHtml = formatRichText(object.body ?? "");
   const metadataExcerpt = metadata.excerpt?.trim();
+  const coverAltText = metadata.coverAltText ?? "";
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     if (!coverImageUrl) {
@@ -129,7 +131,7 @@ export function ArticlePage({
       <>
         <CloseButton backHref={backHref!} backLabel={backLabel!} />
         <article className="cards-article-detail">
-          <img className="cards-article-cover" src={coverImageUrl} alt="" loading="lazy" />
+          <img className="cards-article-cover" src={coverImageUrl} alt={coverAltText} loading="lazy" />
           <header className="cards-article-header">
             <p className="cards-text-badge">
               <span className="cards-text-badge-dot" aria-hidden="true" />
@@ -150,7 +152,7 @@ export function ArticlePage({
 
   return (
     <article className="article-detail">
-      {coverImageUrl ? <img className="article-detail-cover" src={coverImageUrl} alt="" /> : null}
+      {coverImageUrl ? <img className="article-detail-cover" src={coverImageUrl} alt={coverAltText} /> : null}
       <h1>{object.title}</h1>
       {metadataExcerpt ? <p className="article-excerpt">{metadataExcerpt}</p> : null}
       <p className="meta">

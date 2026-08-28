@@ -123,9 +123,9 @@ viewer, books fly a portrait cover into `CardsBookDetailHeader`, and music
 flies square album art into `CardsMusicDetailHeader`. Keep square/portrait art
 out of the generic cover-image hero path, which is meant for article-like
 landscape imagery.
-Article `metadata.coverAssetId` is the card/detail header image. Inline
-markdown images in the article body are separate body images and render below
-the title/excerpt/date content.
+Article `metadata.coverAssetId` is the card/detail header image, with
+`metadata.coverAltText` as its alt text. Inline markdown images in the article
+body are separate body images and render below the title/excerpt/date content.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:

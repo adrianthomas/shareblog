@@ -34,6 +34,7 @@ export interface PhotoMetadata {
 
 export interface ArticleMetadata {
   coverAssetId?: string;
+  coverAltText?: string;
   excerpt?: string;
 }
 

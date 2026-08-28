@@ -318,7 +318,7 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
     case "article": {
       const metadata = object.metadata as ArticleMetadata;
       const cover = await articleImageUrl(object);
-      const image = cover ? `<p><img src="${escapeXml(cover)}" alt="" /></p>` : "";
+      const image = cover ? `<p><img src="${escapeXml(cover)}" alt="${escapeXml(metadata.coverAltText ?? "")}" /></p>` : "";
       const excerpt = metadata.excerpt ? `<p><em>${escapeXml(metadata.excerpt)}</em></p>` : "";
       return image + excerpt + formatRichText(object.body ?? "");
     }
