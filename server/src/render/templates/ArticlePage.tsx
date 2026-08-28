@@ -3,7 +3,7 @@ import type { ContentObject, ArticleMetadata } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
-import { CardsFeedItem, CardsDetailHeader, CloseButton } from "../themes/cards.js";
+import { CardsFeedItem, CloseButton } from "../themes/cards.js";
 import { formatRichText, stripBasicFormatting } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
@@ -30,6 +30,24 @@ export function ArticleCard({
   const excerpt = articleExcerpt(object, metadata);
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
+    if (coverImageUrl) {
+      return (
+        <a className="cards-item cards-article-feed-card" href={`/articles/${object.slug}`}>
+          <div className="cards-hero cards-article-feed-image">
+            <img src={coverImageUrl} alt="" loading="lazy" />
+          </div>
+          <div className="cards-article-feed-copy">
+            <p className="cards-text-badge">
+              <span className="cards-text-badge-dot" aria-hidden="true" />
+              {t(locale, "articles")}
+            </p>
+            <h2 className="cards-article-feed-title">{object.title}</h2>
+            {excerpt ? <p className="cards-article-feed-excerpt">{excerpt}</p> : null}
+            <p className="cards-text-date">{formatDate(object.publishedAt, locale)}</p>
+          </div>
+        </a>
+      );
+    }
     return (
       <CardsFeedItem
         href={`/articles/${object.slug}`}
@@ -109,23 +127,23 @@ export function ArticlePage({
     }
     return (
       <>
-        <CardsDetailHeader
-          href={`/articles/${object.slug}`}
-          eyebrow={t(locale, "articles")}
-          title={object.title}
-          subtitle={metadata.excerpt}
-          dateLabel={
-            <>
+        <CloseButton backHref={backHref!} backLabel={backLabel!} />
+        <article className="cards-article-detail">
+          <img className="cards-article-cover" src={coverImageUrl} alt="" loading="lazy" />
+          <header className="cards-article-header">
+            <p className="cards-text-badge">
+              <span className="cards-text-badge-dot" aria-hidden="true" />
+              {t(locale, "articles")}
+            </p>
+            <h1 className="cards-article-title">{object.title}</h1>
+            {metadataExcerpt ? <p className="cards-article-excerpt">{metadataExcerpt}</p> : null}
+            <p className="cards-article-date">
               {formatDate(object.publishedAt, locale)}
               <CopyLinkButton locale={locale} />
-            </>
-          }
-          type={object.type}
-          hero={{ imageUrl: coverImageUrl, imageAlt: "", gradientSeed: object.slug }}
-          backHref={backHref!}
-          backLabel={backLabel!}
-        />
-        <div className="cards-body body-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+            </p>
+          </header>
+          <div className="cards-article-body body-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        </article>
       </>
     );
   }

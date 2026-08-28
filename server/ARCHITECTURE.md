@@ -88,9 +88,10 @@ ES5-ish JS injected as an inline `<script>`.
 page is wrapped via `wrap()` in `Layout.tsx`. Templates branch between the
 classic-style markup and the interactive cards pipeline: `cards`, `prism`, and
 `ledger` usually render `CardsFeedItem`/`CardsDetailHeader` from
-`themes/cards.tsx`, while classic and washi fall through to the simpler markup. Link posts are the main
-exception: they use their own slim card with a direct external open action
-instead of the cards overlay opener. Adding a field to a
+`themes/cards.tsx`, while classic and washi fall through to the simpler markup. Link posts and
+covered article cards are the main exceptions: links use their own slim card
+with a direct external open action, and covered articles render the image above
+the headline/excerpt instead of overlaying text on the image. Adding a field to a
 content type means updating both branches if the cards-derived themes need to
 display it. Washi is deliberately lighter: `renderList()` wraps list pages in
 `.washi-feed` so it can render a responsive paper-card grid, while detail pages
@@ -122,6 +123,9 @@ viewer, books fly a portrait cover into `CardsBookDetailHeader`, and music
 flies square album art into `CardsMusicDetailHeader`. Keep square/portrait art
 out of the generic cover-image hero path, which is meant for article-like
 landscape imagery.
+Article `metadata.coverAssetId` is the card/detail header image. Inline
+markdown images in the article body are separate body images and render below
+the title/excerpt/date content.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:

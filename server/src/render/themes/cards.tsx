@@ -831,6 +831,35 @@ export const cardsStyles = `
   .cards-text-card--article .cards-text-title {
     font-size: 1.22rem; line-height: 1.28; font-weight: 760;
   }
+  .cards-article-feed-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+  .cards-article-feed-image {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .cards-article-feed-copy {
+    padding: 1rem;
+  }
+  .cards-article-feed-title {
+    margin: 0.65rem 0 0;
+    font-size: 1.22rem;
+    line-height: 1.28;
+    font-weight: 760;
+    color: var(--fg);
+  }
+  .cards-article-feed-excerpt {
+    margin: 0.7rem 0 0;
+    font-size: 0.94rem;
+    line-height: 1.48;
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .cards-text-subtitle {
     margin: 0.8rem 0 0; font-size: 0.94rem; line-height: 1.48; color: var(--muted);
     display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
@@ -1201,6 +1230,15 @@ export const cardsStyles = `
   .cards-article-header {
     padding-bottom: 1.45rem;
     border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  }
+  .cards-article-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 0 0 1.35rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.12);
   }
   .cards-article-title {
     margin: 0; color: var(--fg);
