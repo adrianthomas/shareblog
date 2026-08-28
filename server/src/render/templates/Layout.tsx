@@ -434,6 +434,14 @@ export function Layout({
               .article-detail > .meta { margin-bottom: 1.75rem; }
               .body-content, .about-content { max-width: 65ch; }
               .body-content p, .about-content p { margin: 0 0 1.15rem; }
+              .body-content ul {
+                margin: 0 0 1.15rem;
+                padding-left: 1.45rem;
+              }
+              .body-content li {
+                margin: 0.25rem 0;
+                padding-left: 0.15rem;
+              }
               .body-content h2 { font-size: 1.45rem; margin: 2.15rem 0 0.75rem; line-height: 1.2; }
               .body-content h3 { font-size: 1.18rem; margin: 1.7rem 0 0.55rem; line-height: 1.25; }
               .body-content h4, .body-content h5, .body-content h6 {

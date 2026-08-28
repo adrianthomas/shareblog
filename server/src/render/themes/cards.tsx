@@ -1218,6 +1218,14 @@ export const cardsStyles = `
     font-size: 1.05rem;
     line-height: 1.68;
   }
+  .cards-article-body ul {
+    margin: 0 0 1.2rem;
+    padding-left: 1.45rem;
+  }
+  .cards-article-body li {
+    margin: 0.28rem 0;
+    padding-left: 0.15rem;
+  }
   .cards-article-body h2 {
     margin: 2rem 0 0.7rem;
     font-size: 1.65rem;

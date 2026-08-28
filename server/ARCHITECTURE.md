@@ -127,7 +127,7 @@ Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:
 - `formatBasicText` — paragraphs, `**bold**`, `*italic*`, `[text](url)`.
 - `formatRichText` — the above plus `#` through `######` headings,
-  `![alt](url)`.
+  `-`/`•` unordered lists, and `![alt](url)`.
 - `stripBasicFormatting` — strips back to plain text (RSS `<title>`, a
   cards-theme feed tile).
 

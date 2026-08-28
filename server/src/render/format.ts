@@ -4,7 +4,8 @@
 //   links. Used for shorter annotation fields (Site.about, a Book/Music
 //   note, a Quote's comment).
 // - formatRichText: everything formatBasicText has, plus block-level
-//   `# ` through `###### ` headings and `![alt](url)` inline images. Used for the two
+//   `# ` through `###### ` headings, `- `/`• ` unordered lists, and
+//   `![alt](url)` inline images. Used for the two
 //   "full post" body fields — Thought and Article — where someone might
 //   paste in an actual structured post rather than a one-line note.
 //
@@ -66,6 +67,14 @@ function formatRichBlock(paragraph: string): string {
     const tag = `h${Math.min(heading[1].length + 1, 6)}`;
     return `<${tag}>${formatInline(heading[2], { images: true })}</${tag}>`;
   }
+  const lines = paragraph.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (lines.length > 0 && lines.every((line) => /^[-•]\s+/.test(line))) {
+    const items = lines
+      .map((line) => line.replace(/^[-•]\s+/, ""))
+      .map((line) => `<li>${formatInline(line, { images: true })}</li>`)
+      .join("");
+    return `<ul>${items}</ul>`;
+  }
   // A paragraph that's nothing but a single image renders as its own block
   // rather than wrapped in a <p> — keeps it visually distinct from body
   // copy the same way an image dropped on its own line reads in Markdown.
@@ -97,6 +106,7 @@ export function stripBasicFormatting(text: string): string {
   return text
     .replace(/!\[([^\]]*)\]\([^)\s]+\)/g, "")
     .replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1")
+    .replace(/^[-•]\s+/gm, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1$2")
     .replace(/_([^_\n]+)_/g, "$1")
