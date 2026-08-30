@@ -836,7 +836,7 @@ export const cabinetStyles = `
   .cabinet-backdrop--visible { opacity: 1; }
   .cabinet-panel {
     position: fixed; inset: 0; z-index: 1001; width: 100vw; height: 100vh; height: 100dvh;
-    overflow: hidden; background: var(--bg); will-change: clip-path, opacity; contain: paint;
+    overflow: hidden; background: var(--bg); will-change: clip-path, opacity, transform; contain: paint;
   }
   .cabinet-panel-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .cabinet-panel-scroll:focus, .cabinet-panel-scroll h1:focus-visible { outline: none; }

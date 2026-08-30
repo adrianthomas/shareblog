@@ -110,10 +110,11 @@ type-specific artifact and detail components, typography, and responsive
 styles; every content template has an explicit `theme === "cabinet"` branch.
 `themes/cabinet-script.ts` progressively enhances the ordinary same-origin
 detail links into fetched in-place panels with shared-media/clip-path motion,
-history handling, scroll locking, focus trapping/restoration, an inert
-underlying page, and reading progress. Direct navigation and failed enhancement
-still use the server-rendered detail URL; reduced-motion users receive a short
-opacity transition instead of spatial motion.
+pull-down dismissal from the top of the detail scroller, history handling,
+scroll locking, focus trapping/restoration, an inert underlying page, and
+reading progress. Direct navigation and failed enhancement still use the
+server-rendered detail URL; reduced-motion users receive a short opacity
+transition instead of spatial motion.
 
 `Layout.tsx` also owns the refinement baseline shared by every theme: the
 system reading type scale, visible site title/tagline identity, 44pt-equivalent

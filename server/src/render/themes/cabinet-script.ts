@@ -518,6 +518,7 @@ export const cabinetScript = `
         closeOverlay({});
       });
     }
+    wireDismissGesture(owner);
     var canClip = supportsClipPath();
     var startClip = clipForRect(sourceRect, sourceRadius);
     panel.style.clipPath = canClip ? startClip : fullClip();
@@ -564,6 +565,80 @@ export const cabinetScript = `
       if (current === owner && !owner.closing) safeFocus(owner.heading);
     }, 0);
   }
+  // Pull-to-dismiss follows the usual sheet interaction: it is only active
+  // while the detail scroller is already at its top, ignores controls, and
+  // commits on either distance or downward velocity. A short pull springs
+  // back without disturbing the panel's own scrolling or focus state.
+  function wireDismissGesture(owner) {
+    var scroller = owner.scroller, panel = owner.panel, backdrop = owner.backdrop;
+    var startX = 0, startY = 0, startTime = 0, dragging = false;
+    var activated = false, delta = 0, pointerId = null;
+
+    scroller.addEventListener('pointerdown', function (event) {
+      if (current !== owner || owner.closing || scroller.scrollTop > 0 || event.button !== 0 || event.isPrimary === false) return;
+      if (event.target.closest && event.target.closest('a, button, input, select, textarea, [role="button"]')) return;
+      startX = event.clientX;
+      startY = event.clientY;
+      startTime = Date.now();
+      dragging = true;
+      activated = false;
+      delta = 0;
+      pointerId = event.pointerId;
+    });
+
+    scroller.addEventListener('pointermove', function (event) {
+      if (!dragging || event.pointerId !== pointerId || current !== owner || owner.closing) return;
+      var raw = event.clientY - startY;
+      var horizontal = Math.abs(event.clientX - startX);
+      if (!activated) {
+        if (raw <= 6) return;
+        if (horizontal > raw) { dragging = false; return; }
+        activated = true;
+        try { scroller.setPointerCapture(pointerId); } catch (error) {}
+      }
+      event.preventDefault();
+      delta = raw < 220 ? raw : 220 + (raw - 220) * 0.35;
+      var scale = 1 - delta / 2600;
+      var translateX = (1 - scale) * window.innerWidth / 2;
+      var translateY = delta + (1 - scale) * window.innerHeight / 2;
+      panel.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
+      panel.style.borderRadius = Math.min(28, delta / 4) + 'px';
+      backdrop.style.opacity = String(Math.max(0.12, 1 - delta / 360));
+    });
+
+    function endDrag(event) {
+      if (!dragging || (event && pointerId !== null && event.pointerId !== pointerId)) return;
+      dragging = false;
+      if (pointerId !== null) {
+        try { scroller.releasePointerCapture(pointerId); } catch (error) {}
+      }
+      pointerId = null;
+      if (!activated) return;
+      activated = false;
+      var elapsed = Math.max(1, Date.now() - startTime);
+      var velocity = delta / elapsed;
+      if (delta > 120 || velocity > 0.5) {
+        if (current === owner) closeOverlay({ dragDismiss: true });
+        return;
+      }
+      var springEasing = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+      panel.style.transition = reduceMotion ? 'none' : 'transform 0.32s ' + springEasing + ', border-radius 0.32s ' + springEasing;
+      backdrop.style.transition = reduceMotion ? 'none' : 'opacity 0.32s ease';
+      panel.style.transform = '';
+      panel.style.borderRadius = '';
+      backdrop.style.opacity = '1';
+      function clearTransition() {
+        panel.style.transition = '';
+        backdrop.style.transition = '';
+        panel.removeEventListener('transitionend', clearTransition);
+      }
+      if (reduceMotion) window.setTimeout(clearTransition, 0);
+      else panel.addEventListener('transitionend', clearTransition);
+    }
+
+    scroller.addEventListener('pointerup', endDrag);
+    scroller.addEventListener('pointercancel', endDrag);
+  }
   function closeOverlay(options) {
     var owner = current;
     if (!owner || owner.phase !== 'open' || owner.closing) return;
@@ -581,7 +656,10 @@ export const cabinetScript = `
     var destinationRadius = parseFloat(window.getComputedStyle(owner.visualCard).borderRadius);
     if (isNaN(destinationRadius)) destinationRadius = owner.sourceRadius;
     var destinationClip = clipForRect(destinationRect, destinationRadius);
-    var closeDuration = reduceMotion ? 100 : CLOSE_MS;
+    var dragDismiss = !!options.dragDismiss;
+    var closeDuration = reduceMotion ? 100 : (dragDismiss ? 300 : CLOSE_MS);
+    var currentTransform = window.getComputedStyle(owner.panel).transform;
+    var currentRadius = window.getComputedStyle(owner.panel).borderRadius;
     var closeHandles = [];
     closeHandles.push(play(owner.backdrop, [
       { opacity: owner.backdrop.style.opacity || '1' }, { opacity: '0' }
@@ -595,7 +673,11 @@ export const cabinetScript = `
       duration: reduceMotion ? 80 : 220,
       easing: 'ease-in'
     }));
-    closeHandles.push(play(owner.panel, reduceMotion ? [
+    closeHandles.push(play(owner.panel, dragDismiss && !reduceMotion ? [
+      { transform: currentTransform === 'none' ? 'translateY(0px)' : currentTransform,
+        borderRadius: currentRadius, opacity: '1' },
+      { transform: 'translateY(100vh)', borderRadius: '28px', opacity: '1' }
+    ] : reduceMotion ? [
       { clipPath: fullClip(), opacity: owner.panel.style.opacity || '1' },
       { clipPath: fullClip(), opacity: '0' }
     ] : [
@@ -608,7 +690,7 @@ export const cabinetScript = `
     var sourceShared = owner.sourceShared && document.documentElement.contains(owner.sourceShared) ?
       owner.sourceShared : findShared(owner.visualCard, null);
     var targetShared = findShared(owner.scroller, sourceShared);
-    if (sourceShared && targetShared && !reduceMotion) {
+    if (sourceShared && targetShared && !reduceMotion && !dragDismiss) {
       var sharedClose = flySharedElement(targetShared, sourceShared, CLOSE_MS);
       if (sharedClose) closeHandles.push(sharedClose);
     }

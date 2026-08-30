@@ -391,6 +391,46 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
   expect(finalReferenceRect!.y).toBeCloseTo(initialReferenceRect!.y, 1);
 });
 
+test("Cabinet detail panels can be pulled down to close", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.goto(siteBaseURL + "/");
+
+  const card = page.locator('a[data-cabinet-card][data-cabinet-type="music"]').first();
+  await expect(card).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+  const initialScrollY = await page.evaluate(() => window.scrollY);
+  const homeURL = page.url();
+  await card.click();
+
+  const dialog = page.locator('.cabinet-panel[role="dialog"]');
+  const scroller = dialog.locator(".cabinet-panel-scroll");
+  await expect(dialog).toBeVisible();
+  await scroller.evaluate((element) => { element.scrollTop = 0; });
+  const box = await scroller.boundingBox();
+  expect(box).not.toBeNull();
+
+  const startX = box!.x + box!.width * 0.72;
+  const startY = box!.y + 120;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY + 55, { steps: 3 });
+  await page.waitForTimeout(180);
+  await page.mouse.up();
+  await expect(dialog).toBeAttached();
+  await expect.poll(() => dialog.evaluate((element) => getComputedStyle(element).transform)).toBe("none");
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY + 170, { steps: 6 });
+  await expect.poll(() => dialog.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
+  await page.mouse.up();
+
+  await dialog.waitFor({ state: "detached" });
+  await expect(page).toHaveURL(homeURL);
+  await expect(card).toBeFocused();
+  expect(await page.evaluate(() => window.scrollY)).toBe(initialScrollY);
+});
+
 test("Cabinet overlay honors reduced motion for the shared-photo path", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
   await page.emulateMedia({ reducedMotion: "reduce" });
