@@ -67,7 +67,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`/`prism`/`ledger`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
+| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`/`prism`/`ledger`/`cabinet`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -79,21 +79,19 @@ called on every object/site mutation.
 ## Render pipeline
 
 Server-side React only (`renderToStaticMarkup`), no client hydration, no
-bundler for client JS — the `cards` theme's interactivity
-(`cardsScript` in `themes/cards.tsx`) is a plain template-literal string of
-ES5-ish JS injected as an inline `<script>`.
+bundler for client JS — interactive themes use plain template-literal scripts
+injected as inline `<script>` elements (`cardsScript` in `themes/cards.tsx`,
+and the standalone `cabinetScript` in `themes/cabinet-script.ts`).
 
 `render.ts` orchestrates: `renderCard`/`renderDetail` switch on
 `ContentType` to the matching template in `render/templates/*.tsx`, every
-page is wrapped via `wrap()` in `Layout.tsx`. Templates branch between the
-classic-style markup and the interactive cards pipeline: `cards`, `prism`, and
-`ledger` usually render `CardsFeedItem`/`CardsDetailHeader` from
-`themes/cards.tsx`, while classic and washi fall through to the simpler markup. Link posts and
-covered article cards are the main exceptions: links use their own slim card
-with a direct external open action, and covered articles render the image above
-the headline/excerpt instead of overlaying text on the image. Adding a field to a
-content type means updating both branches if the cards-derived themes need to
-display it. Washi is deliberately lighter: `renderList()` wraps list pages in
+page is wrapped via `wrap()` in `Layout.tsx`. Templates have three rendering
+paths: classic-style markup (also used by Washi), the cards pipeline shared by
+`cards`/`prism`/`ledger`, and Cabinet's explicit per-type feed/detail markup.
+The cards-derived themes usually render `CardsFeedItem`/`CardsDetailHeader`
+from `themes/cards.tsx`; link posts and covered article cards are the main
+exceptions. Adding a field to a content type means updating every path that
+should expose it. Washi is deliberately lighter: `renderList()` wraps list pages in
 `.washi-feed` so it can render a responsive paper-card grid, while detail pages
 reuse the classic markup. The rest of Washi lives in a gated `<style>` block in
 `Layout.tsx`: shared color tokens, self-hosted display type
@@ -107,6 +105,17 @@ high-contrast surfaces, and saturated blue/pink accents. Ledger is also
 cards-derived, but presents the feed as a single-column professional index with
 separators and compact type labels; its branch in `cardsScript` uses an
 iOS-style right-to-left push detail panel instead of the expanding-card motion.
+
+Cabinet is a standalone interactive pipeline rather than a Cards skin.
+`themes/cabinet.tsx` owns its chronological rail, numbered navigation,
+type-specific artifact and detail components, typography, and responsive
+styles; every content template has an explicit `theme === "cabinet"` branch.
+`themes/cabinet-script.ts` progressively enhances the ordinary same-origin
+detail links into fetched in-place panels with shared-media/clip-path motion,
+history handling, scroll locking, focus trapping/restoration, an inert
+underlying page, and reading progress. Direct navigation and failed enhancement
+still use the server-rendered detail URL; reduced-motion users receive a short
+opacity transition instead of spatial motion.
 
 `Layout.tsx` also owns the refinement baseline shared by every theme: the
 system reading type scale, visible site title/tagline identity, 44pt-equivalent

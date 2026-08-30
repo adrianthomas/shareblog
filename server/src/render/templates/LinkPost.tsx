@@ -6,6 +6,7 @@ import { t } from "../i18n.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 import { CloseButton } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetLinkFeedItem } from "../themes/cabinet.js";
 
 function externalUrl(object: ContentObject): string {
   return object.sourceUrl ?? `/links/${object.slug}`;
@@ -56,6 +57,51 @@ export function LinkPost({
   const metadata = object.metadata as LinkMetadata;
   const bodyHtml = formatBasicText(object.body ?? "");
   const host = linkHost(object);
+
+  if (theme === "cabinet") {
+    const title = object.title || host || object.sourceUrl || t(locale, "links");
+    if (linked) {
+      return (
+        <CabinetLinkFeedItem
+          href={`/links/${object.slug}`}
+          externalHref={externalUrl(object)}
+          title={title}
+          host={host}
+          eyebrow={t(locale, "links")}
+          excerpt={metadata.excerpt}
+          commentHtml={bodyHtml}
+          dateLabel={formatDate(object.publishedAt, locale)}
+          detailLabel={`${t(locale, "readMore")}: ${title}`}
+          actionLabel={t(locale, "readMore")}
+        />
+      );
+    }
+    return (
+      <>
+        <CabinetDetailHeader
+          type={object.type}
+          eyebrow={t(locale, "links")}
+          title={<ExternalTitle object={object} />}
+          subtitle={host}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
+          action={<OpenLinkButton object={object} locale={locale} />}
+          backHref={backHref!}
+          backLabel={backLabel!}
+        />
+        {bodyHtml || metadata.excerpt ? (
+          <div className="cabinet-detail-body cabinet-link-detail-body">
+            {metadata.excerpt ? <p className="cabinet-link-detail-excerpt">{metadata.excerpt}</p> : null}
+            {bodyHtml ? <div className="body-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} /> : null}
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     return (

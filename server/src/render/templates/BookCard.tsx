@@ -4,6 +4,7 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader, CardsBookDetailHeader } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
@@ -88,6 +89,56 @@ export function BookCard({
 }) {
   const metadata = object.metadata as BookMetadata;
   const stars = metadata.rating ? "★".repeat(metadata.rating) + "☆".repeat(5 - metadata.rating) : null;
+
+  if (theme === "cabinet") {
+    const image = metadata.coverUrl
+      ? { url: metadata.coverUrl, alt: "" }
+      : undefined;
+    const ratingLabel = metadata.rating ? t(locale, "ratingLabel", { rating: metadata.rating }) : undefined;
+    const hasDetailBody = Boolean(object.body || (metadata.links && flattenLinks(metadata.links).length));
+    if (variant === "card") {
+      return (
+        <CabinetFeedItem
+          href={`/books/${object.slug}`}
+          eyebrow={t(locale, "books")}
+          title={object.title}
+          subtitle={metadata.author}
+          dateLabel={formatDate(object.publishedAt, locale)}
+          rating={stars}
+          ratingLabel={ratingLabel}
+          type={object.type}
+          image={image}
+        />
+      );
+    }
+    return (
+      <>
+        <CabinetDetailHeader
+          type={object.type}
+          eyebrow={t(locale, "books")}
+          title={object.title}
+          subtitle={metadata.author}
+          rating={stars}
+          ratingLabel={ratingLabel}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
+          image={image}
+          backHref={backHref!}
+          backLabel={backLabel!}
+        />
+        {hasDetailBody ? (
+          <div className="cabinet-detail-body cabinet-detail-body--book">
+            <Note body={object.body} />
+            <BookLinks links={metadata.links} />
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = { imageUrl: metadata.coverUrl, imageAlt: object.title ? `Cover of ${object.title}` : "", gradientSeed: object.slug };

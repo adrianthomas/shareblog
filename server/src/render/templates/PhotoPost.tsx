@@ -4,6 +4,7 @@ import type { Theme, AssetExif } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader, type CardsExifRow } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
 // Fractional shutter speeds are the camera-standard notation for anything
@@ -67,6 +68,40 @@ export function PhotoPost({
 }) {
   const metadata = object.metadata as PhotoMetadata;
   const imageAlt = metadata.altText ?? "";
+
+  if (theme === "cabinet") {
+    const title = metadata.caption || formatDate(object.publishedAt, locale);
+    const image = { url: imageUrl, alt: imageAlt };
+    if (linked) {
+      return (
+        <CabinetFeedItem
+          href={`/photos/${object.slug}`}
+          eyebrow={t(locale, "photos")}
+          title={title}
+          dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
+          image={image}
+        />
+      );
+    }
+    return (
+      <CabinetDetailHeader
+        type={object.type}
+        eyebrow={t(locale, "photos")}
+        title={title}
+        dateLabel={
+          <>
+            {formatDate(object.publishedAt, locale)}
+            <CopyLinkButton locale={locale} />
+          </>
+        }
+        image={image}
+        exif={formatExif(exif, locale)}
+        backHref={backHref!}
+        backLabel={backLabel!}
+      />
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const title = metadata.caption || formatDate(object.publishedAt, locale);

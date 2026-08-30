@@ -61,7 +61,12 @@ async function uploadAsset(baseURL: string, token: string): Promise<{ id: string
 // guards against only shows up once there's an actual scroll position to
 // lose. Content/order doesn't matter otherwise.
 const POSTS = [
-  { type: "thought", status: "published", body: "First test post.", metadata: {} },
+  {
+    type: "thought",
+    status: "published",
+    body: "First test post with [a reference](https://example.com/reference).",
+    metadata: {},
+  },
   { type: "quote", status: "published", body: "A quote worth testing.", metadata: { author: "Test Author" } },
   { type: "thought", status: "published", body: "Second test post, a bit longer to take up more vertical space in the feed.", metadata: {} },
   { type: "quote", status: "published", body: "Another quote.", metadata: { author: "Someone Else" } },
@@ -81,6 +86,14 @@ test.beforeAll(async ({ baseURL }) => {
   for (const post of POSTS) {
     await api(apiBaseURL, ownerToken, "/api/v1/objects", post);
   }
+  await api(apiBaseURL, ownerToken, "/api/v1/objects", {
+    type: "link",
+    title: "A link worth keeping",
+    sourceUrl: "https://example.com/cabinet-test",
+    status: "published",
+    body: "A short note about why this belongs in the cabinet.",
+    metadata: { excerpt: "The source and the owner's note remain distinct destinations." },
+  });
   await api(apiBaseURL, ownerToken, "/api/v1/objects", {
     type: "book",
     title: "Test Book",
@@ -123,6 +136,18 @@ async function expectCloseRestoresScroll(page: Page, cardIndexToOpen: number) {
   await page.goto(siteBaseURL + "/");
   await page.waitForSelector("[data-cards-card]");
 
+  // The card being opened has to stay fully inside the viewport at the
+  // scrolled position below — Playwright's .click() silently scrolls its
+  // target into view first if it isn't, which would move the page itself
+  // and invalidate this test's own "did the scroll position survive"
+  // assertions. cardIndexToOpen === 0 (the newest post, right at the top
+  // of the feed) is the tightest case: it goes out of view at a much
+  // smaller scroll offset than a card further down the page, so the cap
+  // here is based on its own resting position, not a fixed guess.
+  const targetCard = page.locator("[data-cards-card]").nth(cardIndexToOpen);
+  const targetRectAtRest = await targetCard.boundingBox();
+  expect(targetRectAtRest).not.toBeNull();
+
   // Deliberately fractional: real on-device momentum/rubber-band scrolling
   // regularly leaves the browser at a sub-pixel position (this is what
   // originally made the bug possible — see the comment on lockedScrollY's
@@ -130,7 +155,8 @@ async function expectCloseRestoresScroll(page: Page, cardIndexToOpen: number) {
   // simulated touch input, but it does honor an explicit fractional
   // scrollTo, so setting one directly exercises the same rounding path
   // deterministically instead of depending on unreliable scroll physics.
-  await page.evaluate(() => window.scrollTo(0, 300.6));
+  const scrollTarget = Math.max(0, Math.min(targetRectAtRest!.y - 40, 300)) + 0.6;
+  await page.evaluate((y) => window.scrollTo(0, y), scrollTarget);
   const initialScrollY = await page.evaluate(() => window.scrollY);
   // A card that's never the one being opened/closed, so its own box is a
   // clean read of "did the page around the overlay move" independent of
@@ -287,4 +313,147 @@ test("Prism music feed cards keep the music detail animation path", async ({ pag
 test("Prism book feed cards keep the book detail animation path", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "prism" }, "PATCH");
   await expectBookCardKeepsDetailAnimation(page);
+});
+
+test("Cabinet overlay preserves navigation, accessibility, focus, and scroll state", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.goto(siteBaseURL + "/");
+
+  const authoredLink = page.locator('.cabinet-thought-body a[href="https://example.com/reference"]').first();
+  await expect(authoredLink).toBeVisible();
+  expect(await authoredLink.evaluate((element) => Boolean(element.closest("a[data-cabinet-card]")))).toBe(false);
+  await expect(
+    page.locator(".cabinet-artifact:has(.cabinet-thought-body a) > .cabinet-thought-permalink"),
+  ).toBeAttached();
+
+  const card = page.locator('a[data-cabinet-card][data-cabinet-type="thought"]').first();
+  await expect(card).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+
+  // Cabinet intentionally rounds its fixed-body lock position because mobile
+  // WebKit can otherwise expose a sub-pixel seam. Start from that same stable
+  // integer contract, then verify both the numerical scroll position and an
+  // unaffected artifact's visual position after the overlay is gone.
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, Math.round(window.scrollY));
+  });
+  const initialScrollY = await page.evaluate(() => window.scrollY);
+  const referenceArtifact = page.locator(".cabinet-artifact").last();
+  const initialReferenceRect = await referenceArtifact.boundingBox();
+  expect(initialReferenceRect).not.toBeNull();
+
+  const homeURL = page.url();
+  const homeTitle = await page.title();
+  const href = await card.getAttribute("href");
+  expect(href).not.toBeNull();
+  const detailURL = new URL(href!, siteBaseURL).toString();
+
+  await card.focus();
+  await expect(card).toBeFocused();
+  await card.click();
+
+  const dialog = page.locator('.cabinet-panel[role="dialog"]');
+  await expect(dialog).toBeAttached();
+  await expect(dialog).toHaveAttribute("aria-modal", "true");
+  await expect(page).toHaveURL(detailURL);
+  await expect(page).toHaveTitle(/Fourth test post/);
+  expect(await page.title()).not.toBe(homeTitle);
+
+  const underlyingHeader = page.locator("body > header.site-header");
+  const underlyingMain = page.locator("body > main#main-content");
+  for (const region of [underlyingHeader, underlyingMain]) {
+    await expect(region).toHaveAttribute("inert", "");
+    await expect(region).toHaveAttribute("aria-hidden", "true");
+  }
+
+  const labelledBy = await dialog.getAttribute("aria-labelledby");
+  expect(labelledBy).toBeTruthy();
+  await expect
+    .poll(() => page.evaluate((id) => document.activeElement?.id === id, labelledBy!))
+    .toBe(true);
+
+  await page.keyboard.press("Escape");
+  await dialog.waitFor({ state: "detached" });
+
+  await expect(page).toHaveURL(homeURL);
+  await expect(page).toHaveTitle(homeTitle);
+  for (const region of [underlyingHeader, underlyingMain]) {
+    await expect(region).not.toHaveAttribute("inert", "");
+    await expect(region).not.toHaveAttribute("aria-hidden", "true");
+  }
+  await expect(card).toBeFocused();
+
+  const finalScrollY = await page.evaluate(() => window.scrollY);
+  const finalReferenceRect = await referenceArtifact.boundingBox();
+  expect(finalScrollY).toBe(initialScrollY);
+  expect(finalReferenceRect).not.toBeNull();
+  expect(finalReferenceRect!.y).toBeCloseTo(initialReferenceRect!.y, 1);
+});
+
+test("Cabinet overlay honors reduced motion for the shared-photo path", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  // Record the Web Animations durations chosen by the runtime. This proves
+  // the preference was observed without turning wall-clock timing into a
+  // flaky assertion; the real animate() implementation still runs normally.
+  await page.addInitScript(() => {
+    const durations: number[] = [];
+    (window as Window & { __cabinetAnimationDurations?: number[] }).__cabinetAnimationDurations = durations;
+    const originalAnimate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      if (typeof options === "number") durations.push(options);
+      else if (typeof options?.duration === "number") durations.push(options.duration);
+      return originalAnimate.call(this, keyframes, options);
+    };
+  });
+
+  await page.goto(siteBaseURL + "/");
+  const photoCard = page.locator('a[data-cabinet-card][data-cabinet-type="photo"]').first();
+  await expect(photoCard).toBeVisible();
+  await photoCard.click();
+
+  const dialog = page.locator('.cabinet-panel[role="dialog"]');
+  await expect(dialog).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __cabinetAnimationDurations?: number[] }).__cabinetAnimationDurations ?? [],
+      ),
+    )
+    .toContain(120);
+  const openDurations = await page.evaluate(
+    () => (window as Window & { __cabinetAnimationDurations?: number[] }).__cabinetAnimationDurations ?? [],
+  );
+  expect(openDurations).not.toContain(580);
+
+  await page.locator(".cabinet-close").click();
+  await dialog.waitFor({ state: "detached" });
+  await expect(photoCard).toBeFocused();
+});
+
+test("Cabinet link artifacts keep the source and saved note as distinct routes", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.goto(siteBaseURL + "/");
+
+  const artifact = page.locator(".cabinet-item--link").first();
+  const outbound = artifact.locator(".cabinet-outbound");
+  const permalink = artifact.locator(".cabinet-link-permalink");
+
+  await expect(outbound).toHaveAttribute("href", "https://example.com/cabinet-test");
+  await expect(outbound).toHaveAttribute("target", "_blank");
+  await expect(outbound).not.toHaveAttribute("data-cabinet-card", "");
+  await expect(permalink).toHaveAttribute("href", /\/links\//);
+  await expect(permalink).toContainText("Read more");
+
+  await permalink.click();
+  const dialog = page.locator('.cabinet-panel[role="dialog"]');
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(/\/links\//);
+  await expect(dialog.locator("h1")).toContainText("A link worth keeping");
+
+  await dialog.locator(".cabinet-close").click();
+  await dialog.waitFor({ state: "detached" });
+  await expect(permalink).toBeFocused();
 });

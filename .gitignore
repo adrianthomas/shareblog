@@ -11,6 +11,9 @@ dist/
 .env.local
 deploy.env
 
+# Internal-only notes, not for the public repo
+BRANDING.md
+
 # Xcode
 ios/**/xcuserdata/
 ios/**/*.xcuserstate

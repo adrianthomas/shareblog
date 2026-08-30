@@ -4,6 +4,7 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CloseButton } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { formatRichText, stripBasicFormatting } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
@@ -29,6 +30,25 @@ export function ArticleCard({
   const metadata = object.metadata as ArticleMetadata;
   const excerpt = articleExcerpt(object, metadata);
   const coverAltText = metadata.coverAltText ?? "";
+
+  if (theme === "cabinet") {
+    return (
+      <CabinetFeedItem
+        href={`/articles/${object.slug}`}
+        eyebrow={t(locale, "articles")}
+        title={object.title}
+        subtitle={excerpt}
+        dateLabel={formatDate(object.publishedAt, locale)}
+        actionLabel={
+          <>
+            {t(locale, "readMore")} <span aria-hidden="true">→</span>
+          </>
+        }
+        type={object.type}
+        image={coverImageUrl ? { url: coverImageUrl, alt: coverAltText } : undefined}
+      />
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     if (coverImageUrl) {
@@ -103,6 +123,32 @@ export function ArticlePage({
   const bodyHtml = formatRichText(object.body ?? "");
   const metadataExcerpt = metadata.excerpt?.trim();
   const coverAltText = metadata.coverAltText ?? "";
+
+  if (theme === "cabinet") {
+    return (
+      <>
+        <CabinetDetailHeader
+          type={object.type}
+          eyebrow={t(locale, "articles")}
+          title={object.title}
+          subtitle={metadataExcerpt}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
+          image={coverImageUrl ? { url: coverImageUrl, alt: coverAltText } : undefined}
+          backHref={backHref!}
+          backLabel={backLabel!}
+        />
+        <div
+          className="cabinet-detail-body cabinet-article-body body-content"
+          dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        />
+      </>
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     if (!coverImageUrl) {

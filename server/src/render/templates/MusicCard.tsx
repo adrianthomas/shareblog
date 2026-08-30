@@ -4,6 +4,7 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader, CardsMusicDetailHeader } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
@@ -50,6 +51,56 @@ export function MusicCard({
     (entry): entry is [string, string] => Boolean(entry[1]),
   );
   const visibleLinks = variant === "card" ? links.slice(0, 1) : links;
+
+  if (theme === "cabinet") {
+    const image = metadata.artworkUrl
+      ? { url: metadata.artworkUrl, alt: "" }
+      : undefined;
+    if (variant === "card") {
+      return (
+        <CabinetFeedItem
+          href={`/music/${object.slug}`}
+          eyebrow={t(locale, "music")}
+          title={metadata.releaseTitle}
+          subtitle={metadata.artist}
+          dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
+          image={image}
+        />
+      );
+    }
+    return (
+      <>
+        <CabinetDetailHeader
+          type={object.type}
+          eyebrow={t(locale, "music")}
+          title={metadata.releaseTitle}
+          subtitle={metadata.artist}
+          dateLabel={
+            <>
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
+          image={image}
+          backHref={backHref!}
+          backLabel={backLabel!}
+        />
+        {object.body || links.length > 0 ? (
+          <div className="cabinet-detail-body cabinet-detail-body--music">
+            <Note body={object.body} />
+            {links.length > 0 ? (
+              <p className="music-links">
+                {links.map(([platform, url]) => (
+                  <MusicLink key={platform} platform={platform} url={url} locale={locale} />
+                ))}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = {

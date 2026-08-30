@@ -4,6 +4,7 @@ import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { CopyLinkButton, CopyQuoteButton } from "./CopyButton.js";
 import { formatBasicText } from "../format.js";
 
@@ -37,6 +38,45 @@ export function QuotePost({
   // attribution, not the poster's own comment underneath it, since that's
   // a personal reflection rather than part of the quote being shared.
   const quoteCopyText = `“${object.body ?? ""}” — ${metadata.author}`;
+
+  if (theme === "cabinet") {
+    if (linked) {
+      return (
+        <CabinetFeedItem
+          href={`/quotes/${object.slug}`}
+          eyebrow={t(locale, "quotes")}
+          title={quoted}
+          subtitle={metadata.author}
+          dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
+        />
+      );
+    }
+    return (
+      <>
+        <CabinetDetailHeader
+          type={object.type}
+          eyebrow={t(locale, "quotes")}
+          title={quoted}
+          subtitle={metadata.author}
+          dateLabel={
+            <>
+              <CopyQuoteButton text={quoteCopyText} locale={locale} className="copy-btn--leading" />
+              {formatDate(object.publishedAt, locale)}
+              <CopyLinkButton locale={locale} />
+            </>
+          }
+          backHref={backHref!}
+          backLabel={backLabel!}
+        />
+        {metadata.comment ? (
+          <div className="cabinet-detail-body cabinet-quote-comment">
+            <Comment text={metadata.comment} />
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = { gradientSeed: object.slug, imageAlt: "" };

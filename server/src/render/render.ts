@@ -172,21 +172,24 @@ export async function renderList(
 ): Promise<string> {
   const cards = await Promise.all(objects.map((object) => renderCard(object, site.locale, site.theme)));
   const wrapOpts = { currentPath, availablePaths };
+  const pageTitle = currentPath === "/" ? undefined : title;
   if (cards.length === 0) {
     return wrap(
       site,
-      title,
+      pageTitle,
       React.createElement("p", { className: "meta" }, t(site.locale, "nothingHereYet")),
       wrapOpts,
     );
   }
   const list =
-    site.theme === "cards" || site.theme === "prism" || site.theme === "ledger"
-      ? React.createElement("div", { className: "cards-feed" }, ...cards)
-      : site.theme === "washi"
-        ? React.createElement("div", { className: "washi-feed" }, ...cards)
-        : React.createElement(React.Fragment, null, ...cards);
-  return wrap(site, title, list, wrapOpts);
+    site.theme === "cabinet"
+      ? React.createElement("div", { className: "cabinet-feed" }, ...cards)
+      : site.theme === "cards" || site.theme === "prism" || site.theme === "ledger"
+        ? React.createElement("div", { className: "cards-feed" }, ...cards)
+        : site.theme === "washi"
+          ? React.createElement("div", { className: "washi-feed" }, ...cards)
+          : React.createElement(React.Fragment, null, ...cards);
+  return wrap(site, pageTitle, list, wrapOpts);
 }
 
 export async function renderObjectPage(
@@ -196,9 +199,11 @@ export async function renderObjectPage(
   availablePaths?: string[],
 ): Promise<string> {
   const detail = await renderDetail(object, site.locale, site.theme);
-  return wrap(site, object.title ?? undefined, detail, {
+  const detailTitle = object.title ?? (feedContentSummary(object) || undefined);
+  return wrap(site, detailTitle, detail, {
     currentPath: currentPath ?? `/${PATH_PREFIX[object.type]}/${object.slug}`,
-    cardsDetail: site.theme === "cards" || site.theme === "prism" || site.theme === "ledger",
+    cardsDetail:
+      site.theme === "cards" || site.theme === "prism" || site.theme === "ledger" || site.theme === "cabinet",
     availablePaths,
   });
 }

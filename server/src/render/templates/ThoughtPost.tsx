@@ -3,6 +3,7 @@ import type { ContentObject } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { t } from "../i18n.js";
 import { CardsFeedItem, CardsDetailHeader } from "../themes/cards.js";
+import { CabinetDetailHeader, CabinetThoughtFeedItem } from "../themes/cabinet.js";
 import { formatRichText, stripBasicFormatting } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
 
@@ -21,6 +22,40 @@ export function ThoughtPost({
   backHref?: string;
   backLabel?: string;
 }) {
+  if (theme === "cabinet") {
+    const title = stripBasicFormatting(object.body ?? "");
+    const richHtml = formatRichText(object.body ?? "");
+    if (linked) {
+      return (
+        <CabinetThoughtFeedItem
+          href={`/posts/${object.slug}`}
+          eyebrow={t(locale, "posts")}
+          title={title}
+          richHtml={richHtml}
+          dateLabel={formatDate(object.publishedAt, locale)}
+          type={object.type}
+          detailLabel={`${t(locale, "readMore")}: ${title}`}
+        />
+      );
+    }
+    return (
+      <CabinetDetailHeader
+        type={object.type}
+        eyebrow={t(locale, "posts")}
+        title={title}
+        richHtml={richHtml}
+        dateLabel={
+          <>
+            {formatDate(object.publishedAt, locale)}
+            <CopyLinkButton locale={locale} />
+          </>
+        }
+        backHref={backHref!}
+        backLabel={backLabel!}
+      />
+    );
+  }
+
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = { gradientSeed: object.slug, imageAlt: "" };
     // The cards feed/detail treatment uses the body itself as the heading

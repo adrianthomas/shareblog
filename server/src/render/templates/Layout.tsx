@@ -2,6 +2,8 @@ import React from "react";
 import type { Site } from "./types.js";
 import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsCategoryFilter } from "../themes/cards.js";
+import { cabinetStyles, CabinetNavigation } from "../themes/cabinet.js";
+import { cabinetScript } from "../themes/cabinet-script.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 
 const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }> = {
@@ -10,6 +12,7 @@ const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }
   washi: { light: "#f6efe1", dark: "#1c1a15" },
   prism: { light: "#f7f8ff", dark: "#101321" },
   ledger: { light: "#f8fafc", dark: "#0f1115" },
+  cabinet: { light: "#f3f1ea", dark: "#11120f" },
 };
 
 // Promotes the Amazon storefront closest to the visitor's browser-reported
@@ -102,9 +105,9 @@ export function Layout({
   site: Site;
   title?: string;
   children: React.ReactNode;
-  /** The request path, used only to highlight the active tab in the cards theme's bottom bar. */
+  /** The request path, used to highlight the active item in theme navigation. */
   currentPath?: string;
-  /** True on a single-post detail page in the cards theme — hides the normal header/tab bar for an immersive, edge-to-edge layout. */
+  /** True on a single-post detail page in an interactive theme — hides normal site chrome for the immersive detail surface. */
   cardsDetail?: boolean;
   /** Nav paths (e.g. "/posts") that have at least one published post. When omitted, all category links are shown. */
   availablePaths?: string[];
@@ -113,7 +116,9 @@ export function Layout({
   const theme = site.theme;
   const chromeColors = THEME_CHROME_COLORS[theme];
   const usesCardsInteraction = theme === "cards" || theme === "prism" || theme === "ledger";
-  const usesCompactCategoryFilter = !usesCardsInteraction;
+  const usesCabinetInteraction = theme === "cabinet";
+  const usesInteractiveDetail = usesCardsInteraction || usesCabinetInteraction;
+  const usesCompactCategoryFilter = !usesInteractiveDetail;
   const hasAbout = Boolean(site.about && site.about.trim());
   // Not siteOrigin() from render.ts — that file imports Layout, so
   // importing back would be circular. Same computation, just the host
@@ -492,6 +497,7 @@ export function Layout({
           }}
         />
         {usesCardsInteraction ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
+        {usesCabinetInteraction ? <style dangerouslySetInnerHTML={{ __html: cabinetStyles }} /> : null}
         {theme === "washi" ? (
           // Washi keeps the classic templates but gives list pages their own
           // feed wrapper in render.ts, so it can be more composed than classic
@@ -1797,10 +1803,13 @@ export function Layout({
                 ? "theme-cards theme-prism"
                 : theme === "ledger"
                   ? "theme-cards theme-ledger"
+                  : theme === "cabinet"
+                    ? "theme-cabinet"
                   : undefined
         }
         data-theme={theme}
         data-cards-detail={usesCardsInteraction && cardsDetail ? "true" : undefined}
+        data-cabinet-detail={usesCabinetInteraction && cardsDetail ? "true" : undefined}
       >
         <a className="skip-link" href="#main-content">
           {t(site.locale, "skipToContent")}
@@ -1813,7 +1822,9 @@ export function Layout({
               </h1>
               {site.tagline ? <p className="site-tagline">{site.tagline}</p> : null}
             </div>
-            {usesCardsInteraction && !cardsDetail ? (
+            {usesCabinetInteraction && !cardsDetail ? (
+              <CabinetNavigation locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
+            ) : usesCardsInteraction && !cardsDetail ? (
               <CardsCategoryFilter locale={site.locale} currentPath={currentPath} availablePaths={availablePaths} />
             ) : usesCompactCategoryFilter ? (
               <CategoryFilter site={site} currentPath={currentPath} availablePaths={availablePaths} />
@@ -1837,7 +1848,7 @@ export function Layout({
                 </>
               ) : null}
             </p>
-            {usesCardsInteraction && !cardsDetail ? null : usesCompactCategoryFilter ? null : (
+            {usesInteractiveDetail && !cardsDetail ? null : usesCompactCategoryFilter ? null : (
               <nav aria-label={t(site.locale, "primaryNavigation")}>
                 {navItems(site, availablePaths).map((item) => (
                   <a key={item.href} href={item.href}>
@@ -1848,13 +1859,19 @@ export function Layout({
             )}
           </div>
         </header>
+        {usesCabinetInteraction ? (
+          <div className="cabinet-reading-progress" aria-hidden="true">
+            <span />
+          </div>
+        ) : null}
         <main id="main-content">{children}</main>
-        {hasAbout && !(usesCardsInteraction && cardsDetail) ? (
+        {hasAbout && !(usesInteractiveDetail && cardsDetail) ? (
           <footer className="site-footer">
             <a href="/about">{t(site.locale, "about")}</a>
           </footer>
         ) : null}
         {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}
+        {usesCabinetInteraction ? <script dangerouslySetInnerHTML={{ __html: cabinetScript }} /> : null}
         <script dangerouslySetInnerHTML={{ __html: amazonRegionScript }} />
         <script dangerouslySetInnerHTML={{ __html: copyButtonScript }} />
       </body>

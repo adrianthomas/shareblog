@@ -33,6 +33,11 @@ const themeOptions = [
     name: "Ledger",
     description: "A polished index-style theme with clean rows, type labels, and iOS-style push detail views.",
   },
+  {
+    id: "cabinet",
+    name: "Cabinet",
+    description: "An editorial cabinet of photos, notes, books, music, and essays, wired together as one living personal index.",
+  },
 ] satisfies ThemeOption[];
 
 const missingThemeMetadata = themeValues.filter((theme) => !themeOptions.some((option) => option.id === theme));

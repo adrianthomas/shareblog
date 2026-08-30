@@ -34,7 +34,7 @@ export const users = sqliteTable("users", {
   createdAt: createdAt(),
 });
 
-export const themeValues = ["classic", "cards", "washi", "prism", "ledger"] as const;
+export const themeValues = ["classic", "cards", "washi", "prism", "ledger", "cabinet"] as const;
 export type Theme = (typeof themeValues)[number];
 
 export const sites = sqliteTable("sites", {
