@@ -62,8 +62,7 @@ export const sites = sqliteTable("sites", {
   // Fediverse followers. The actor/WebFinger/inbox stay live either way
   // (so existing follows never silently break) — this only gates outbound
   // delivery, in src/activitypub/federation.ts's deliverCreateActivity.
-  // Defaults on: no separate cross-posting step is the whole point (see
-  // product-spec.md §7).
+  // Defaults on: no separate cross-posting step is the whole point.
   federationEnabled: integer("federation_enabled", { mode: "boolean" }).notNull().default(true),
   createdAt: createdAt(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })

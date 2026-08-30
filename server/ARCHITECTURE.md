@@ -1,10 +1,8 @@
 # Server architecture map
 
-A fast-orientation reference for `server/`. CLAUDE.md has the condensed
-version of some of this; this file goes one level deeper — route tables,
-schema tables, and the checklist for cross-cutting changes (like adding a
-content type) that touch many files at once. Keep it in sync — see the root
-CLAUDE.md's "Working in this repo" note.
+A fast-orientation reference for `server/`: route tables, schema tables, and
+the checklist for cross-cutting changes (like adding a content type) that touch
+many files at once. Keep it in sync with the implementation.
 
 ## Request lifecycle
 
@@ -37,7 +35,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
 | File | Routes | Notes |
 |---|---|---|
-| `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see `ownerClaims` table, `ios/ARCHITECTURE.md`'s Auth/bootstrapping section). Logout revokes *every* token for the account. |
+| `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see the `ownerClaims` table below). Logout revokes *every* token for the account. |
 | `routes/sites.ts` | site CRUD (create, update theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). |
 | `routes/themes.ts` | `GET /themes` (no auth) | Server-owned catalog of selectable site themes (`id`/`name`/`description`) used by iOS Settings. Keep this additive so newer servers can expose themes without requiring an iOS app update. |
 | `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images), cache invalidation, and triggers `deliverCreateActivity` on publish. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
@@ -150,7 +148,7 @@ caption.
 
 i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
 `site.locale` threads through every render call. Add a string here, not as
-a hardcoded literal in a template (see CLAUDE.md's accessibility/i18n bar).
+a hardcoded literal in a template.
 
 ## Federation (`activitypub/`)
 
@@ -187,8 +185,8 @@ placeholder, not implemented. Selected via `STORAGE_DRIVER` env var.
    the new type from unfiltered list/detail responses. Older iOS apps decode
    content types as a closed enum, so returning an unknown `type` breaks the
    entire feed.
-8. iOS — see `ios/ARCHITECTURE.md`'s matching checklist; a new type needs
-   changes on both sides together.
+8. Coordinate the matching client changes; a new type needs changes on both
+   sides together.
 
 ## Testing
 

@@ -29,7 +29,7 @@ import { getOrCreateKeyPairs } from "./keys.js";
 //
 // kv/queue are in-memory: there's no background job/queue infrastructure
 // anywhere else in this codebase, and the project is deliberately scoped
-// small (one site, a handful of actors — see product-spec.md §9). Known
+// small (one site and a handful of actors). Known
 // tradeoff: an in-flight retry is lost on process restart (every deploy
 // restarts the service). Acceptable at this scale; worth revisiting with
 // a persistent MessageQueue/KvStore if delivery reliability becomes a
