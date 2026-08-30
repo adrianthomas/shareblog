@@ -428,6 +428,7 @@ test("Cabinet detail panels can be pulled down to close", async ({ page }) => {
   await dialog.waitFor({ state: "detached" });
   await expect(page).toHaveURL(homeURL);
   await expect(card).toBeFocused();
+  await expect.poll(() => card.locator(".cabinet-artifact").evaluate((element) => getComputedStyle(element).outlineStyle)).toBe("none");
   expect(await page.evaluate(() => window.scrollY)).toBe(initialScrollY);
 });
 

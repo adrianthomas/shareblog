@@ -529,6 +529,7 @@ export const cabinetStyles = `
   .cabinet-item--link:has(.cabinet-link-permalink:focus-visible) .cabinet-artifact {
     outline: 3px solid var(--focus); outline-offset: 4px;
   }
+  a.cabinet-item--suppress-focus-ring:focus-visible .cabinet-artifact { outline: none; }
   @media (hover: hover) {
     a.cabinet-item:hover .cabinet-artifact,
     .cabinet-item--link:hover .cabinet-artifact {
@@ -837,6 +838,7 @@ export const cabinetStyles = `
   .cabinet-panel {
     position: fixed; inset: 0; z-index: 1001; width: 100vw; height: 100vh; height: 100dvh;
     overflow: hidden; background: var(--bg); will-change: clip-path, opacity, transform; contain: paint;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
   }
   .cabinet-panel-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .cabinet-panel-scroll:focus, .cabinet-panel-scroll h1:focus-visible { outline: none; }

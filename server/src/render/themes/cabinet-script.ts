@@ -572,7 +572,25 @@ export const cabinetScript = `
   function wireDismissGesture(owner) {
     var scroller = owner.scroller, panel = owner.panel, backdrop = owner.backdrop;
     var startX = 0, startY = 0, startTime = 0, dragging = false;
-    var activated = false, delta = 0, pointerId = null;
+    var activated = false, delta = 0, pointerId = null, renderPending = false;
+
+    function renderDrag() {
+      renderPending = false;
+      if (!activated || current !== owner || owner.closing) return;
+      // A single composited vertical translation is markedly steadier in
+      // WebKit than rescaling and re-clipping the full rendered document on
+      // every pointer event. Coalescing updates to animation frames also
+      // avoids painting multiple intermediate positions in one display tick.
+      panel.style.transform = 'translate3d(0, ' + delta + 'px, 0)';
+      panel.style.borderRadius = '20px 20px 0 0';
+      backdrop.style.opacity = String(Math.max(0.2, 1 - delta / 480));
+    }
+
+    function scheduleRender() {
+      if (renderPending) return;
+      renderPending = true;
+      animationFrame(renderDrag);
+    }
 
     scroller.addEventListener('pointerdown', function (event) {
       if (current !== owner || owner.closing || scroller.scrollTop > 0 || event.button !== 0 || event.isPrimary === false) return;
@@ -598,12 +616,7 @@ export const cabinetScript = `
       }
       event.preventDefault();
       delta = raw < 220 ? raw : 220 + (raw - 220) * 0.35;
-      var scale = 1 - delta / 2600;
-      var translateX = (1 - scale) * window.innerWidth / 2;
-      var translateY = delta + (1 - scale) * window.innerHeight / 2;
-      panel.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
-      panel.style.borderRadius = Math.min(28, delta / 4) + 'px';
-      backdrop.style.opacity = String(Math.max(0.12, 1 - delta / 360));
+      scheduleRender();
     });
 
     function endDrag(event) {
@@ -614,6 +627,7 @@ export const cabinetScript = `
       }
       pointerId = null;
       if (!activated) return;
+      renderDrag();
       activated = false;
       var elapsed = Math.max(1, Date.now() - startTime);
       var velocity = delta / elapsed;
@@ -702,6 +716,12 @@ export const cabinetScript = `
       restoreUnderlyingPage(owner.inertRecords);
       unlockPageScroll();
       owner.item.classList.remove('cabinet-item--opening');
+      if (dragDismiss) {
+        owner.link.classList.add('cabinet-item--suppress-focus-ring');
+        owner.link.addEventListener('blur', function clearSuppression() {
+          owner.link.classList.remove('cabinet-item--suppress-focus-ring');
+        }, { once: true });
+      }
       safeFocus(owner.link);
     }, closeDuration + 50);
   }
