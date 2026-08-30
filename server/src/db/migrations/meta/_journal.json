@@ -50,6 +50,13 @@
       "when": 1787593170180,
       "tag": "0006_nebulous_mulholland_black",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1788123810175,
+      "tag": "0007_faulty_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, count, gte, lt, sql } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "../db/client.js";
 import { contentObjects } from "../db/schema.js";
 import type { ContentType } from "../db/schema.js";
@@ -12,19 +13,36 @@ import {
   renderAboutPage,
   renderAboutProductPage,
   renderReleaseHistoryPage,
+  renderArchivePage,
+  searchForm,
+  siteOrigin,
+  objectPath,
   PATH_PREFIX,
 } from "../render/render.js";
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
 import { t, type MessageKey } from "../render/i18n.js";
+import { siteForHost } from "../middleware/tenant.js";
 
-async function publishedObjects(siteId: string, type?: ContentType) {
+const PAGE_SIZE = 20;
+
+const pageQuerySchema = z.object({ page: z.coerce.number().int().min(1).max(10_000).default(1) });
+
+async function publishedObjects(siteId: string, type?: ContentType, limit?: number, offset?: number) {
   const conditions = [eq(contentObjects.siteId, siteId), eq(contentObjects.status, "published")];
   if (type) conditions.push(eq(contentObjects.type, type));
-  return db
+  const query = db
     .select()
     .from(contentObjects)
     .where(and(...conditions))
     .orderBy(desc(contentObjects.publishedAt));
+  return limit === undefined ? query : query.limit(limit).offset(offset ?? 0);
+}
+
+async function publishedCount(siteId: string, type?: ContentType): Promise<number> {
+  const conditions = [eq(contentObjects.siteId, siteId), eq(contentObjects.status, "published")];
+  if (type) conditions.push(eq(contentObjects.type, type));
+  const [row] = await db.select({ value: count() }).from(contentObjects).where(and(...conditions));
+  return row?.value ?? 0;
 }
 
 // Nav paths (e.g. "/posts") for categories that have at least one published
@@ -104,17 +122,138 @@ const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
 ];
 
 export async function sitePageRoutes(app: FastifyInstance) {
+  // Once a site claims a canonical custom domain, keep the deployment
+  // subdomain as a working alias but redirect ordinary public page requests
+  // so readers, crawlers, and copied links converge on one origin. ActivityPub
+  // routes are registered outside this plugin and keep handling signatures on
+  // the exact host they were addressed to.
+  app.addHook("preHandler", async (request, reply) => {
+    if (request.method !== "GET" && request.method !== "HEAD") return;
+    const site = await siteForHost(request.headers.host);
+    if (!site?.customDomain) return;
+    const requestHost = request.headers.host?.toLowerCase().replace(/\.$/, "");
+    if (requestHost !== site.customDomain) {
+      return reply.redirect(`${siteOrigin(site)}${request.url}`, 308);
+    }
+  });
+
   app.get("/", async (request, reply) => {
     if (request.headers.host === process.env.BASE_DOMAIN) {
-      return sendHtml(reply, renderLandingPage());
+      const apexSite = await siteForHost(request.headers.host);
+      if (!apexSite) return sendHtml(reply, renderLandingPage());
     }
     await resolveTenant(request, reply);
     if (reply.sent) return;
     const site = request.site!;
+    const { page } = pageQuerySchema.parse(request.query);
     return sendCachedHtml(request, reply, site.id, async () => {
-      const [objects, availablePaths] = await Promise.all([publishedObjects(site.id), publishedNavPaths(site.id)]);
-      return renderList(site, site.title, objects.slice(0, 20), "/", availablePaths);
+      const [objects, total, availablePaths] = await Promise.all([
+        publishedObjects(site.id, undefined, PAGE_SIZE, (page - 1) * PAGE_SIZE),
+        publishedCount(site.id),
+        publishedNavPaths(site.id),
+      ]);
+      return renderList(site, site.title, objects, "/", availablePaths, {
+        page,
+        totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+        metadata: { path: page > 1 ? `/?page=${page}` : "/", description: site.introduction ?? site.tagline ?? undefined, type: "profile" },
+      });
     });
+  });
+
+  app.get("/robots.txt", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return reply
+      .type("text/plain; charset=utf-8")
+      .header("cache-control", `public, max-age=${PAGE_CACHE_TTL_MS / 1000}`)
+      .send(`User-agent: *\nAllow: /\nSitemap: ${siteOrigin(site)}/sitemap.xml\n`);
+  });
+
+  app.get("/sitemap.xml", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    const [objects, paths] = await Promise.all([publishedObjects(site.id), publishedNavPaths(site.id)]);
+    const staticPaths = ["/", "/archive", ...(site.about?.trim() ? ["/about"] : []), ...paths];
+    const urls = [...staticPaths, ...objects.map((object) => `/${objectPath(object)}`)];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls
+      .map((path) => `<url><loc>${siteOrigin(site)}${path}</loc></url>`)
+      .join("")}</urlset>`;
+    return reply
+      .type("application/xml; charset=utf-8")
+      .header("cache-control", `public, max-age=${PAGE_CACHE_TTL_MS / 1000}`)
+      .send(xml);
+  });
+
+  app.get("/archive", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => {
+      const [rows, availablePaths] = await Promise.all([
+        db.select({ publishedAt: contentObjects.publishedAt }).from(contentObjects)
+          .where(and(eq(contentObjects.siteId, site.id), eq(contentObjects.status, "published")))
+          .orderBy(desc(contentObjects.publishedAt)),
+        publishedNavPaths(site.id),
+      ]);
+      const grouped = new Map<number, Map<number, number>>();
+      for (const row of rows) {
+        if (!row.publishedAt) continue;
+        const year = row.publishedAt.getUTCFullYear();
+        const month = row.publishedAt.getUTCMonth() + 1;
+        const months = grouped.get(year) ?? new Map<number, number>();
+        months.set(month, (months.get(month) ?? 0) + 1);
+        grouped.set(year, months);
+      }
+      const groups = [...grouped.entries()].map(([year, months]) => ({
+        year,
+        months: [...months.entries()].map(([month, monthCount]) => ({
+          month,
+          count: monthCount,
+          label: new Intl.DateTimeFormat(site.locale, { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, 1))),
+        })),
+      }));
+      return renderArchivePage(site, groups, availablePaths);
+    });
+  });
+
+  app.get("/archive/:year/:month", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    const params = z.object({ year: z.coerce.number().int().min(1970).max(9999), month: z.coerce.number().int().min(1).max(12) }).parse(request.params);
+    const { page } = pageQuerySchema.parse(request.query);
+    const start = new Date(Date.UTC(params.year, params.month - 1, 1));
+    const end = new Date(Date.UTC(params.year, params.month, 1));
+    const conditions = and(
+      eq(contentObjects.siteId, site.id), eq(contentObjects.status, "published"),
+      gte(contentObjects.publishedAt, start), lt(contentObjects.publishedAt, end),
+    );
+    const [objects, countRows, availablePaths] = await Promise.all([
+      db.select().from(contentObjects).where(conditions).orderBy(desc(contentObjects.publishedAt)).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE),
+      db.select({ value: count() }).from(contentObjects).where(conditions),
+      publishedNavPaths(site.id),
+    ]);
+    if (!objects.length && page === 1) return reply.code(404).send("Not found");
+    const title = new Intl.DateTimeFormat(site.locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(start);
+    const path = `/archive/${params.year}/${String(params.month).padStart(2, "0")}`;
+    return sendCachedHtml(request, reply, site.id, async () => renderList(site, title, objects, path, availablePaths, {
+      page,
+      totalPages: Math.max(1, Math.ceil((countRows[0]?.value ?? 0) / PAGE_SIZE)),
+      metadata: { path: page > 1 ? `${path}?page=${page}` : path, description: `${title} — ${site.title}` },
+    }));
+  });
+
+  app.get("/search", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    const { q = "", page } = z.object({ q: z.string().trim().max(200).default(""), page: z.coerce.number().int().min(1).max(10_000).default(1) }).parse(request.query);
+    const searchCondition = sql`lower(coalesce(${contentObjects.title}, '') || ' ' || coalesce(${contentObjects.body}, '') || ' ' || coalesce(${contentObjects.sourceUrl}, '') || ' ' || ${contentObjects.metadata}) like ${`%${q.toLowerCase()}%`}`;
+    const conditions = and(eq(contentObjects.siteId, site.id), eq(contentObjects.status, "published"), searchCondition);
+    const [objects, countRows, availablePaths] = q ? await Promise.all([
+      db.select().from(contentObjects).where(conditions).orderBy(desc(contentObjects.publishedAt)).limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE),
+      db.select({ value: count() }).from(contentObjects).where(conditions),
+      publishedNavPaths(site.id),
+    ]) : [[], [{ value: 0 }], await publishedNavPaths(site.id)];
+    return sendCachedHtml(request, reply, site.id, async () => renderList(site, t(site.locale, "search"), objects, "/search", availablePaths, {
+      page,
+      totalPages: Math.max(1, Math.ceil((countRows[0]?.value ?? 0) / PAGE_SIZE)),
+      query: q ? { q } : {},
+      prefix: searchForm(site, q),
+      metadata: { path: q ? `/search?q=${encodeURIComponent(q)}` : "/search", noIndex: true },
+    }));
   });
 
   // Linked from the site footer (see Layout.tsx) only when about is set;
@@ -152,12 +291,18 @@ export async function sitePageRoutes(app: FastifyInstance) {
   for (const listing of LISTING_TYPES) {
     app.get(listing.path, { preHandler: resolveTenant }, async (request, reply) => {
       const site = request.site!;
+      const { page } = pageQuerySchema.parse(request.query);
       return sendCachedHtml(request, reply, site.id, async () => {
-        const [objects, availablePaths] = await Promise.all([
-          publishedObjects(site.id, listing.type),
+        const [objects, total, availablePaths] = await Promise.all([
+          publishedObjects(site.id, listing.type, PAGE_SIZE, (page - 1) * PAGE_SIZE),
+          publishedCount(site.id, listing.type),
           publishedNavPaths(site.id),
         ]);
-        return renderList(site, t(site.locale, listing.titleKey), objects, listing.path, availablePaths);
+        return renderList(site, t(site.locale, listing.titleKey), objects, listing.path, availablePaths, {
+          page,
+          totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+          metadata: { path: page > 1 ? `${listing.path}?page=${page}` : listing.path },
+        });
       });
     });
 

@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { assets, type AssetExif } from "../db/schema.js";
 import { storage } from "../storage/index.js";
-import { Layout } from "./templates/Layout.js";
+import { Layout, type PageMetadata } from "./templates/Layout.js";
 import { LandingPage } from "./templates/LandingPage.js";
 import { ThoughtPost } from "./templates/ThoughtPost.js";
 import { PhotoPost, formatExif } from "./templates/PhotoPost.js";
@@ -29,12 +29,13 @@ import type {
 } from "./templates/types.js";
 import { t, resolveLocale, type MessageKey } from "./i18n.js";
 import { formatBasicText, formatRichText, stripBasicFormatting } from "./format.js";
+import { siteOrigin } from "./site-url.js";
 
 function wrap(
   site: Site,
   title: string | undefined,
   node: React.ReactNode,
-  opts: { currentPath?: string; cardsDetail?: boolean; availablePaths?: string[] } = {},
+  opts: { currentPath?: string; cardsDetail?: boolean; availablePaths?: string[]; metadata?: PageMetadata } = {},
 ): string {
   return (
     "<!doctype html>" +
@@ -46,6 +47,7 @@ function wrap(
         currentPath: opts.currentPath,
         cardsDetail: opts.cardsDetail,
         availablePaths: opts.availablePaths,
+        metadata: opts.metadata,
       }),
     )
   );
@@ -169,16 +171,24 @@ export async function renderList(
   objects: ContentObject[],
   currentPath = "/",
   availablePaths?: string[],
+  options: {
+    page?: number;
+    totalPages?: number;
+    query?: Record<string, string>;
+    prefix?: React.ReactNode;
+    metadata?: PageMetadata;
+  } = {},
 ): Promise<string> {
   const cards = await Promise.all(objects.map((object) => renderCard(object, site.locale, site.theme)));
   const wrapOpts = { currentPath, availablePaths };
   const pageTitle = currentPath === "/" ? undefined : title;
+  const pagination = paginationNode(site, currentPath, options.page ?? 1, options.totalPages ?? 1, options.query);
   if (cards.length === 0) {
     return wrap(
       site,
       pageTitle,
-      React.createElement("p", { className: "meta" }, t(site.locale, "nothingHereYet")),
-      wrapOpts,
+      React.createElement(React.Fragment, null, options.prefix, React.createElement("p", { className: "meta" }, t(site.locale, "nothingHereYet"))),
+      { ...wrapOpts, metadata: options.metadata },
     );
   }
   const list =
@@ -189,7 +199,32 @@ export async function renderList(
         : site.theme === "washi"
           ? React.createElement("div", { className: "washi-feed" }, ...cards)
           : React.createElement(React.Fragment, null, ...cards);
-  return wrap(site, pageTitle, list, wrapOpts);
+  return wrap(site, pageTitle, React.createElement(React.Fragment, null, options.prefix, list, pagination), {
+    ...wrapOpts,
+    metadata: options.metadata,
+  });
+}
+
+function paginationNode(
+  site: Site,
+  path: string,
+  page: number,
+  totalPages: number,
+  query: Record<string, string> = {},
+): React.ReactNode {
+  if (totalPages <= 1) return null;
+  const href = (target: number) => {
+    const params = new URLSearchParams(query);
+    if (target > 1) params.set("page", String(target));
+    const suffix = params.toString();
+    return suffix ? `${path}?${suffix}` : path;
+  };
+  return React.createElement(
+    "nav",
+    { className: "pagination", "aria-label": "Pagination" },
+    page > 1 ? React.createElement("a", { href: href(page - 1), rel: "prev" }, `← ${t(site.locale, "previous")}`) : React.createElement("span"),
+    page < totalPages ? React.createElement("a", { href: href(page + 1), rel: "next" }, `${t(site.locale, "next")} →`) : React.createElement("span"),
+  );
 }
 
 export async function renderObjectPage(
@@ -200,20 +235,92 @@ export async function renderObjectPage(
 ): Promise<string> {
   const detail = await renderDetail(object, site.locale, site.theme);
   const detailTitle = object.title ?? (feedContentSummary(object) || undefined);
+  const metadataRecord = object.metadata as Record<string, unknown>;
+  const description =
+    (typeof metadataRecord.excerpt === "string" ? metadataRecord.excerpt : undefined) ??
+    (typeof metadataRecord.caption === "string" ? metadataRecord.caption : undefined) ??
+    (object.body ? truncateSummary(stripBasicFormatting(object.body), 200) : undefined);
+  const imageUrl =
+    object.type === "photo"
+      ? await photoImageUrl(object)
+      : object.type === "article"
+        ? await articleImageUrl(object)
+        : object.type === "book"
+          ? (object.metadata as BookMetadata).coverUrl
+          : object.type === "music"
+            ? (object.metadata as MusicMetadata).artworkUrl
+            : undefined;
   return wrap(site, detailTitle, detail, {
     currentPath: currentPath ?? `/${PATH_PREFIX[object.type]}/${object.slug}`,
     cardsDetail:
       site.theme === "cards" || site.theme === "prism" || site.theme === "ledger" || site.theme === "cabinet",
     availablePaths,
+    metadata: {
+      path: `/${PATH_PREFIX[object.type]}/${object.slug}`,
+      description,
+      imageUrl,
+      type: "article",
+      publishedAt: object.publishedAt,
+    },
   });
 }
 
 export function renderAboutPage(site: Site): string {
-  return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }));
+  return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }), {
+    currentPath: "/about",
+    metadata: { path: "/about", description: site.about ?? site.introduction ?? undefined, type: "profile" },
+  });
+}
+
+export function renderArchivePage(
+  site: Site,
+  groups: Array<{ year: number; months: Array<{ month: number; label: string; count: number }> }>,
+  availablePaths?: string[],
+): string {
+  const content = React.createElement(
+    React.Fragment,
+    null,
+    React.createElement("h2", null, t(site.locale, "archive")),
+    React.createElement(
+      "ol",
+      { className: "archive-list" },
+      ...groups.map((group) => React.createElement(
+        "li",
+        { key: group.year },
+        React.createElement("h2", null, String(group.year)),
+        React.createElement(
+          "ul",
+          { className: "archive-months" },
+          ...group.months.map((month) => React.createElement(
+            "li",
+            { key: month.month },
+            React.createElement("a", { href: `/archive/${group.year}/${String(month.month).padStart(2, "0")}` }, `${month.label} (${month.count})`),
+          )),
+        ),
+      )),
+    ),
+  );
+  return wrap(site, t(site.locale, "archive"), content, {
+    currentPath: "/archive",
+    availablePaths,
+    metadata: { path: "/archive", description: `${site.title} — ${t(site.locale, "archive")}` },
+  });
+}
+
+export function searchForm(site: Site, query = ""): React.ReactNode {
+  return React.createElement(
+    "form",
+    { className: "search-form", action: "/search", method: "get", role: "search" },
+    React.createElement("input", { type: "search", name: "q", defaultValue: query, placeholder: t(site.locale, "search"), "aria-label": t(site.locale, "search") }),
+    React.createElement("button", { type: "submit" }, t(site.locale, "search")),
+  );
 }
 
 export function renderAboutProductPage(site: Site): string {
-  return wrap(site, t(site.locale, "aboutShareblog"), React.createElement(AboutProductPage, {}));
+  return wrap(site, t(site.locale, "aboutShareblog"), React.createElement(AboutProductPage, {}), {
+    currentPath: "/about-shareblog",
+    metadata: { path: "/about-shareblog", noIndex: true },
+  });
 }
 
 export function renderReleaseHistoryPage(site: Site): string {
@@ -221,14 +328,11 @@ export function renderReleaseHistoryPage(site: Site): string {
     site,
     t(site.locale, "releaseHistory"),
     React.createElement(ReleaseHistoryPage, { locale: site.locale, commit: currentCommit }),
+    { currentPath: "/changelog", metadata: { path: "/changelog", noIndex: true } },
   );
 }
 
-export function siteOrigin(site: Site): string {
-  const baseDomain = process.env.BASE_DOMAIN ?? "localhost:3000";
-  const scheme = baseDomain.startsWith("localhost") ? "http" : "https";
-  return `${scheme}://${site.subdomain}.${baseDomain}`;
-}
+export { siteOrigin } from "./site-url.js";
 
 const TYPE_LABEL_KEY: Record<ContentObject["type"], MessageKey> = {
   thought: "typeThought",

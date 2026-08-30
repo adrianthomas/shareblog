@@ -4,6 +4,10 @@ The self-hosted Shareblog API and public-site renderer. It stores structured
 thoughts, articles, photos, books, music, links, and quotes, then publishes them
 on the owner's own site with optional ActivityPub federation.
 
+Each site also has a small cross-theme identity profile, can use an apex or
+custom canonical domain, and exposes paginated feeds, chronological archives,
+search, social-card metadata, structured data, a sitemap, and robots policy.
+
 ## Local development
 
 ```bash

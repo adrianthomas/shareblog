@@ -161,6 +161,20 @@ sudo systemctl reload caddy
 Add a new line (or extend the host list) for every additional site you
 create — Caddy requests a cert for each hostname automatically.
 
+### Use the apex or another custom domain for your site
+
+The iOS app's **Settings → Identity & Domain** screen can make a hostname such
+as `yourdomain.com` the site's canonical public address. The server then uses
+that Host header for permalinks, feeds, social metadata, sitemaps, and
+ActivityPub identity. This setting does not change DNS or obtain a certificate
+by itself: include the hostname in the reverse-proxy configuration above,
+point its DNS at the server, and reload Caddy first. Keep
+`api.yourdomain.com` routed to the same process for the app.
+
+Changing the canonical domain after Fediverse followers already exist changes
+the actor's public host. Choose the permanent domain before actively promoting
+the Fediverse handle whenever possible.
+
 ## 7. Point the iOS app at your server
 
 Easiest path: tap **Scan to Connect** on the app's first screen and scan

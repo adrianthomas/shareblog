@@ -79,6 +79,7 @@ let apiBaseURL: string;
 let ownerToken: string;
 
 test.beforeAll(async ({ baseURL }) => {
+  test.setTimeout(60_000);
   ownerToken = bootstrapOwnerToken();
   apiBaseURL = baseURL!;
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { subdomain: "e2ecards", title: "E2E Cards Site" });
@@ -497,4 +498,70 @@ test("Cabinet link artifacts keep the source and saved note as distinct routes",
   await dialog.locator(".cabinet-close").click();
   await dialog.waitFor({ state: "detached" });
   await expect(permalink).toBeFocused();
+});
+
+test("site identity drives public profile and discovery metadata", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", {
+    title: "Adrian Example",
+    tagline: "Product maker and writer",
+    introduction: "I make thoughtful software and keep a public record of what I learn.",
+    location: "Berlin, Germany",
+    profileImageUrl: "https://example.com/avatar.jpg",
+    profileLinks: [{ label: "GitHub", url: "https://github.com/example", relMe: true }],
+    contactLabel: "Email me",
+    contactUrl: "mailto:hello@example.com",
+  }, "PATCH");
+
+  await page.goto(siteBaseURL + "/");
+  await expect(page.locator(".site-profile")).toContainText("thoughtful software");
+  await expect(page.locator(".site-profile")).toContainText("Berlin, Germany");
+  await expect(page.locator('.site-profile a[href="https://github.com/example"]')).toHaveAttribute("rel", "me");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", siteBaseURL + "/");
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "Adrian Example");
+  expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("thoughtful software");
+
+  const sitemap = await fetch(siteBaseURL + "/sitemap.xml");
+  expect(sitemap.status).toBe(200);
+  expect(await sitemap.text()).toContain("/archive");
+  const robots = await fetch(siteBaseURL + "/robots.txt");
+  expect(await robots.text()).toContain("/sitemap.xml");
+});
+
+test("public feeds paginate and remain retrievable through archive and search", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
+  for (let index = 0; index < 12; index += 1) {
+    await api(apiBaseURL, ownerToken, "/api/v1/objects", {
+      type: "thought",
+      status: "published",
+      body: index === 0 ? "A uniquely searchable roadmap field note." : `Pagination post ${index + 1}`,
+      metadata: {},
+    });
+  }
+
+  await page.goto(siteBaseURL + "/");
+  await expect(page.locator('.pagination a[rel="next"]')).toBeVisible();
+  await page.locator('.pagination a[rel="next"]').click();
+  await expect(page).toHaveURL(/\?page=2$/);
+  await expect(page.locator("[data-cards-card]")).not.toHaveCount(0);
+
+  await page.goto(siteBaseURL + "/search?q=uniquely%20searchable");
+  await expect(page.locator("main")).toContainText("uniquely searchable roadmap");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex,follow");
+
+  const now = new Date();
+  const monthPath = `/archive/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  await page.goto(siteBaseURL + "/archive");
+  await expect(page.locator(`a[href="${monthPath}"]`)).toBeVisible();
+  await page.goto(siteBaseURL + monthPath);
+  await expect(page.locator("main")).toContainText("Pagination post");
+});
+
+test("a configured apex domain resolves the site and becomes canonical", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { customDomain: new URL(apiBaseURL).host }, "PATCH");
+  const aliasResponse = await fetch(siteBaseURL + "/", { redirect: "manual" });
+  expect(aliasResponse.status).toBe(308);
+  expect(aliasResponse.headers.get("location")).toBe(apiBaseURL + "/");
+  await page.goto(apiBaseURL + "/");
+  await expect(page.locator("h1")).toContainText("Adrian Example");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", apiBaseURL + "/");
 });

@@ -12,6 +12,16 @@ export interface ReleaseEntry {
 // site owner would notice. Keep both of those out of any future entry too.
 export const RELEASE_HISTORY: ReleaseEntry[] = [
   {
+    date: "2026-08-30",
+    changes: [
+      "Added a cross-theme identity profile with a photo, introduction, location, profile links, and contact action.",
+      "Sites can now use an apex or custom domain as their canonical public identity.",
+      "Added canonical and social-card metadata, Person and article structured data, sitemap.xml, and robots.txt.",
+      "Added pagination, search, and a chronological month archive so older posts remain findable.",
+      "Added the Cabinet theme, including in-place detail panels and pull-down dismissal.",
+    ],
+  },
+  {
     date: "2026-08-25",
     changes: [
       "Added \"Prism,\" a bright, playful site theme with crisp cards, rounded typography, and blue-pink accents.",

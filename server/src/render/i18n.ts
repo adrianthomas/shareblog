@@ -8,6 +8,10 @@ export type MessageKey =
   | "photos"
   | "quotes"
   | "about"
+  | "archive"
+  | "search"
+  | "previous"
+  | "next"
   | "followRss"
   | "fediverseLabel"
   | "copyFediverseHandle"
@@ -56,6 +60,10 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Photos",
     quotes: "Quotes",
     about: "About",
+    archive: "Archive",
+    search: "Search",
+    previous: "Previous",
+    next: "Next",
     followRss: "Follow RSS",
     fediverseLabel: "Fediverse",
     copyFediverseHandle: "Copy Fediverse handle",
@@ -101,6 +109,10 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Fotos",
     quotes: "Zitate",
     about: "Über",
+    archive: "Archiv",
+    search: "Suche",
+    previous: "Zurück",
+    next: "Weiter",
     followRss: "RSS abonnieren",
     fediverseLabel: "Fediverse",
     copyFediverseHandle: "Fediverse-Adresse kopieren",
@@ -146,6 +158,10 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Photos",
     quotes: "Citations",
     about: "À propos",
+    archive: "Archives",
+    search: "Rechercher",
+    previous: "Précédent",
+    next: "Suivant",
     followRss: "Suivre en RSS",
     fediverseLabel: "Fédivers",
     copyFediverseHandle: "Copier l'identifiant Fediverse",
@@ -191,6 +207,10 @@ const MESSAGES: Record<string, Messages> = {
     photos: "Fotos",
     quotes: "Citas",
     about: "Acerca de",
+    archive: "Archivo",
+    search: "Buscar",
+    previous: "Anterior",
+    next: "Siguiente",
     followRss: "Seguir por RSS",
     fediverseLabel: "Fediverso",
     copyFediverseHandle: "Copiar identificador de Fediverse",
@@ -236,6 +256,10 @@ const MESSAGES: Record<string, Messages> = {
     photos: "写真",
     quotes: "引用",
     about: "このサイトについて",
+    archive: "アーカイブ",
+    search: "検索",
+    previous: "前へ",
+    next: "次へ",
     followRss: "RSSで購読",
     fediverseLabel: "フェディバース",
     copyFediverseHandle: "Fediverseハンドルをコピー",

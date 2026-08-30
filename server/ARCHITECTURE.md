@@ -21,11 +21,11 @@ many files at once. Keep it in sync with the implementation.
    any host that isn't `api.<BASE_DOMAIN>`).
 
 One process, split entirely by the `Host` header (`middleware/tenant.ts`):
-`api.<BASE_DOMAIN>` → the JSON API, `<subdomain>.<BASE_DOMAIN>` → that
-site's public pages. `siteForHost()` is the shared lookup (30s in-memory
-cache, keyed by subdomain, invalidated via `invalidateTenantCache` on site
-update); `resolveTenant` wraps it as a route preHandler and 404s unknown
-hosts. `authGuard` (`middleware/auth-guard.ts`) is the separate, unrelated
+`api.<BASE_DOMAIN>` → the JSON API; `<subdomain>.<BASE_DOMAIN>` or a site's
+configured canonical `customDomain` → that site's public pages.
+`siteForHost()` is the shared lookup (30s in-memory cache, keyed by hostname
+and cleared on site update); `resolveTenant` wraps it as a route preHandler
+and 404s unknown hosts. `authGuard` (`middleware/auth-guard.ts`) is the separate, unrelated
 preHandler for `/api/v1` routes — it reads the `Authorization: Bearer`
 token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
@@ -36,7 +36,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | File | Routes | Notes |
 |---|---|---|
 | `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see the `ownerClaims` table below). Logout revokes *every* token for the account. |
-| `routes/sites.ts` | site CRUD (create, update theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). |
+| `routes/sites.ts` | site CRUD (create; update identity/domain/theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). New identity fields are additive for older clients. |
 | `routes/themes.ts` | `GET /themes` (no auth) | Server-owned catalog of selectable site themes (`id`/`name`/`description`) used by iOS Settings. Keep this additive so newer servers can expose themes without requiring an iOS app update. |
 | `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images), cache invalidation, and triggers `deliverCreateActivity` on publish. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
@@ -46,10 +46,13 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
 | Path | Renders |
 |---|---|
-| `/` | Home — all types mixed, latest 20 (`renderList`) |
-| `/posts`, `/articles`, `/links`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listing (`LISTING_TYPES`), full list |
+| `/` | Home — all types mixed, paginated 20 at a time (`renderList`) |
+| `/posts`, `/articles`, `/links`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listings (`LISTING_TYPES`), paginated 20 at a time |
 | `/<listing>/feed.xml`, `/feed.xml` | RSS (`renderFeed`) |
 | `/<prefix>/:slug` (`DETAIL_TYPES`) | Detail page (`renderObjectPage`) — 404s if not published |
+| `/archive`, `/archive/:year/:month` | Chronological month index and paginated month views |
+| `/search?q=...` | Search titles, bodies, source URLs, and structured metadata; marked `noindex` |
+| `/sitemap.xml`, `/robots.txt` | Search-engine discovery using the site's canonical origin |
 | `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` 404s if the site has no About text |
 
 `PATH_PREFIX` (exported from `render.ts`) is the single source of truth
@@ -65,7 +68,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). `theme` (`classic`/`cards`/`washi`/`prism`/`ledger`/`cabinet`), `about`, `federationEnabled`, `subdomain`/`customDomain`. |
+| `sites` | One per user (today). Identity (`title`, `tagline`, `introduction`, `location`, `profileImageUrl`, `profileLinks`, contact CTA), `theme`, `about`, `federationEnabled`, and `subdomain`/canonical `customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -131,6 +134,14 @@ viewer, books fly a portrait cover into `CardsBookDetailHeader`, and music
 flies square album art into `CardsMusicDetailHeader`. Keep square/portrait art
 out of the generic cover-image hero path, which is meant for article-like
 landscape imagery.
+
+`render/site-url.ts` is the canonical-origin source of truth. A configured
+`sites.customDomain` wins over `<subdomain>.<BASE_DOMAIN>` and threads through
+HTML canonical/Open Graph metadata, JSON-LD, RSS, sitemaps, and ActivityPub.
+`Layout.tsx` emits the shared Person/WebSite or BlogPosting structured data and
+the cross-theme identity profile. Product marketing routes remain available
+for old links but are no longer linked from a person's About page and are
+`noindex`.
 Article `metadata.coverAssetId` is the card/detail header image, with
 `metadata.coverAltText` as its alt text. Inline markdown images in the article
 body are separate body images and render below the title/excerpt/date content.

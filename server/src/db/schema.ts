@@ -50,6 +50,15 @@ export const sites = sqliteTable("sites", {
   customDomain: text("custom_domain").unique(),
   title: text("title").notNull(),
   tagline: text("tagline"),
+  introduction: text("introduction"),
+  location: text("location"),
+  profileImageUrl: text("profile_image_url"),
+  profileLinks: text("profile_links", { mode: "json" })
+    .notNull()
+    .default([])
+    .$type<Array<{ label: string; url: string; relMe?: boolean }>>(),
+  contactLabel: text("contact_label"),
+  contactUrl: text("contact_url"),
   // Free-text About page, editable from the iOS app's settings and linked
   // from the site footer (see Layout.tsx). Supports a small safe-formatting
   // syntax — **bold**, *italic*, [text](url) — parsed by render/format.ts;

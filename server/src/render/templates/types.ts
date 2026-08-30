@@ -3,6 +3,12 @@ import type { contentObjects, sites } from "../../db/schema.js";
 export type Site = typeof sites.$inferSelect;
 export type ContentObject = typeof contentObjects.$inferSelect;
 
+export interface ProfileLink {
+  label: string;
+  url: string;
+  relMe?: boolean;
+}
+
 export interface BookMetadata {
   author: string;
   isbn13?: string;

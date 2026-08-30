@@ -5,6 +5,17 @@ import { cardsStyles, cardsScript, CardsCategoryFilter } from "../themes/cards.j
 import { cabinetStyles, CabinetNavigation } from "../themes/cabinet.js";
 import { cabinetScript } from "../themes/cabinet-script.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
+import { absoluteSiteUrl, siteOrigin } from "../site-url.js";
+import type { ProfileLink } from "./types.js";
+
+export interface PageMetadata {
+  path?: string;
+  description?: string;
+  imageUrl?: string;
+  type?: "website" | "article" | "profile";
+  publishedAt?: Date | null;
+  noIndex?: boolean;
+}
 
 const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }> = {
   classic: { light: "#ffffff", dark: "#111111" },
@@ -101,6 +112,7 @@ export function Layout({
   currentPath = "/",
   cardsDetail = false,
   availablePaths,
+  metadata = {},
 }: {
   site: Site;
   title?: string;
@@ -111,6 +123,7 @@ export function Layout({
   cardsDetail?: boolean;
   /** Nav paths (e.g. "/posts") that have at least one published post. When omitted, all category links are shown. */
   availablePaths?: string[];
+  metadata?: PageMetadata;
 }) {
   const pageTitle = title ? `${title} — ${site.title}` : site.title;
   const theme = site.theme;
@@ -120,12 +133,39 @@ export function Layout({
   const usesInteractiveDetail = usesCardsInteraction || usesCabinetInteraction;
   const usesCompactCategoryFilter = !usesInteractiveDetail;
   const hasAbout = Boolean(site.about && site.about.trim());
-  // Not siteOrigin() from render.ts — that file imports Layout, so
-  // importing back would be circular. Same computation, just the host
-  // (no scheme) since this only needs it for the @handle@host string and
-  // a relative activity+json link.
-  const fediverseHost = `${site.subdomain}.${process.env.BASE_DOMAIN ?? "localhost:3000"}`;
+  // The canonical host is also the Fediverse identity host. The actor's
+  // identifier remains the stable site subdomain, while a configured custom
+  // domain replaces the deployment's default <subdomain>.<BASE_DOMAIN> host.
+  const fediverseHost = new URL(siteOrigin(site)).host;
   const fediverseHandle = `@${site.subdomain}@${fediverseHost}`;
+  const canonicalUrl = absoluteSiteUrl(site, metadata.path ?? currentPath);
+  const description = metadata.description ?? site.introduction ?? site.tagline ?? undefined;
+  const profileLinks = (site.profileLinks ?? []) as ProfileLink[];
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": `${siteOrigin(site)}/#person`,
+        name: site.title,
+        url: siteOrigin(site),
+        ...(description ? { description } : {}),
+        ...(site.profileImageUrl ? { image: site.profileImageUrl } : {}),
+        ...(site.location ? { homeLocation: site.location } : {}),
+        ...(profileLinks.length ? { sameAs: profileLinks.map((link) => link.url) } : {}),
+      },
+      {
+        "@type": metadata.type === "article" ? "BlogPosting" : "WebSite",
+        "@id": `${canonicalUrl}#content`,
+        url: canonicalUrl,
+        name: pageTitle,
+        author: { "@id": `${siteOrigin(site)}/#person` },
+        ...(description ? { description } : {}),
+        ...(metadata.imageUrl ? { image: metadata.imageUrl } : {}),
+        ...(metadata.publishedAt ? { datePublished: metadata.publishedAt.toISOString() } : {}),
+      },
+    ],
+  };
 
   return (
     <html lang={resolveLocale(site.locale)} data-theme={theme}>
@@ -136,7 +176,24 @@ export function Layout({
         <meta name="theme-color" content={chromeColors.light} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={chromeColors.dark} media="(prefers-color-scheme: dark)" />
         <title>{pageTitle}</title>
-        {site.tagline ? <meta name="description" content={site.tagline} /> : null}
+        {description ? <meta name="description" content={description} /> : null}
+        <link rel="canonical" href={canonicalUrl} />
+        {metadata.noIndex ? <meta name="robots" content="noindex,follow" /> : null}
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:type" content={metadata.type ?? "website"} />
+        <meta property="og:url" content={canonicalUrl} />
+        {description ? <meta property="og:description" content={description} /> : null}
+        {metadata.imageUrl ? <meta property="og:image" content={metadata.imageUrl} /> : null}
+        <meta name="twitter:card" content={metadata.imageUrl ? "summary_large_image" : "summary"} />
+        <meta name="twitter:title" content={pageTitle} />
+        {description ? <meta name="twitter:description" content={description} /> : null}
+        {metadata.imageUrl ? <meta name="twitter:image" content={metadata.imageUrl} /> : null}
+        {site.profileImageUrl ? <link rel="icon" href={site.profileImageUrl} /> : null}
+        {site.profileImageUrl ? <link rel="apple-touch-icon" href={site.profileImageUrl} /> : null}
+        {profileLinks.filter((link) => link.relMe).map((link) => (
+          <link key={link.url} rel="me" href={link.url} />
+        ))}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
         <link rel="alternate" type="application/rss+xml" href="/feed.xml" />
         {site.federationEnabled ? (
           <link rel="alternate" type="application/activity+json" href={`/users/${site.subdomain}`} />
@@ -472,6 +529,25 @@ export function Layout({
               .faq-entry ul { margin: 0; padding-left: 1.25rem; }
               .faq-entry li { margin: 0 0 0.6rem; }
               .faq-entry li:last-child { margin-bottom: 0; }
+              .site-profile {
+                display: flex; gap: 1rem; align-items: flex-start; margin: 0 0 2.5rem;
+                padding: 1.1rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+              }
+              .site-profile > img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex: none; }
+              .site-profile p { margin: 0 0 0.45rem; max-width: 60ch; }
+              .site-profile-links { display: flex; flex-wrap: wrap; gap: 0.4rem 0.85rem; font-size: 0.9rem; }
+              .site-profile-links a { color: inherit; }
+              .site-profile-links .site-contact { font-weight: 650; }
+              .pagination { display: flex; justify-content: space-between; gap: 1rem; margin: 2.5rem 0 0; }
+              .pagination a { color: inherit; }
+              .search-form { display: flex; gap: 0.5rem; margin: 0 0 2rem; }
+              .search-form input { min-width: 0; flex: 1; padding: 0.7rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; }
+              .search-form button { padding: 0.7rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--fg); color: var(--bg); font: inherit; cursor: pointer; }
+              .archive-list { list-style: none; margin: 0; padding: 0; }
+              .archive-list > li { margin: 0 0 1.6rem; }
+              .archive-list h2 { font-size: 1.1rem; margin: 0 0 0.6rem; }
+              .archive-months { display: flex; flex-wrap: wrap; gap: 0.45rem 1rem; margin: 0; padding: 0; list-style: none; }
+              .archive-months a { color: inherit; }
               footer.site-footer {
                 margin-top: 3.5rem; padding-top: 1.5rem; padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
                 border-top: 1px solid var(--border); font-size: 0.82rem;
@@ -1864,10 +1940,27 @@ export function Layout({
             <span />
           </div>
         ) : null}
+        {currentPath === "/" && !cardsDetail && (site.introduction || site.location || profileLinks.length || site.contactUrl) ? (
+          <aside className="site-profile" aria-label={site.title}>
+            {site.profileImageUrl ? <img src={site.profileImageUrl} alt="" /> : null}
+            <div>
+              {site.introduction ? <p>{site.introduction}</p> : null}
+              {site.location ? <p className="meta">{site.location}</p> : null}
+              {profileLinks.length || site.contactUrl ? (
+                <p className="site-profile-links">
+                  {profileLinks.map((link) => <a key={link.url} href={link.url} rel={link.relMe ? "me" : undefined}>{link.label}</a>)}
+                  {site.contactUrl ? <a className="site-contact" href={site.contactUrl}>{site.contactLabel || "Contact"}</a> : null}
+                </p>
+              ) : null}
+            </div>
+          </aside>
+        ) : null}
         <main id="main-content">{children}</main>
-        {hasAbout && !(usesInteractiveDetail && cardsDetail) ? (
+        {!(usesInteractiveDetail && cardsDetail) ? (
           <footer className="site-footer">
-            <a href="/about">{t(site.locale, "about")}</a>
+            <a href="/archive">{t(site.locale, "archive")}</a>
+            {" · "}<a href="/search">{t(site.locale, "search")}</a>
+            {hasAbout ? <>{" · "}<a href="/about">{t(site.locale, "about")}</a></> : null}
           </footer>
         ) : null}
         {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}

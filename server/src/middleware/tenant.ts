@@ -9,7 +9,7 @@ declare module "fastify" {
   }
 }
 
-// Small in-memory cache in front of the subdomain -> site lookup; sites
+// Small in-memory cache in front of the hostname -> site lookup; sites
 // change rarely relative to request volume, and there's no multi-process
 // deployment yet to worry about cache coherence across.
 const cache = new Map<string, { site: typeof sites.$inferSelect | null; expiresAt: number }>();
@@ -18,8 +18,8 @@ const CACHE_TTL_MS = 30_000;
 // Called whenever a site row changes (e.g. theme update) so the next
 // request re-reads it instead of serving a stale cached row for up to
 // CACHE_TTL_MS.
-export function invalidateTenantCache(subdomain: string): void {
-  cache.delete(subdomain);
+export function invalidateTenantCache(): void {
+  cache.clear();
 }
 
 function extractSubdomain(host: string, baseDomain: string): string | null {
@@ -36,16 +36,32 @@ export async function siteForHost(host: string | undefined): Promise<typeof site
   const baseDomain = process.env.BASE_DOMAIN;
   if (!host || !baseDomain) return null;
 
-  const subdomain = extractSubdomain(host, baseDomain);
-  if (!subdomain) return null;
+  const normalizedHost = host.toLowerCase().replace(/\.$/, "");
+  const normalizedBaseDomain = baseDomain.toLowerCase().replace(/\.$/, "");
 
-  const cached = cache.get(subdomain);
+  const cached = cache.get(normalizedHost);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.site;
   }
 
+  const [customDomainSite] = await db
+    .select()
+    .from(sites)
+    .where(eq(sites.customDomain, normalizedHost))
+    .limit(1);
+  if (customDomainSite) {
+    cache.set(normalizedHost, { site: customDomainSite, expiresAt: Date.now() + CACHE_TTL_MS });
+    return customDomainSite;
+  }
+
+  const subdomain = extractSubdomain(normalizedHost, normalizedBaseDomain);
+  if (!subdomain) {
+    cache.set(normalizedHost, { site: null, expiresAt: Date.now() + CACHE_TTL_MS });
+    return null;
+  }
+
   const [site] = await db.select().from(sites).where(eq(sites.subdomain, subdomain)).limit(1);
-  cache.set(subdomain, { site: site ?? null, expiresAt: Date.now() + CACHE_TTL_MS });
+  cache.set(normalizedHost, { site: site ?? null, expiresAt: Date.now() + CACHE_TTL_MS });
   return site ?? null;
 }
 
