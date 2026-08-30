@@ -6,22 +6,10 @@ node_modules/
 dist/
 *.log
 
-# Env
+# Environment
 .env
 .env.local
 deploy.env
-
-# Internal-only notes, not for the public repo
-BRANDING.md
-
-# Xcode
-ios/**/xcuserdata/
-ios/**/*.xcuserstate
-ios/DerivedData/
-ios/build/
-ios/.swiftpm/
-ios/**/.swiftpm/
-ios/**/.build/
 
 # Server data
 server/data/uploads/*
