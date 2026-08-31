@@ -845,8 +845,9 @@ export const cabinetStyles = `
   .cabinet-shared-clone { position: fixed; z-index: 1100; margin: 0; object-fit: cover; pointer-events: none; will-change: top, left, width, height, border-radius; }
 
   .about-content, .release-entry, .about-product { font-family: "Cabinet Serif", Georgia, serif; }
-  body.theme-cabinet .about-content { max-width: 66ch; margin: 0 auto; font-size: 1.18rem; line-height: 1.7; }
-  body.theme-cabinet .about-content::before { content: ""; display: block; width: 3rem; height: 0.35rem; margin-bottom: 2rem; background: var(--cabinet-signal); }
+  body.theme-cabinet .about-page { max-width: 66ch; margin: 0 auto; }
+  body.theme-cabinet .about-page > h1 { padding-bottom: 1rem; border-bottom: 0.35rem solid var(--cabinet-signal); }
+  body.theme-cabinet .about-content { font-size: 1.18rem; line-height: 1.7; }
 
   @media (max-width: 1099px) {
     body.theme-cabinet header.site-header { grid-template-columns: 1fr; }

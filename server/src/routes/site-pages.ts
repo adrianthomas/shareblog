@@ -265,8 +265,8 @@ export async function sitePageRoutes(app: FastifyInstance) {
     }));
   });
 
-  // The About page contains both the structured identity profile and the
-  // optional long-form About text. Hide it only when both are empty.
+  // The About page contains the site's long-form About text. Identity and
+  // contact details stay in the shared footer, where they appear site-wide.
   app.get("/about", { preHandler: resolveTenant }, async (request, reply) => {
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => renderAboutPage(site));

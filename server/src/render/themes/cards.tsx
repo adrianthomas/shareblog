@@ -560,7 +560,7 @@ export const cardsStyles = `
   body.theme-cards footer.site-footer {
     max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; border-top: 1px solid var(--border);
   }
-  body.theme-cards .about-content { max-width: 640px; margin: 0 auto; }
+  body.theme-cards .about-page { max-width: 640px; margin: 0 auto; }
   /* Cards/prism render their categories as the filter popover below; hide
      only the classic inline nav if it ever appears in this header. */
   body.theme-cards header.site-header .site-header-right > nav { display: none; }

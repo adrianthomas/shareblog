@@ -285,7 +285,7 @@ export async function renderObjectPage(
 export function renderAboutPage(site: Site): string {
   return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }), {
     currentPath: "/about",
-    metadata: { path: "/about", description: site.about ?? site.tagline ?? site.introduction ?? undefined, type: "profile" },
+    metadata: { path: "/about", description: site.about ?? site.tagline ?? undefined, type: "profile" },
   });
 }
 

@@ -513,6 +513,7 @@ test("site identity drives public profile and discovery metadata", async ({ page
       { label: "Email me", url: "mailto:hello@example.com" },
       { label: "Book a call", url: "https://example.com/call" },
     ],
+    about: "I’ve been blogging since the early 2000s.",
   }, "PATCH");
 
   await page.goto(siteBaseURL + "/");
@@ -522,19 +523,31 @@ test("site identity drives public profile and discovery metadata", async ({ page
   await expect(page.locator('footer a[href="https://example.com/call"]')).toHaveText("Book a call");
   await expect(page.locator('footer a[href="/about"]')).toBeVisible();
   await page.goto(siteBaseURL + "/about");
-  await expect(page.locator(".site-profile")).toContainText("thoughtful software");
-  await expect(page.locator(".site-profile")).toContainText("Adrian Thomas");
-  await expect(page.locator(".site-profile")).toContainText("Berlin, Germany");
-  await expect(page.locator('.site-profile a[href="https://github.com/example"]')).toHaveAttribute("rel", "me");
+  await expect(page.locator("main h1")).toHaveText("About");
+  await expect(page.locator(".about-content")).toHaveText("I’ve been blogging since the early 2000s.");
+  await expect(page.locator("main")).not.toContainText("thoughtful software");
+  await expect(page.locator(".site-footer-profile")).toHaveCount(1);
+  await expect(page.locator('footer a[href="https://github.com/example"]')).toHaveAttribute("rel", "me");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", siteBaseURL + "/about");
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "About — Adrian Example");
-  expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("Small things worth keeping");
+  expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("I’ve been blogging since the early 2000s.");
 
   const sitemap = await fetch(siteBaseURL + "/sitemap.xml");
   expect(sitemap.status).toBe(200);
   expect(await sitemap.text()).toContain("/archive");
   const robots = await fetch(siteBaseURL + "/robots.txt");
   expect(await robots.text()).toContain("/sitemap.xml");
+
+  for (const theme of ["classic", "cards", "washi", "prism", "ledger", "cabinet"]) {
+    await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme }, "PATCH");
+    await page.goto(siteBaseURL + "/about");
+    const identityBox = await page.locator("footer .site-profile-identity").boundingBox();
+    const linksBox = await page.locator("footer .site-profile-link-groups").boundingBox();
+    expect(identityBox, `${theme} footer identity should be visible`).not.toBeNull();
+    expect(linksBox, `${theme} footer links should be visible`).not.toBeNull();
+    expect(linksBox!.x, `${theme} footer links should form the second column`).toBeGreaterThan(identityBox!.x + identityBox!.width);
+    expect(Math.abs(linksBox!.y - identityBox!.y), `${theme} footer columns should align`).toBeLessThan(2);
+  }
 });
 
 test("public feeds paginate and remain retrievable through archive and search", async ({ page }) => {

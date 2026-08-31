@@ -7,18 +7,18 @@ export function siteContactLinks(site: Site): ContactLink[] {
   return site.contactUrl ? [{ label: site.contactLabel || "Contact", url: site.contactUrl }] : [];
 }
 
-export function SiteProfile({ site, about = false }: { site: Site; about?: boolean }) {
+export function SiteProfile({ site }: { site: Site }) {
   const profileLinks = (site.profileLinks ?? []) as ProfileLink[];
   const contactLinks = siteContactLinks(site);
   const name = site.profileName?.trim() || site.title;
 
   return (
-    <section className={about ? "site-profile site-profile--about" : "site-footer-profile"} aria-label={name}>
-      {about && site.profileImageUrl ? <img src={site.profileImageUrl} alt="" /> : null}
+    <section className="site-footer-profile" aria-label={name}>
       <div className="site-profile-details">
-        <p className="site-profile-name">{name}</p>
-        {site.location ? <p className="site-profile-location">{site.location}</p> : null}
-        {about && site.introduction ? <p className="site-profile-introduction">{site.introduction}</p> : null}
+        <div className="site-profile-identity">
+          <p className="site-profile-name">{name}</p>
+          {site.location ? <p className="site-profile-location">{site.location}</p> : null}
+        </div>
         {profileLinks.length || contactLinks.length ? (
           <div className="site-profile-link-groups">
             {profileLinks.length ? (

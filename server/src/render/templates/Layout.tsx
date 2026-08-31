@@ -488,7 +488,9 @@ export function Layout({
               .copy-feedback--visible { max-width: 8em; opacity: 1; }
               .article-detail > h1 { margin: 0 0 0.7rem; font-size: clamp(2.1rem, 7vw, 3.2rem); line-height: 1.03; }
               .article-detail > .meta { margin-bottom: 1.75rem; }
-              .body-content, .about-content { max-width: 65ch; }
+              .body-content { max-width: 65ch; }
+              .about-page { max-width: 65ch; }
+              .about-page > h1 { margin: 0 0 2rem; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; }
               .body-content p, .about-content p { margin: 0 0 1.15rem; }
               .body-content ul, .body-content ol {
                 margin: 0 0 1.15rem;
@@ -528,16 +530,10 @@ export function Layout({
               .faq-entry ul { margin: 0; padding-left: 1.25rem; }
               .faq-entry li { margin: 0 0 0.6rem; }
               .faq-entry li:last-child { margin-bottom: 0; }
-              .site-profile {
-                display: flex; gap: 1rem; align-items: flex-start; margin: 0 0 2.5rem;
-                padding: 1.1rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-              }
-              .site-profile > img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex: none; }
-              .site-profile-details { min-width: 0; flex: 1; }
-              .site-profile p, .site-footer-profile p { margin: 0; }
+              .site-profile-details { min-width: 0; }
+              .site-footer-profile p { margin: 0; }
               .site-profile-name { font-size: 1rem; font-weight: 720; color: var(--fg); }
               .site-profile-location { margin-top: 0.15rem !important; color: var(--muted); font-size: 0.82rem; }
-              .site-profile-introduction { max-width: 60ch; margin-top: 0.75rem !important; }
               .site-profile-link-groups { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin-top: 0.85rem; }
               .site-profile-links { display: flex; flex-wrap: wrap; gap: 0.35rem 0.85rem; font-size: 0.9rem; }
               .site-profile-links > span { width: 100%; color: var(--muted); font-size: 0.7rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -557,7 +553,8 @@ export function Layout({
                 margin-top: 3.5rem; padding-top: 1.5rem; padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
                 border-top: 1px solid var(--border); font-size: 0.82rem;
               }
-              .site-footer-profile { display: grid; grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+              .site-footer-profile { margin-bottom: 1.5rem; }
+              .site-footer-profile .site-profile-details { display: grid; grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr); gap: 1.5rem; align-items: start; }
               .site-footer-profile .site-profile-link-groups { margin-top: 0; justify-content: flex-end; }
               .site-footer-profile .site-profile-links { justify-content: flex-end; }
               .site-footer-nav { padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
@@ -615,7 +612,7 @@ export function Layout({
                 .site-header-left { width: 100%; }
                 .site-header-right { align-items: flex-start; }
                 .header-links { margin-top: -0.35rem; }
-                .site-footer-profile { grid-template-columns: 1fr; }
+                .site-footer-profile .site-profile-details { grid-template-columns: 1fr; }
                 .site-footer-profile .site-profile-link-groups { justify-content: flex-start; }
                 .site-footer-profile .site-profile-links { justify-content: flex-start; }
               }
