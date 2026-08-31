@@ -17,7 +17,11 @@ import { deliverCreateActivity } from "../activitypub/federation.js";
 function metadataAssetIds(metadata: unknown): string[] {
   if (!metadata || typeof metadata !== "object") return [];
   const record = metadata as Record<string, unknown>;
-  return [record.assetId, record.coverAssetId].filter((value): value is string => typeof value === "string");
+  const inlineAssetIds = Array.isArray(record.inlineAssetIds)
+    ? record.inlineAssetIds.filter((value): value is string => typeof value === "string")
+    : [];
+  return [record.assetId, record.coverAssetId, ...inlineAssetIds]
+    .filter((value): value is string => typeof value === "string");
 }
 
 type Asset = typeof assets.$inferSelect;

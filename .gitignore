@@ -11,6 +11,9 @@ dist/
 .env.local
 deploy.env
 
+# Local migration source archives can contain private drafts and large media.
+imports/
+
 # Server data
 server/data/uploads/*
 !server/data/uploads/.gitkeep

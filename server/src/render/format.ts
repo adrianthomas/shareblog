@@ -15,7 +15,22 @@
 // ThoughtPost.tsx, ArticlePage.tsx, etc).
 
 const SAFE_LINK_PROTOCOL = /^(https?:|mailto:)/i;
-const SAFE_IMAGE_PROTOCOL = /^https:/i;
+
+function isSafeImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol === "https:") return true;
+    // Local development and the browser suite use the documented
+    // *.localhost setup over HTTP. Never admit arbitrary remote HTTP images
+    // into a production article, where they would be mixed content.
+    return url.protocol === "http:" && (
+      url.hostname === "localhost" || url.hostname.endsWith(".localhost") ||
+      url.hostname === "127.0.0.1" || url.hostname === "::1"
+    );
+  } catch {
+    return false;
+  }
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -42,7 +57,7 @@ function formatInline(text: string, { images = false }: { images?: boolean } = {
     // would otherwise make the link pass wrap its "[alt](url)" tail in an
     // <a> too.
     html = html.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (match, alt: string, url: string) => {
-      if (!SAFE_IMAGE_PROTOCOL.test(url)) return "";
+      if (!isSafeImageUrl(url)) return "";
       return `<img src="${url}" alt="${alt}" loading="lazy" />`;
     });
   }
@@ -62,6 +77,8 @@ export function formatBasicText(text: string): string {
 }
 
 function formatRichBlock(paragraph: string): string {
+  const fencedCode = paragraph.match(/^```[^\n]*\n([\s\S]*?)\n```$/);
+  if (fencedCode) return `<pre><code>${escapeHtml(fencedCode[1])}</code></pre>`;
   const heading = paragraph.match(/^(#{1,6})\s+([\s\S]+)$/);
   if (heading) {
     const tag = `h${Math.min(heading[1].length + 1, 6)}`;
@@ -75,14 +92,26 @@ function formatRichBlock(paragraph: string): string {
       .join("");
     return `<ul>${items}</ul>`;
   }
+  if (lines.length > 0 && lines.every((line) => /^\d+\.\s+/.test(line))) {
+    const items = lines
+      .map((line) => line.replace(/^\d+\.\s+/, ""))
+      .map((line) => `<li>${formatInline(line, { images: true })}</li>`)
+      .join("");
+    return `<ol>${items}</ol>`;
+  }
+  if (lines.length > 0 && lines.every((line) => /^>\s?/.test(line))) {
+    const quote = lines.map((line) => line.replace(/^>\s?/, "")).join("\n");
+    return `<blockquote><p>${formatInline(quote, { images: true })}</p></blockquote>`;
+  }
+  if (/^(?:---|\*\*\*|___)$/.test(paragraph)) return "<hr />";
   // A paragraph that's nothing but a single image renders as its own block
   // rather than wrapped in a <p> — keeps it visually distinct from body
   // copy the same way an image dropped on its own line reads in Markdown.
   const imageOnly = paragraph.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
   if (imageOnly) {
     const [, alt, url] = imageOnly;
-    if (!SAFE_IMAGE_PROTOCOL.test(url)) return "";
-    return `<img src="${url}" alt="${alt}" loading="lazy" />`;
+    if (!isSafeImageUrl(url)) return "";
+    return `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
   }
   return `<p>${formatInline(paragraph, { images: true })}</p>`;
 }
@@ -107,6 +136,9 @@ export function stripBasicFormatting(text: string): string {
     .replace(/!\[([^\]]*)\]\([^)\s]+\)/g, "")
     .replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1")
     .replace(/^[-•]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/^>\s?/gm, "")
+    .replace(/^```[^\n]*\n|\n```$/g, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1$2")
     .replace(/_([^_\n]+)_/g, "$1")

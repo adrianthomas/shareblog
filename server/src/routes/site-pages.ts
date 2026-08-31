@@ -363,4 +363,26 @@ export async function sitePageRoutes(app: FastifyInstance) {
       return sendHtml(reply, html);
     });
   }
+
+  // WordPress posts commonly lived at /<slug>; Shareblog articles live at
+  // /articles/<slug>. Imported metadata supplies a narrow redirect map after
+  // all real routes, so historical links survive without shadowing pages.
+  app.get("/*", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    const url = new URL(request.url, "http://shareblog.invalid");
+    const legacyPath = url.pathname.replace(/\/$/, "") || "/";
+    const [object] = await db
+      .select()
+      .from(contentObjects)
+      .where(and(
+        eq(contentObjects.siteId, site.id),
+        eq(contentObjects.status, "published"),
+        sql`json_extract(${contentObjects.metadata}, '$.import.legacyPath') = ${legacyPath}`,
+      ))
+      .limit(1);
+    if (!object) return reply.code(404).send("Not found");
+    const target = `/${objectPath(object)}${url.search}`;
+    if (target === `${legacyPath}${url.search}`) return reply.code(404).send("Not found");
+    return reply.redirect(target, 308);
+  });
 }

@@ -3,25 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { assets } from "../db/schema.js";
 import { authGuard } from "../middleware/auth-guard.js";
-import { storage } from "../storage/index.js";
-import { processImage } from "../image/process-image.js";
-
-const VARIANTS = [
-  { name: "thumb", width: 400 },
-  { name: "medium", width: 1200 },
-  { name: "original", width: 2400 },
-] as const;
-
-function toAssetResponse(asset: typeof assets.$inferSelect) {
-  const variants = asset.variants as Record<string, string>;
-  return {
-    id: asset.id,
-    url: storage.getUrl(variants.original ?? variants.medium ?? asset.storageKey),
-    thumbUrl: storage.getUrl(variants.thumb ?? variants.original ?? asset.storageKey),
-    width: asset.width,
-    height: asset.height,
-  };
-}
+import { createImageAsset, imageAssetResponse } from "../lib/image-assets.js";
 
 export async function assetRoutes(app: FastifyInstance) {
   app.post("/assets", { preHandler: authGuard }, async (request, reply) => {
@@ -36,36 +18,8 @@ export async function assetRoutes(app: FastifyInstance) {
     }
 
     const buffer = await file.toBuffer();
-    const processed = await processImage(buffer, VARIANTS.map(({ name, width }) => ({ name, width })));
-
-    const [asset] = await db
-      .insert(assets)
-      .values({
-        siteId: site.id,
-        storageKey: "", // filled in below once we know the asset id
-        originalFilename: file.filename,
-        mimeType: "image/jpeg",
-        width: processed.width,
-        height: processed.height,
-        variants: {},
-        exif: processed.exif ?? null,
-      })
-      .returning();
-
-    const variants: Record<string, string> = {};
-    for (const variant of VARIANTS) {
-      const key = `${site.id}/${asset.id}/${variant.name}.jpg`;
-      await storage.put(key, processed.variants[variant.name], "image/jpeg");
-      variants[variant.name] = key;
-    }
-
-    const [updated] = await db
-      .update(assets)
-      .set({ storageKey: variants.original, variants })
-      .where(eq(assets.id, asset.id))
-      .returning();
-
-    return reply.code(201).send({ asset: toAssetResponse(updated) });
+    const asset = await createImageAsset(site.id, buffer, file.filename);
+    return reply.code(201).send({ asset: imageAssetResponse(asset) });
   });
 
   // Lets a client resolve an assetId (the only thing stored in a Photo
@@ -83,6 +37,6 @@ export async function assetRoutes(app: FastifyInstance) {
       .limit(1);
 
     if (!asset) return reply.code(404).send({ error: { code: "not_found", message: "Asset not found." } });
-    return reply.send({ asset: toAssetResponse(asset) });
+    return reply.send({ asset: imageAssetResponse(asset) });
   });
 }

@@ -38,8 +38,41 @@ npm run build
 npm run db:generate
 npm run db:migrate
 npm run bootstrap-owner
+npm run import:markdown -- --input /path/to/archive
 npm run test:e2e
 ```
+
+## Importing a Markdown archive
+
+`import:markdown` recursively reads Markdown files with YAML frontmatter,
+uploads every referenced local image through Shareblog's normal image
+pipeline, and preserves historical dates and slugs. It is a dry-run unless
+`--commit` is explicitly passed, is safe to rerun when the frontmatter has a
+stable `id`, and publishes historical entries without ActivityPub delivery.
+For WordPress imports, pass the original WXR/XML too so gallery attachment IDs
+and exact legacy permalinks can be recovered.
+
+```bash
+cd server
+npm run import:markdown -- \
+  --input /path/to/markdown-export \
+  --source wordpress:example.com \
+  --source-base-url https://example.com \
+  --wordpress-export /path/to/wordpress-export.xml
+
+# After reviewing the report:
+npm run import:markdown -- \
+  --input /path/to/markdown-export \
+  --source wordpress:example.com \
+  --source-base-url https://example.com \
+  --wordpress-export /path/to/wordpress-export.xml \
+  --commit
+```
+
+WordPress `post` entries become Articles. WordPress pages are counted and
+skipped for deliberate mapping to About, Project, or adjacent static pages.
+See [WORDPRESS_IMPORT.md](WORDPRESS_IMPORT.md) for the export/conversion
+workflow and current formatting limits.
 
 ## First-owner pairing
 

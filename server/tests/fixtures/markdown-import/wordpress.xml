@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:wp="http://wordpress.org/export/1.2/">
+  <channel>
+    <item>
+      <title><![CDATA[Imported article]]></title>
+      <link>https://legacy.example.com/imported-multi-image/</link>
+      <wp:post_id>420</wp:post_id>
+      <wp:post_type><![CDATA[post]]></wp:post_type>
+    </item>
+    <item>
+      <title><![CDATA[Gallery image]]></title>
+      <link>https://legacy.example.com/imported-multi-image/gallery-image/</link>
+      <wp:post_id>501</wp:post_id>
+      <wp:post_type><![CDATA[attachment]]></wp:post_type>
+      <wp:attachment_url><![CDATA[https://legacy.example.com/wp-content/uploads/two.svg]]></wp:attachment_url>
+    </item>
+  </channel>
+</rss>

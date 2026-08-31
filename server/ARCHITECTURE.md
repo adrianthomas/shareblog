@@ -55,6 +55,10 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `/sitemap.xml`, `/robots.txt` | Search-engine discovery using the site's canonical origin |
 | `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` repeats the footer profile before any optional long-form About text |
 
+After all explicit routes, imported `metadata.import.legacyPath` values provide
+permanent redirects from historical root-level WordPress permalinks to the
+matching typed Shareblog detail route.
+
 `PATH_PREFIX` (exported from `render.ts`) is the single source of truth
 mapping a `ContentType` to its URL segment (`photo` → `/photos`) — reused by
 `LISTING_TYPES`/`DETAIL_TYPES` here and by `renderDetail`'s close-button
@@ -181,6 +185,15 @@ silently break.
 Driver abstraction behind `storage-adapter.ts`. `local` (filesystem, served
 via the `/files/*` route in `app.ts`) is implemented; `s3` is a documented
 placeholder, not implemented. Selected via `STORAGE_DRIVER` env var.
+
+`lib/image-assets.ts` is the shared asset-ingestion path for both authenticated
+API uploads and the offline Markdown importer. `import/markdown.ts` recursively
+reads YAML-frontmatter Markdown archives, imports local cover/inline images,
+preserves historical dates/slugs and source markers, skips page-shaped content
+for manual mapping, and writes published history without federation delivery.
+It is dry-run by default; `npm run import:markdown -- ... --commit` is the only
+write mode. Inline image URLs remain compatible with existing clients while
+`metadata.inlineAssetIds` preserves ownership/lifecycle information.
 
 ## Adding a new content type — checklist
 

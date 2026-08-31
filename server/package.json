@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "bootstrap-owner": "tsx src/db/bootstrap-owner.ts",
+    "import:markdown": "tsx src/import/markdown.ts",
     "test:e2e": "playwright test",
     "postinstall": "node scripts/fix-better-sqlite3.cjs"
   },
@@ -43,6 +44,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.35.3",
+    "yaml": "^2.9.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

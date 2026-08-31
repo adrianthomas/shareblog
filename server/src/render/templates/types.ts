@@ -47,6 +47,19 @@ export interface ArticleMetadata {
   coverAssetId?: string;
   coverAltText?: string;
   excerpt?: string;
+  // Imported body images remain normal Markdown URLs for old clients, while
+  // their asset ids make lifecycle cleanup and future richer editing safe.
+  inlineAssetIds?: string[];
+  import?: {
+    source?: string;
+    sourceId?: string;
+    sourcePath?: string;
+    originalUrl?: string;
+    legacyPath?: string;
+    categories?: string[];
+    tags?: string[];
+    inlineImagesReadOnly?: boolean;
+  };
 }
 
 export interface LinkMetadata {

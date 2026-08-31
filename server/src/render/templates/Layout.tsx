@@ -498,7 +498,7 @@ export function Layout({
               .article-detail > .meta { margin-bottom: 1.75rem; }
               .body-content, .about-content { max-width: 65ch; }
               .body-content p, .about-content p { margin: 0 0 1.15rem; }
-              .body-content ul {
+              .body-content ul, .body-content ol {
                 margin: 0 0 1.15rem;
                 padding-left: 1.45rem;
               }
@@ -515,6 +515,11 @@ export function Layout({
               .body-content h4:first-child, .body-content h5:first-child,
               .body-content h6:first-child { margin-top: 0; }
               .body-content img { max-width: 100%; height: auto; border-radius: 6px; margin: 0 0 1rem; display: block; }
+              .body-content blockquote { margin: 1.5rem 0; padding-left: 1rem; border-left: 3px solid var(--border); color: var(--muted); }
+              .body-content blockquote p:last-child { margin-bottom: 0; }
+              .body-content pre { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--bg) 94%, var(--fg)); }
+              .body-content code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.88em; }
+              .body-content hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--border); }
               .release-entry { margin: 0 0 1.75rem; }
               .release-entry:last-child { margin-bottom: 0; }
               .release-date { font-size: 1rem; margin: 0 0 0.5rem; }

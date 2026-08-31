@@ -575,3 +575,58 @@ test("a configured apex domain resolves the site and becomes canonical", async (
   await expect(page.locator("h1")).toContainText("Adrian Example");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", apiBaseURL + "/");
 });
+
+test("Markdown import preserves dates, legacy links, and multiple local images", async ({ page }) => {
+  test.setTimeout(60_000);
+  // Keep this test independent when it runs alone or after the custom-domain
+  // test above: the ordinary tenant subdomain is the public origin here.
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { customDomain: "" }, "PATCH");
+  const serverRoot = path.resolve(import.meta.dirname, "../..");
+  const fixtureRoot = path.resolve(serverRoot, "tests/fixtures/markdown-import");
+  const importArgs = [
+    "tsx", "src/import/markdown.ts",
+    "--input", fixtureRoot,
+    "--site", "e2ecards",
+    "--source", "wordpress:e2e",
+    "--source-base-url", "https://legacy.example.com",
+    "--wordpress-export", path.resolve(fixtureRoot, "wordpress.xml"),
+  ];
+  const importEnv = {
+    ...process.env,
+    DATABASE_URL: path.resolve(serverRoot, "data/e2e-test.db"),
+    BASE_DOMAIN: "localhost:3100",
+    API_BASE_URL: "http://api.localhost:3100",
+    STORAGE_DRIVER: "local",
+    LOCAL_STORAGE_DIR: path.resolve(serverRoot, "data/e2e-test-uploads"),
+  };
+
+  const dryRun = execFileSync("npx", importArgs, { cwd: serverRoot, env: importEnv, encoding: "utf8" });
+  expect(dryRun).toContain("dry-run complete");
+  expect(dryRun).toContain('"importable": 1');
+  expect(dryRun).toContain('"skippedPages": 1');
+
+  const committed = execFileSync("npx", [...importArgs, "--commit"], { cwd: serverRoot, env: importEnv, encoding: "utf8" });
+  expect(committed).toContain('"imported": 1');
+  expect(committed).toContain('"images": 2');
+
+  await page.goto(`${siteBaseURL}/articles/imported-multi-image`);
+  await expect(page.getByRole("heading", { name: "Imported – multi-image article" })).toBeVisible();
+  await expect(page.locator(".body-content img")).toHaveCount(3);
+  await expect(page.locator('.body-content img[alt="A red test landscape"]')).toBeVisible();
+  await expect(page.locator('.body-content img[alt="A blue test landscape"]')).toBeVisible();
+  await expect(page.locator('.body-content img[alt="WordPress gallery image"]')).toBeVisible();
+  await expect(page.locator(".body-content")).toContainText("A preserved figure caption");
+  await expect(page.getByRole("link", { name: "Watch the embedded video" })).toHaveAttribute("href", "https://www.youtube.com/watch?v=aHrn3-Cb3iM");
+  await expect(page.locator(".body-content ol li")).toHaveCount(2);
+  await expect(page.locator(".body-content blockquote")).toContainText("quoted observation");
+  await expect(page.locator("main")).toContainText("2015");
+
+  const legacy = await fetch(`${siteBaseURL}/imported-multi-image?from=old`, { redirect: "manual" });
+  expect(legacy.status).toBe(308);
+  expect(legacy.headers.get("location")).toBe("/articles/imported-multi-image?from=old");
+
+  const repeated = execFileSync("npx", [...importArgs, "--commit"], { cwd: serverRoot, env: importEnv, encoding: "utf8" });
+  expect(repeated).toContain('"imported": 0');
+  expect(repeated).toContain('"skippedExisting": 1');
+  expect(repeated).toContain('"images": 0');
+});
