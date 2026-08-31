@@ -33,7 +33,7 @@ function ExternalTitle({ object }: { object: ContentObject }) {
 
 function OpenLinkButton({ object, locale }: { object: ContentObject; locale: string }) {
   return (
-    <a className="open-link-button" href={externalUrl(object)} target="_blank" rel="noopener noreferrer">
+    <a className="open-link-button content-action-button" href={externalUrl(object)} target="_blank" rel="noopener noreferrer">
       {t(locale, "openLink")} <span aria-hidden="true">↗</span>
     </a>
   );

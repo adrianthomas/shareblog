@@ -419,16 +419,6 @@ export function Layout({
               .music-links a {
                 display: inline-flex; align-items: center; gap: 0.42rem; min-height: 2.75rem;
               }
-              .music-link-icon {
-                display: inline-flex; align-items: center; justify-content: center;
-                width: 1.45rem; height: 1.45rem; border-radius: 999px;
-                color: var(--bg); background: var(--focus);
-                font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                font-size: 0.68rem; font-weight: 800; line-height: 1;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 6px 14px color-mix(in srgb, var(--focus) 24%, transparent);
-                flex-shrink: 0;
-              }
-              .music-link-icon { padding-left: 1px; }
               .link-card {
                 position: relative;
                 padding: 1.05rem 1.15rem 1.15rem;
@@ -456,16 +446,18 @@ export function Layout({
               }
               .link-comment p:last-child { margin-bottom: 0; }
               .link-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0 0; }
-              .open-link-button {
+              .content-action-button {
                 display: inline-flex; align-items: center; gap: 0.35rem;
                 border: 1px solid color-mix(in srgb, var(--focus) 38%, var(--border)); border-radius: 999px;
                 min-height: 2.75rem; padding: 0.55rem 0.85rem; text-decoration: none;
                 color: var(--focus); font-size: 0.9rem; font-weight: 650;
                 background: color-mix(in srgb, var(--focus) 8%, transparent);
               }
-              .open-link-button:hover, .open-link-button:focus-visible {
+              .content-action-button:hover, .content-action-button:focus-visible {
                 border-color: var(--focus); background: color-mix(in srgb, var(--focus) 14%, transparent);
               }
+              .article-actions { margin: 1rem 0 0.85rem; }
+              .book-links { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
               .quote-text { margin: 0 0 1rem; padding-left: 1.15rem; border-left: 2px solid var(--border); }
               .quote-text p { margin: 0 0 0.65rem; font-size: 1.22rem; font-style: italic; line-height: 1.48; letter-spacing: -0.014em; }
               .quote-text footer { font-size: 0.9rem; color: var(--muted); }
@@ -763,7 +755,7 @@ export function Layout({
                   gap: 1.35rem;
                   align-items: start;
                 }
-                html[data-theme="washi"] .washi-feed > .card {
+                html[data-theme="washi"] .washi-feed-item {
                   position: relative;
                   margin: 0;
                   padding: 1.3rem;
@@ -775,9 +767,18 @@ export function Layout({
                     var(--washi-paper);
                   box-shadow: var(--washi-shadow);
                   overflow: hidden;
+                  cursor: pointer;
                   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
                 }
-                html[data-theme="washi"] .washi-feed > .card::before {
+                html[data-theme="washi"] .washi-feed-item > .card {
+                  margin: 0;
+                  padding: 0;
+                  border: 0;
+                  background: transparent;
+                  box-shadow: none;
+                  overflow: visible;
+                }
+                html[data-theme="washi"] .washi-feed-item::before {
                   content: "";
                   position: absolute;
                   inset: 0;
@@ -789,18 +790,36 @@ export function Layout({
                   mix-blend-mode: multiply;
                 }
                 @media (prefers-color-scheme: dark) {
-                  html[data-theme="washi"] .washi-feed > .card::before { mix-blend-mode: screen; opacity: 0.08; }
+                  html[data-theme="washi"] .washi-feed-item::before { mix-blend-mode: screen; opacity: 0.08; }
                 }
                 @media (hover: hover) and (pointer: fine) {
-                  html[data-theme="washi"] .washi-feed > .card:hover {
+                  html[data-theme="washi"] .washi-feed-item:hover {
                     transform: translateY(-2px);
                     box-shadow: var(--washi-shadow-hover);
                     border-color: color-mix(in srgb, var(--focus) 24%, var(--border));
                   }
                 }
-                html[data-theme="washi"] .washi-feed > .card > * {
+                html[data-theme="washi"] .washi-feed-item > .card {
                   position: relative;
-                  z-index: 1;
+                }
+                html[data-theme="washi"] .washi-card-permalink {
+                  position: absolute;
+                  inset: 0;
+                  z-index: 2;
+                  border-radius: inherit;
+                }
+                html[data-theme="washi"] .washi-card-permalink:focus-visible {
+                  outline: 3px solid var(--focus);
+                  outline-offset: -3px;
+                }
+                html[data-theme="washi"] .washi-feed-item > .card a,
+                html[data-theme="washi"] .washi-feed-item > .card button,
+                html[data-theme="washi"] .washi-feed-item > .card input,
+                html[data-theme="washi"] .washi-feed-item > .card select,
+                html[data-theme="washi"] .washi-feed-item > .card textarea,
+                html[data-theme="washi"] .washi-feed-item > .card summary {
+                  position: relative;
+                  z-index: 3;
                 }
                 html[data-theme="washi"] h1,
                 html[data-theme="washi"] h2,
@@ -835,7 +854,7 @@ export function Layout({
                   font-size: 0.76rem;
                   letter-spacing: 0.025em;
                 }
-                html[data-theme="washi"] .washi-feed > .card > .body-content:first-child {
+                html[data-theme="washi"] .washi-feed-item > .card > .body-content:first-child {
                   font-family: "Shippori Mincho", "Hiragino Mincho ProN", serif;
                   font-size: 1.08rem; line-height: 1.72; letter-spacing: 0.005em;
                 }
@@ -875,22 +894,14 @@ export function Layout({
                 html[data-theme="washi"] .washi-feed .music { gap: 1rem; }
                 html[data-theme="washi"] .washi-feed .book img,
                 html[data-theme="washi"] .washi-feed .music img.artwork { width: 96px; }
-                html[data-theme="washi"] .music-links a,
-                html[data-theme="washi"] .meta a {
-                  display: inline-flex;
-                  align-items: center;
-                  min-height: 1.85rem;
-                  margin-bottom: 0.25rem;
-                  border-radius: 999px;
-                  padding: 0.18rem 0.58rem;
-                  background: color-mix(in srgb, var(--focus) 10%, transparent);
-                  text-decoration: none;
+                html[data-theme="washi"] .content-action-button {
+                  border-color: color-mix(in srgb, var(--focus) 42%, var(--border));
+                  background: color-mix(in srgb, var(--focus) 10%, var(--washi-paper));
+                  box-shadow: 0 1px 2px rgba(45, 31, 13, 0.08);
                 }
-                html[data-theme="washi"] .meta a:hover,
-                html[data-theme="washi"] .meta a:focus-visible,
-                html[data-theme="washi"] .music-links a:hover,
-                html[data-theme="washi"] .music-links a:focus-visible {
-                  background: color-mix(in srgb, var(--focus) 18%, transparent);
+                html[data-theme="washi"] .content-action-button:hover,
+                html[data-theme="washi"] .content-action-button:focus-visible {
+                  background: color-mix(in srgb, var(--focus) 17%, var(--washi-paper));
                 }
                 html[data-theme="washi"] .card img,
                 html[data-theme="washi"] .body-content img,
@@ -902,8 +913,8 @@ export function Layout({
                   outline-offset: -1px;
                   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 10px 24px rgba(45, 31, 13, 0.14);
                 }
-                html[data-theme="washi"] .washi-feed > .card:not(.book):not(.music) > a:first-child img,
-                html[data-theme="washi"] .washi-feed > .card:not(.book):not(.music) > img:first-child {
+                html[data-theme="washi"] .washi-feed-item > .card:not(.book):not(.music) > a:first-child img,
+                html[data-theme="washi"] .washi-feed-item > .card:not(.book):not(.music) > img:first-child {
                   display: block;
                   width: calc(100% + 2.6rem);
                   max-width: none;
@@ -1429,11 +1440,6 @@ export function Layout({
                   background: color-mix(in srgb, var(--focus) 10%, var(--prism-surface));
                   text-decoration: none;
                   font-weight: 650;
-                }
-                html[data-theme="prism"] .music-link-icon {
-                  color: white;
-                  background: var(--prism-pink);
-                  box-shadow: 0 1px 2px rgba(66, 66, 250, 0.14), 0 8px 18px rgba(230, 0, 103, 0.22);
                 }
                 html[data-theme="prism"] .meta a:hover,
                 html[data-theme="prism"] .meta a:focus-visible,

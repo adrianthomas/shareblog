@@ -99,6 +99,13 @@ export function ArticleCard({
         </a>
       </h2>
       {excerpt ? <p className="article-excerpt">{excerpt}</p> : null}
+      {theme === "washi" ? (
+        <p className="article-actions">
+          <a className="content-action-button" href={`/articles/${object.slug}`}>
+            {t(locale, "readMore")} <span aria-hidden="true">→</span>
+          </a>
+        </p>
+      ) : null}
       <p className="meta">{formatDate(object.publishedAt, locale)}</p>
     </article>
   );

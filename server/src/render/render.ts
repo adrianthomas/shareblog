@@ -199,7 +199,22 @@ export async function renderList(
       : site.theme === "cards" || site.theme === "prism" || site.theme === "ledger"
         ? React.createElement("div", { className: "cards-feed" }, ...cards)
         : site.theme === "washi"
-          ? React.createElement("div", { className: "washi-feed" }, ...cards)
+          ? React.createElement(
+              "div",
+              { className: "washi-feed" },
+              ...cards.map((card, index) =>
+                React.createElement(
+                  "div",
+                  { className: "washi-feed-item", key: objects[index].id },
+                  React.createElement("a", {
+                    className: "washi-card-permalink",
+                    href: `/${PATH_PREFIX[objects[index].type]}/${objects[index].slug}`,
+                    "aria-label": `${t(site.locale, "readMore")}: ${objects[index].title ?? feedContentSummary(objects[index])}`,
+                  }),
+                  card,
+                ),
+              ),
+            )
           : React.createElement(React.Fragment, null, ...cards);
   return wrap(site, pageTitle, React.createElement(React.Fragment, null, options.prefix, list, pagination), {
     ...wrapOpts,

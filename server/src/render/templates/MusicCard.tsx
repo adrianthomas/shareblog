@@ -22,11 +22,9 @@ export const PLATFORM_LABELS: Record<string, string> = {
 
 function MusicLink({ platform, url, locale }: { platform: string; url: string; locale: string }) {
   return (
-    <a href={url}>
-      <span className="music-link-icon" aria-hidden="true">
-        ▶︎
-      </span>
+    <a className="content-action-button" href={url}>
       <span>{t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}</span>
+      <span aria-hidden="true">↗</span>
     </a>
   );
 }

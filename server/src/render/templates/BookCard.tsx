@@ -62,10 +62,10 @@ function BookLinks({ links }: { links?: BookMetadata["links"] }) {
   const entries = links ? flattenLinks(links) : [];
   if (entries.length === 0) return null;
   return (
-    <p className="meta">
+    <p className="meta book-links">
       {entries.map(({ key, label, url, amazonRegion }) => (
-        <a key={key} href={url} data-amazon-region={amazonRegion} style={{ marginRight: "0.75rem" }}>
-          {label}
+        <a key={key} className="content-action-button" href={url} data-amazon-region={amazonRegion}>
+          {label} <span aria-hidden="true">↗</span>
         </a>
       ))}
     </p>
