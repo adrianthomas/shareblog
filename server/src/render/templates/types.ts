@@ -9,6 +9,11 @@ export interface ProfileLink {
   relMe?: boolean;
 }
 
+export interface ContactLink {
+  label: string;
+  url: string;
+}
+
 export interface BookMetadata {
   author: string;
   isbn13?: string;

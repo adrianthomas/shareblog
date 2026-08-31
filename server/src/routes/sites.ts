@@ -15,6 +15,7 @@ const createSiteSchema = z.object({
     .max(63)
     .regex(/^[a-z0-9-]+$/, "Subdomain may only contain lowercase letters, numbers, and hyphens."),
   title: z.string().min(1).max(200),
+  tagline: z.string().max(300).optional(),
   locale: z
     .string()
     .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, "Locale must be a BCP 47 language tag, e.g. \"en\" or \"pt-BR\".")
@@ -52,12 +53,14 @@ const updateSiteSchema = z
     theme: z.enum(themeValues).optional(),
     title: z.string().trim().min(1).max(200).optional(),
     tagline: z.string().max(300).optional(),
+    profileName: z.string().max(200).optional(),
     introduction: z.string().max(1_000).optional(),
     location: z.string().max(120).optional(),
     profileImageUrl: z.union([z.string().url().max(2_000), z.literal("")]).optional(),
     profileLinks: z.array(profileLinkSchema).max(20).optional(),
     contactLabel: z.string().max(80).optional(),
     contactUrl: z.union([z.string().url().max(2_000), z.literal("")]).optional(),
+    contactLinks: z.array(profileLinkSchema.omit({ relMe: true })).max(20).optional(),
     customDomain: customDomainSchema.optional(),
     about: z.string().max(20_000).optional(),
     federationEnabled: z.boolean().optional(),
@@ -86,16 +89,21 @@ export async function siteRoutes(app: FastifyInstance) {
 
     const [site] = await db
       .insert(sites)
-      .values({ ownerUserId: request.authUser!.id, subdomain, title: body.title, locale: body.locale })
+      .values({
+        ownerUserId: request.authUser!.id,
+        subdomain,
+        title: body.title,
+        tagline: body.tagline || null,
+        profileName: body.title,
+        locale: body.locale,
+      })
       .returning();
 
     return reply.code(201).send({ site });
   });
 
-  // Theme, About text, and the federation toggle are the only things
-  // settable here today — the iOS app's theme picker, About editor, and
-  // Settings screen are the only callers. Broaden the schema if site
-  // settings grow a web dashboard later.
+  // These settings are edited by the iOS app's theme, About, site, and
+  // footer screens. All additions remain optional for older clients.
   app.patch("/sites", { preHandler: authGuard }, async (request, reply) => {
     const site = request.authSite;
     if (!site) {
@@ -116,13 +124,32 @@ export async function siteRoutes(app: FastifyInstance) {
       .set({
         ...(body.theme !== undefined ? { theme: body.theme } : {}),
         ...(body.title !== undefined ? { title: body.title } : {}),
+        ...(body.profileName === undefined && body.title !== undefined && site.profileName === site.title
+          ? { profileName: body.title }
+          : {}),
         ...(body.tagline !== undefined ? { tagline: body.tagline || null } : {}),
+        ...(body.profileName !== undefined ? { profileName: body.profileName || null } : {}),
         ...(body.introduction !== undefined ? { introduction: body.introduction || null } : {}),
         ...(body.location !== undefined ? { location: body.location || null } : {}),
         ...(body.profileImageUrl !== undefined ? { profileImageUrl: body.profileImageUrl || null } : {}),
         ...(body.profileLinks !== undefined ? { profileLinks: body.profileLinks } : {}),
         ...(body.contactLabel !== undefined ? { contactLabel: body.contactLabel || null } : {}),
         ...(body.contactUrl !== undefined ? { contactUrl: body.contactUrl || null } : {}),
+        ...(body.contactLinks === undefined && (body.contactLabel !== undefined || body.contactUrl !== undefined)
+          ? (() => {
+              const legacyUrl = body.contactUrl !== undefined ? body.contactUrl : site.contactUrl;
+              const legacyLabel = body.contactLabel !== undefined ? body.contactLabel : site.contactLabel;
+              return {
+                contactLinks: legacyUrl ? [{ label: legacyLabel || "Contact", url: legacyUrl }] : [],
+              };
+            })()
+          : {}),
+        ...(body.contactLinks !== undefined ? {
+          contactLinks: body.contactLinks,
+          // Keep the first contact mirrored for older installed clients.
+          contactLabel: body.contactLinks[0]?.label ?? null,
+          contactUrl: body.contactLinks[0]?.url ?? null,
+        } : {}),
         ...(body.customDomain !== undefined ? { customDomain: body.customDomain || null } : {}),
         ...(body.about !== undefined ? { about: body.about || null } : {}),
         ...(body.federationEnabled !== undefined ? { federationEnabled: body.federationEnabled } : {}),

@@ -8,6 +8,7 @@ import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 import { absoluteSiteUrl, siteOrigin } from "../site-url.js";
 import type { ProfileLink } from "./types.js";
 import { workPageEnabled } from "../../lib/work-page.js";
+import { SiteProfile } from "./SiteProfile.js";
 
 export interface PageMetadata {
   path?: string;
@@ -133,10 +134,6 @@ export function Layout({
   const usesCabinetInteraction = theme === "cabinet";
   const usesInteractiveDetail = usesCardsInteraction || usesCabinetInteraction;
   const usesCompactCategoryFilter = !usesInteractiveDetail;
-  const hasAbout = Boolean(
-    site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
-    site.profileLinks?.length || site.contactUrl,
-  );
   const hasWorkPage = workPageEnabled();
   // The canonical host is also the Fediverse identity host. The actor's
   // identifier remains the stable site subdomain, while a configured custom
@@ -144,7 +141,7 @@ export function Layout({
   const fediverseHost = new URL(siteOrigin(site)).host;
   const fediverseHandle = `@${site.subdomain}@${fediverseHost}`;
   const canonicalUrl = absoluteSiteUrl(site, metadata.path ?? currentPath);
-  const description = metadata.description ?? site.introduction ?? site.tagline ?? undefined;
+  const description = metadata.description ?? site.tagline ?? site.introduction ?? undefined;
   const profileLinks = (site.profileLinks ?? []) as ProfileLink[];
   const jsonLd = {
     "@context": "https://schema.org",
@@ -152,7 +149,7 @@ export function Layout({
       {
         "@type": "Person",
         "@id": `${siteOrigin(site)}/#person`,
-        name: site.title,
+        name: site.profileName?.trim() || site.title,
         url: siteOrigin(site),
         ...(description ? { description } : {}),
         ...(site.profileImageUrl ? { image: site.profileImageUrl } : {}),
@@ -539,10 +536,16 @@ export function Layout({
                 padding: 1.1rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
               }
               .site-profile > img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex: none; }
-              .site-profile p { margin: 0 0 0.45rem; max-width: 60ch; }
-              .site-profile-links { display: flex; flex-wrap: wrap; gap: 0.4rem 0.85rem; font-size: 0.9rem; }
+              .site-profile-details { min-width: 0; flex: 1; }
+              .site-profile p, .site-footer-profile p { margin: 0; }
+              .site-profile-name { font-size: 1rem; font-weight: 720; color: var(--fg); }
+              .site-profile-location { margin-top: 0.15rem !important; color: var(--muted); font-size: 0.82rem; }
+              .site-profile-introduction { max-width: 60ch; margin-top: 0.75rem !important; }
+              .site-profile-link-groups { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin-top: 0.85rem; }
+              .site-profile-links { display: flex; flex-wrap: wrap; gap: 0.35rem 0.85rem; font-size: 0.9rem; }
+              .site-profile-links > span { width: 100%; color: var(--muted); font-size: 0.7rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; }
               .site-profile-links a { color: inherit; }
-              .site-profile-links .site-contact { font-weight: 650; }
+              .site-contact-links a { font-weight: 650; }
               .pagination { display: flex; justify-content: space-between; gap: 1rem; margin: 2.5rem 0 0; }
               .pagination a { color: inherit; }
               .search-form { display: flex; gap: 0.5rem; margin: 0 0 2rem; }
@@ -557,6 +560,10 @@ export function Layout({
                 margin-top: 3.5rem; padding-top: 1.5rem; padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
                 border-top: 1px solid var(--border); font-size: 0.82rem;
               }
+              .site-footer-profile { display: grid; grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+              .site-footer-profile .site-profile-link-groups { margin-top: 0; justify-content: flex-end; }
+              .site-footer-profile .site-profile-links { justify-content: flex-end; }
+              .site-footer-nav { padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
               footer.site-footer a { color: var(--muted); text-decoration: none; }
               footer.site-footer a:hover, footer.site-footer a:focus-visible { color: var(--fg); }
               body[data-page="/my-work"] { max-width: 1080px; }
@@ -597,7 +604,7 @@ export function Layout({
               .work-launch { position: relative; width: 270px; height: 270px; display: grid; place-items: center; }.work-orbit { position: absolute; inset: 6%; border: 1px solid rgba(255,255,255,.7); border-radius: 50%; }.work-orbit--two { inset: 22%; border-style: dashed; }.work-launch-mark { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 26px; background: var(--work-lime); color: #111; font-size: 3.5rem; box-shadow: 13px 14px 0 rgba(0,0,0,.22); transform: rotate(-8deg); }.work-launch-copy { position: absolute; bottom: 0; color: white; font: 750 .7rem/1 ui-monospace, monospace; letter-spacing: .08em; }.work-visual--launch { background: #ff5c35; }
               .work-indie { position: relative; width: 82%; height: 72%; }.work-indie-window { position: absolute; display: flex; gap: 5px; padding: 13px; border: 2px solid #151515; border-radius: 12px; background: #fff; box-shadow: 10px 11px 0 #151515; }.work-indie-window i { width: 7px; height: 7px; border-radius: 50%; background: #ff5c35; }.work-indie-window--back { inset: 0 14% 22% 0; transform: rotate(-5deg); background: #d7ff4f; }.work-indie-window--front { inset: 20% 0 0 18%; transform: rotate(3deg); }.work-indie-window b { position: absolute; inset: 48% 0 auto; text-align: center; font-size: 1.15rem; }.work-indie-spark { position: absolute; right: -2%; top: -11%; font-size: 4rem; color: #ff5c35; }.work-visual--indie { background: #c7b8ff; }
               .work-outro { position: relative; padding: clamp(5rem, 12vw, 10rem) 0; }.work-outro > p { margin: 0 0 1rem; color: var(--muted); }.work-outro h2 { max-width: 820px; margin: 0 0 2.5rem; font-size: clamp(3rem, 8vw, 7rem); line-height: .9; letter-spacing: -.065em; }.work-contact-link, .contact-primary { display: inline-flex; align-items: center; gap: 1.25rem; padding: .9rem 1.15rem; border: 2px solid currentColor; border-radius: 999px; color: var(--fg); font-weight: 780; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }.work-contact-link:hover, .contact-primary:hover { transform: translate(-3px,-3px); box-shadow: 6px 7px 0 var(--work-accent, #ff5c35); }.work-signoff { display: block; margin-top: 4rem; color: var(--muted); font-size: .78rem; }
-              body[data-page="/contact"] { max-width: 850px; }.contact-page { min-height: 65vh; padding: clamp(3rem, 9vw, 7.5rem) 0; }.contact-page h2 { max-width: 760px; margin: 0; font-size: clamp(3.1rem, 9vw, 6.6rem); line-height: .9; letter-spacing: -.065em; }.contact-lede { max-width: 610px; margin: 2rem 0; color: var(--muted); font-size: 1.18rem; }.contact-primary { --work-accent: #ff5c35; margin: .5rem 0 3rem; }.contact-links { display: flex; flex-wrap: wrap; gap: .65rem 1.15rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: .86rem; }.contact-links span { width: 100%; color: var(--muted); }.contact-links a { color: var(--fg); }.contact-quiet { padding: 1rem; border: 1px dashed var(--border); color: var(--muted); }.contact-back { display: inline-block; margin-top: 5rem; color: var(--muted); font-size: .82rem; }
+              body[data-page="/contact"] { max-width: 850px; }.contact-page { min-height: 65vh; padding: clamp(3rem, 9vw, 7.5rem) 0; }.contact-page h2 { max-width: 760px; margin: 0; font-size: clamp(3.1rem, 9vw, 6.6rem); line-height: .9; letter-spacing: -.065em; }.contact-lede { max-width: 610px; margin: 2rem 0; color: var(--muted); font-size: 1.18rem; }.contact-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin: .5rem 0 3rem; }.contact-primary { --work-accent: #ff5c35; }.contact-links { display: flex; flex-wrap: wrap; gap: .65rem 1.15rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: .86rem; }.contact-links span { width: 100%; color: var(--muted); }.contact-links a { color: var(--fg); }.contact-quiet { padding: 1rem; border: 1px dashed var(--border); color: var(--muted); }.contact-back { display: inline-block; margin-top: 5rem; color: var(--muted); font-size: .82rem; }
               @media (max-width: 760px) { .work-hero { grid-template-columns: 1fr; min-height: auto; }.work-sticker { width: 125px; }.work-chapter { grid-template-columns: 44px 1fr; min-height: 0; padding: 3.5rem 0; }.work-visual { grid-column: 2; min-height: 320px; }.work-rail span { width: 38px; height: 38px; }.work-rail::before { top: -3.5rem; bottom: -3.5rem; } }
               @media (max-width: 480px) { .work-hero h2 { font-size: clamp(3rem, 16vw, 5rem); }.work-chapter { grid-template-columns: 32px minmax(0,1fr); gap: 1rem; }.work-rail span { width: 30px; height: 30px; font-size: .6rem; }.work-visual { min-height: 280px; border-radius: 20px; }.work-phone { transform: scale(.82); }.work-outro h2 { font-size: 3.4rem; } }
               @media (max-width: 400px) {
@@ -611,6 +618,9 @@ export function Layout({
                 .site-header-left { width: 100%; }
                 .site-header-right { align-items: flex-start; }
                 .header-links { margin-top: -0.35rem; }
+                .site-footer-profile { grid-template-columns: 1fr; }
+                .site-footer-profile .site-profile-link-groups { justify-content: flex-start; }
+                .site-footer-profile .site-profile-links { justify-content: flex-start; }
               }
               @media (prefers-reduced-motion: reduce) {
                 *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
@@ -1990,10 +2000,13 @@ export function Layout({
         <main id="main-content">{children}</main>
         {!(usesInteractiveDetail && cardsDetail) ? (
           <footer className="site-footer">
-            <a href="/archive">{t(site.locale, "archive")}</a>
-            {" · "}<a href="/search">{t(site.locale, "search")}</a>
-            {hasAbout ? <>{" · "}<a href="/about">{t(site.locale, "about")}</a></> : null}
-            {hasWorkPage ? <>{" · "}<a href="/my-work">My work</a>{" · "}<a href="/contact">Contact</a></> : null}
+            <SiteProfile site={site} />
+            <div className="site-footer-nav">
+              <a href="/archive">{t(site.locale, "archive")}</a>
+              {" · "}<a href="/search">{t(site.locale, "search")}</a>
+              {" · "}<a href="/about">{t(site.locale, "about")}</a>
+              {hasWorkPage ? <>{" · "}<a href="/my-work">My work</a>{" · "}<a href="/contact">Contact</a></> : null}
+            </div>
           </footer>
         ) : null}
         {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}

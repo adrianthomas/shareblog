@@ -53,7 +53,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `/archive`, `/archive/:year/:month` | Chronological month index and paginated month views |
 | `/search?q=...` | Search titles, bodies, source URLs, and structured metadata; marked `noindex` |
 | `/sitemap.xml`, `/robots.txt` | Search-engine discovery using the site's canonical origin |
-| `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` 404s if the site has no About text |
+| `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` repeats the footer profile before any optional long-form About text |
 
 `PATH_PREFIX` (exported from `render.ts`) is the single source of truth
 mapping a `ContentType` to its URL segment (`photo` → `/photos`) — reused by
@@ -68,7 +68,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). Identity (`title`, `tagline`, `introduction`, `location`, `profileImageUrl`, `profileLinks`, contact CTA), `theme`, `about`, `federationEnabled`, and `subdomain`/canonical `customDomain`. |
+| `sites` | One per user (today). Site identity (`title`, `tagline`) is distinct from the footer profile (`profileName`, `location`, `profileLinks`, `contactLinks`); legacy introduction/single-contact fields remain compatible. Also stores `theme`, `about`, `federationEnabled`, and `subdomain`/canonical `customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -139,8 +139,9 @@ landscape imagery.
 `sites.customDomain` wins over `<subdomain>.<BASE_DOMAIN>` and threads through
 HTML canonical/Open Graph metadata, JSON-LD, RSS, sitemaps, and ActivityPub.
 `Layout.tsx` emits the shared Person/WebSite or BlogPosting structured data.
-`AboutPage.tsx` renders the cross-theme identity profile alongside the longer
-About copy. Product marketing routes remain available
+`SiteProfile.tsx` renders the same name, location, profile links, and contact
+links in the global footer and on `AboutPage.tsx`, where it sits alongside the
+longer About copy. Product marketing routes remain available
 for old links but are no longer linked from a person's About page and are
 `noindex`.
 Article `metadata.coverAssetId` is the card/detail header image, with

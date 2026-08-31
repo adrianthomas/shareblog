@@ -158,7 +158,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
       return renderList(site, site.title, objects, "/", availablePaths, {
         page,
         totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
-        metadata: { path: page > 1 ? `/?page=${page}` : "/", description: site.introduction ?? site.tagline ?? undefined, type: "profile" },
+        metadata: { path: page > 1 ? `/?page=${page}` : "/", description: site.tagline ?? site.introduction ?? undefined, type: "profile" },
       });
     });
   });
@@ -174,15 +174,11 @@ export async function sitePageRoutes(app: FastifyInstance) {
   app.get("/sitemap.xml", { preHandler: resolveTenant }, async (request, reply) => {
     const site = request.site!;
     const [objects, paths] = await Promise.all([publishedObjects(site.id), publishedNavPaths(site.id)]);
-    const hasAbout = Boolean(
-      site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
-      site.profileLinks?.length || site.contactUrl,
-    );
     const staticPaths = [
       "/",
       "/archive",
       ...(workPageEnabled() ? ["/my-work", "/contact"] : []),
-      ...(hasAbout ? ["/about"] : []),
+      "/about",
       ...paths,
     ];
     const urls = [...staticPaths, ...objects.map((object) => `/${objectPath(object)}`)];
@@ -273,13 +269,6 @@ export async function sitePageRoutes(app: FastifyInstance) {
   // optional long-form About text. Hide it only when both are empty.
   app.get("/about", { preHandler: resolveTenant }, async (request, reply) => {
     const site = request.site!;
-    const hasAbout = Boolean(
-      site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
-      site.profileLinks?.length || site.contactUrl,
-    );
-    if (!hasAbout) {
-      return reply.code(404).send("Not found");
-    }
     return sendCachedHtml(request, reply, site.id, async () => renderAboutPage(site));
   });
 

@@ -503,25 +503,32 @@ test("Cabinet link artifacts keep the source and saved note as distinct routes",
 test("site identity drives public profile and discovery metadata", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", {
     title: "Adrian Example",
-    tagline: "Product maker and writer",
+    tagline: "Small things worth keeping",
+    profileName: "Adrian Thomas",
     introduction: "I make thoughtful software and keep a public record of what I learn.",
     location: "Berlin, Germany",
     profileImageUrl: "https://example.com/avatar.jpg",
     profileLinks: [{ label: "GitHub", url: "https://github.com/example", relMe: true }],
-    contactLabel: "Email me",
-    contactUrl: "mailto:hello@example.com",
+    contactLinks: [
+      { label: "Email me", url: "mailto:hello@example.com" },
+      { label: "Book a call", url: "https://example.com/call" },
+    ],
   }, "PATCH");
 
   await page.goto(siteBaseURL + "/");
-  await expect(page.locator(".site-profile")).toHaveCount(0);
+  await expect(page.locator("header .site-tagline")).toHaveText("Small things worth keeping");
+  await expect(page.locator("footer .site-profile-name")).toHaveText("Adrian Thomas");
+  await expect(page.locator("footer .site-profile-location")).toHaveText("Berlin, Germany");
+  await expect(page.locator('footer a[href="https://example.com/call"]')).toHaveText("Book a call");
   await expect(page.locator('footer a[href="/about"]')).toBeVisible();
   await page.goto(siteBaseURL + "/about");
   await expect(page.locator(".site-profile")).toContainText("thoughtful software");
+  await expect(page.locator(".site-profile")).toContainText("Adrian Thomas");
   await expect(page.locator(".site-profile")).toContainText("Berlin, Germany");
   await expect(page.locator('.site-profile a[href="https://github.com/example"]')).toHaveAttribute("rel", "me");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", siteBaseURL + "/about");
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "About — Adrian Example");
-  expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("thoughtful software");
+  expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("Small things worth keeping");
 
   const sitemap = await fetch(siteBaseURL + "/sitemap.xml");
   expect(sitemap.status).toBe(200);
