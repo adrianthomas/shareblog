@@ -138,8 +138,9 @@ landscape imagery.
 `render/site-url.ts` is the canonical-origin source of truth. A configured
 `sites.customDomain` wins over `<subdomain>.<BASE_DOMAIN>` and threads through
 HTML canonical/Open Graph metadata, JSON-LD, RSS, sitemaps, and ActivityPub.
-`Layout.tsx` emits the shared Person/WebSite or BlogPosting structured data and
-the cross-theme identity profile. Product marketing routes remain available
+`Layout.tsx` emits the shared Person/WebSite or BlogPosting structured data.
+`AboutPage.tsx` renders the cross-theme identity profile alongside the longer
+About copy. Product marketing routes remain available
 for old links but are no longer linked from a person's About page and are
 `noindex`.
 Article `metadata.coverAssetId` is the card/detail header image, with

@@ -132,7 +132,10 @@ export function Layout({
   const usesCabinetInteraction = theme === "cabinet";
   const usesInteractiveDetail = usesCardsInteraction || usesCabinetInteraction;
   const usesCompactCategoryFilter = !usesInteractiveDetail;
-  const hasAbout = Boolean(site.about && site.about.trim());
+  const hasAbout = Boolean(
+    site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
+    site.profileLinks?.length || site.contactUrl,
+  );
   // The canonical host is also the Fediverse identity host. The actor's
   // identifier remains the stable site subdomain, while a configured custom
   // domain replaces the deployment's default <subdomain>.<BASE_DOMAIN> host.
@@ -554,6 +557,47 @@ export function Layout({
               }
               footer.site-footer a { color: var(--muted); text-decoration: none; }
               footer.site-footer a:hover, footer.site-footer a:focus-visible { color: var(--fg); }
+              body[data-page="/my-work"] { max-width: 1080px; }
+              .work-page { --work-accent: #ff5c35; --work-lime: #d7ff4f; --work-ink: #151515; }
+              .work-hero {
+                min-height: min(70vh, 650px); display: grid; grid-template-columns: minmax(0, 1fr) 190px;
+                gap: clamp(2rem, 7vw, 6rem); align-items: center; padding: clamp(2rem, 6vw, 5.5rem) 0 5rem;
+                border-bottom: 1px solid var(--border);
+              }
+              .work-eyebrow { margin: 0 0 1rem; font-size: 0.72rem; font-weight: 760; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+              .work-hero h2 { max-width: 850px; margin: 0; font-size: clamp(3.2rem, 8.8vw, 7.5rem); line-height: 0.87; letter-spacing: -0.07em; }
+              .work-lede { max-width: 610px; margin: 2rem 0 0; font-size: clamp(1.08rem, 2vw, 1.35rem); line-height: 1.48; color: var(--muted); }
+              .work-sticker {
+                aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+                border-radius: 50%; background: var(--work-lime); color: var(--work-ink); transform: rotate(7deg);
+                box-shadow: 0.55rem 0.7rem 0 var(--work-accent); font-size: 0.72rem; font-weight: 850; letter-spacing: 0.09em; line-height: 1.5;
+              }
+              .work-sticker i { margin-top: 0.3rem; font-size: 1.7rem; font-style: normal; line-height: 1; }
+              .work-timeline { position: relative; }
+              .work-chapter { display: grid; grid-template-columns: 64px minmax(220px, 0.85fr) minmax(320px, 1.15fr); gap: clamp(1.5rem, 5vw, 4.5rem); min-height: 520px; padding: 5rem 0; border-bottom: 1px solid var(--border); align-items: center; }
+              .work-rail { align-self: stretch; position: relative; display: flex; justify-content: center; }
+              .work-rail::before { content: ""; position: absolute; top: -5rem; bottom: -5rem; width: 1px; background: var(--border); }
+              .work-rail span { position: sticky; top: 2rem; z-index: 1; align-self: flex-start; display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid var(--border); border-radius: 50%; background: var(--bg); font: 750 0.72rem/1 ui-monospace, monospace; }
+              .work-label { margin: 0 0 0.55rem !important; color: var(--work-accent); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+              .work-chapter-copy h3 { margin: 0 0 1rem; font-size: clamp(2.2rem, 5vw, 4.5rem); line-height: 0.95; letter-spacing: -0.055em; }
+              .work-chapter-copy > p:not(.work-label):not(.work-note-line) { max-width: 34rem; font-size: 1.08rem; line-height: 1.55; }
+              .work-note-line { margin: 1.7rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
+              .work-visual { min-height: 360px; display: grid; place-items: center; overflow: hidden; border-radius: 28px; background: #ebe7df; color: var(--work-ink); }
+              .work-board { position: relative; width: 82%; height: 75%; background: #d8d2c8; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+              .work-note { position: absolute; width: 38%; aspect-ratio: 1.08; display: grid; place-items: center; padding: 1rem; background: #fff277; box-shadow: 0 9px 18px rgba(0,0,0,.12); font: 700 0.8rem/1.2 ui-monospace, monospace; text-align: center; }
+              .work-note--one { left: 9%; top: 12%; transform: rotate(-5deg); }.work-note--two { right: 9%; top: 18%; background: #ff9db0; transform: rotate(4deg); }.work-note--three { left: 31%; bottom: 10%; background: #d7ff4f; transform: rotate(-1deg); }
+              .work-thread { position: absolute; left: 25%; right: 26%; top: 49%; height: 2px; background: var(--work-accent); transform: rotate(16deg); }
+              .work-phone { position: relative; width: 190px; height: 360px; overflow: hidden; border: 8px solid #111; border-radius: 35px; background: #f8f4ee; padding: 3.25rem 1.15rem 1rem; box-shadow: 0 25px 38px rgba(0,0,0,.2); }
+              .work-phone-island { position: absolute; top: 11px; left: 50%; width: 72px; height: 19px; border-radius: 999px; background: #111; transform: translateX(-50%); }.work-phone-kicker { display: block; margin-bottom: .2rem; color: #777; font-size: .55rem; letter-spacing: .15em; }.work-phone strong { display: block; font-size: 1.15rem; line-height: 1.05; }.work-phone-card { display: block; height: 67px; margin-top: 1rem; border-radius: 13px; }.work-phone-card--pink { background: #ff9db0; transform: rotate(-2deg); }.work-phone-card--yellow { margin-top: .55rem; background: #d7ff4f; transform: rotate(1deg); }.work-phone-pill { position: absolute; left: 1.15rem; right: 1.15rem; bottom: 1rem; padding: .55rem; border-radius: 999px; background: #111; color: white; font-size: .65rem; text-align: center; }
+              .work-visual--phone { background: #9fc4ff; }
+              .work-system { width: 82%; padding: 1.6rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; border-radius: 16px; background: #fff; box-shadow: 0 22px 38px rgba(0,0,0,.14); }.work-system-title { grid-column: 1/-1; margin-bottom: .5rem; font-weight: 800; }.work-swatch { aspect-ratio: 1.5; border-radius: 9px; }.work-swatch--a { background: #151515; }.work-swatch--b { background: #ff5c35; }.work-swatch--c { background: #d7ff4f; }.work-system-button { grid-column: span 1; padding: .55rem; border-radius: 999px; background: #151515; color: #fff; text-align: center; font-size: .65rem; font-weight: 750; }.work-system-input { grid-column: span 2; padding: .55rem .7rem; border: 1px solid #bbb; border-radius: 8px; color: #777; font-size: .65rem; }
+              .work-visual--system { background: #ffc5d0; }
+              .work-launch { position: relative; width: 270px; height: 270px; display: grid; place-items: center; }.work-orbit { position: absolute; inset: 6%; border: 1px solid rgba(255,255,255,.7); border-radius: 50%; }.work-orbit--two { inset: 22%; border-style: dashed; }.work-launch-mark { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 26px; background: var(--work-lime); color: #111; font-size: 3.5rem; box-shadow: 13px 14px 0 rgba(0,0,0,.22); transform: rotate(-8deg); }.work-launch-copy { position: absolute; bottom: 0; color: white; font: 750 .7rem/1 ui-monospace, monospace; letter-spacing: .08em; }.work-visual--launch { background: #ff5c35; }
+              .work-indie { position: relative; width: 82%; height: 72%; }.work-indie-window { position: absolute; display: flex; gap: 5px; padding: 13px; border: 2px solid #151515; border-radius: 12px; background: #fff; box-shadow: 10px 11px 0 #151515; }.work-indie-window i { width: 7px; height: 7px; border-radius: 50%; background: #ff5c35; }.work-indie-window--back { inset: 0 14% 22% 0; transform: rotate(-5deg); background: #d7ff4f; }.work-indie-window--front { inset: 20% 0 0 18%; transform: rotate(3deg); }.work-indie-window b { position: absolute; inset: 48% 0 auto; text-align: center; font-size: 1.15rem; }.work-indie-spark { position: absolute; right: -2%; top: -11%; font-size: 4rem; color: #ff5c35; }.work-visual--indie { background: #c7b8ff; }
+              .work-outro { position: relative; padding: clamp(5rem, 12vw, 10rem) 0; }.work-outro > p { margin: 0 0 1rem; color: var(--muted); }.work-outro h2 { max-width: 820px; margin: 0 0 2.5rem; font-size: clamp(3rem, 8vw, 7rem); line-height: .9; letter-spacing: -.065em; }.work-contact-link, .contact-primary { display: inline-flex; align-items: center; gap: 1.25rem; padding: .9rem 1.15rem; border: 2px solid currentColor; border-radius: 999px; color: var(--fg); font-weight: 780; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }.work-contact-link:hover, .contact-primary:hover { transform: translate(-3px,-3px); box-shadow: 6px 7px 0 var(--work-accent, #ff5c35); }.work-signoff { display: block; margin-top: 4rem; color: var(--muted); font-size: .78rem; }
+              body[data-page="/contact"] { max-width: 850px; }.contact-page { min-height: 65vh; padding: clamp(3rem, 9vw, 7.5rem) 0; }.contact-page h2 { max-width: 760px; margin: 0; font-size: clamp(3.1rem, 9vw, 6.6rem); line-height: .9; letter-spacing: -.065em; }.contact-lede { max-width: 610px; margin: 2rem 0; color: var(--muted); font-size: 1.18rem; }.contact-primary { --work-accent: #ff5c35; margin: .5rem 0 3rem; }.contact-links { display: flex; flex-wrap: wrap; gap: .65rem 1.15rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: .86rem; }.contact-links span { width: 100%; color: var(--muted); }.contact-links a { color: var(--fg); }.contact-quiet { padding: 1rem; border: 1px dashed var(--border); color: var(--muted); }.contact-back { display: inline-block; margin-top: 5rem; color: var(--muted); font-size: .82rem; }
+              @media (max-width: 760px) { .work-hero { grid-template-columns: 1fr; min-height: auto; }.work-sticker { width: 125px; }.work-chapter { grid-template-columns: 44px 1fr; min-height: 0; padding: 3.5rem 0; }.work-visual { grid-column: 2; min-height: 320px; }.work-rail span { width: 38px; height: 38px; }.work-rail::before { top: -3.5rem; bottom: -3.5rem; } }
+              @media (max-width: 480px) { .work-hero h2 { font-size: clamp(3rem, 16vw, 5rem); }.work-chapter { grid-template-columns: 32px minmax(0,1fr); gap: 1rem; }.work-rail span { width: 30px; height: 30px; font-size: .6rem; }.work-visual { min-height: 280px; border-radius: 20px; }.work-phone { transform: scale(.82); }.work-outro h2 { font-size: 3.4rem; } }
               @media (max-width: 400px) {
                 .book, .music { flex-direction: column; }
                 .book img { width: 140px; }
@@ -1886,6 +1930,7 @@ export function Layout({
         data-theme={theme}
         data-cards-detail={usesCardsInteraction && cardsDetail ? "true" : undefined}
         data-cabinet-detail={usesCabinetInteraction && cardsDetail ? "true" : undefined}
+        data-page={currentPath}
       >
         <a className="skip-link" href="#main-content">
           {t(site.locale, "skipToContent")}
@@ -1940,27 +1985,14 @@ export function Layout({
             <span />
           </div>
         ) : null}
-        {currentPath === "/" && !cardsDetail && (site.introduction || site.location || profileLinks.length || site.contactUrl) ? (
-          <aside className="site-profile" aria-label={site.title}>
-            {site.profileImageUrl ? <img src={site.profileImageUrl} alt="" /> : null}
-            <div>
-              {site.introduction ? <p>{site.introduction}</p> : null}
-              {site.location ? <p className="meta">{site.location}</p> : null}
-              {profileLinks.length || site.contactUrl ? (
-                <p className="site-profile-links">
-                  {profileLinks.map((link) => <a key={link.url} href={link.url} rel={link.relMe ? "me" : undefined}>{link.label}</a>)}
-                  {site.contactUrl ? <a className="site-contact" href={site.contactUrl}>{site.contactLabel || "Contact"}</a> : null}
-                </p>
-              ) : null}
-            </div>
-          </aside>
-        ) : null}
         <main id="main-content">{children}</main>
         {!(usesInteractiveDetail && cardsDetail) ? (
           <footer className="site-footer">
             <a href="/archive">{t(site.locale, "archive")}</a>
             {" · "}<a href="/search">{t(site.locale, "search")}</a>
             {hasAbout ? <>{" · "}<a href="/about">{t(site.locale, "about")}</a></> : null}
+            {" · "}<a href="/my-work">My work</a>
+            {" · "}<a href="/contact">Contact</a>
           </footer>
         ) : null}
         {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}

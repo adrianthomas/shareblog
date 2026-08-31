@@ -11,6 +11,8 @@ import {
   renderFeed,
   renderLandingPage,
   renderAboutPage,
+  renderWorkPage,
+  renderContactPage,
   renderAboutProductPage,
   renderReleaseHistoryPage,
   renderArchivePage,
@@ -171,7 +173,11 @@ export async function sitePageRoutes(app: FastifyInstance) {
   app.get("/sitemap.xml", { preHandler: resolveTenant }, async (request, reply) => {
     const site = request.site!;
     const [objects, paths] = await Promise.all([publishedObjects(site.id), publishedNavPaths(site.id)]);
-    const staticPaths = ["/", "/archive", ...(site.about?.trim() ? ["/about"] : []), ...paths];
+    const hasAbout = Boolean(
+      site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
+      site.profileLinks?.length || site.contactUrl,
+    );
+    const staticPaths = ["/", "/archive", "/my-work", "/contact", ...(hasAbout ? ["/about"] : []), ...paths];
     const urls = [...staticPaths, ...objects.map((object) => `/${objectPath(object)}`)];
     const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls
       .map((path) => `<url><loc>${siteOrigin(site)}${path}</loc></url>`)
@@ -256,15 +262,28 @@ export async function sitePageRoutes(app: FastifyInstance) {
     }));
   });
 
-  // Linked from the site footer (see Layout.tsx) only when about is set;
-  // still guard the route itself in case a link to it is shared directly
-  // after the owner clears the text back out.
+  // The About page contains both the structured identity profile and the
+  // optional long-form About text. Hide it only when both are empty.
   app.get("/about", { preHandler: resolveTenant }, async (request, reply) => {
     const site = request.site!;
-    if (!site.about || !site.about.trim()) {
+    const hasAbout = Boolean(
+      site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
+      site.profileLinks?.length || site.contactUrl,
+    );
+    if (!hasAbout) {
       return reply.code(404).send("Not found");
     }
     return sendCachedHtml(request, reply, site.id, async () => renderAboutPage(site));
+  });
+
+  app.get("/my-work", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => renderWorkPage(site));
+  });
+
+  app.get("/contact", { preHandler: resolveTenant }, async (request, reply) => {
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => renderContactPage(site));
   });
 
   // Unlike /about, always available — these are product info (what

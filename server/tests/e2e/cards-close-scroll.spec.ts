@@ -513,11 +513,14 @@ test("site identity drives public profile and discovery metadata", async ({ page
   }, "PATCH");
 
   await page.goto(siteBaseURL + "/");
+  await expect(page.locator(".site-profile")).toHaveCount(0);
+  await expect(page.locator('footer a[href="/about"]')).toBeVisible();
+  await page.goto(siteBaseURL + "/about");
   await expect(page.locator(".site-profile")).toContainText("thoughtful software");
   await expect(page.locator(".site-profile")).toContainText("Berlin, Germany");
   await expect(page.locator('.site-profile a[href="https://github.com/example"]')).toHaveAttribute("rel", "me");
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", siteBaseURL + "/");
-  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "Adrian Example");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", siteBaseURL + "/about");
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "About — Adrian Example");
   expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("thoughtful software");
 
   const sitemap = await fetch(siteBaseURL + "/sitemap.xml");

@@ -16,6 +16,8 @@ import { QuotePost } from "./templates/QuotePost.js";
 import { AboutPage } from "./templates/AboutPage.js";
 import { ReleaseHistoryPage } from "./templates/ReleaseHistoryPage.js";
 import { AboutProductPage } from "./templates/AboutProductPage.js";
+import { WorkPage } from "./templates/WorkPage.js";
+import { ContactPage } from "./templates/ContactPage.js";
 import { currentCommit } from "../lib/version.js";
 import type {
   ContentObject,
@@ -269,6 +271,28 @@ export function renderAboutPage(site: Site): string {
   return wrap(site, t(site.locale, "about"), React.createElement(AboutPage, { site }), {
     currentPath: "/about",
     metadata: { path: "/about", description: site.about ?? site.introduction ?? undefined, type: "profile" },
+  });
+}
+
+export function renderWorkPage(site: Site): string {
+  return wrap(site, "My work", React.createElement(WorkPage, { site }), {
+    currentPath: "/my-work",
+    metadata: {
+      path: "/my-work",
+      description: "Selected work across product thinking, digital experiences, systems, and independent projects.",
+      type: "profile",
+    },
+  });
+}
+
+export function renderContactPage(site: Site): string {
+  return wrap(site, "Contact", React.createElement(ContactPage, { site }), {
+    currentPath: "/contact",
+    metadata: {
+      path: "/contact",
+      description: `Get in touch with ${site.title}.`,
+      type: "profile",
+    },
   });
 }
 
