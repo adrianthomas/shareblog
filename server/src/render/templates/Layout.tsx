@@ -7,6 +7,7 @@ import { cabinetScript } from "../themes/cabinet-script.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 import { absoluteSiteUrl, siteOrigin } from "../site-url.js";
 import type { ProfileLink } from "./types.js";
+import { workPageEnabled } from "../../lib/work-page.js";
 
 export interface PageMetadata {
   path?: string;
@@ -136,6 +137,7 @@ export function Layout({
     site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
     site.profileLinks?.length || site.contactUrl,
   );
+  const hasWorkPage = workPageEnabled();
   // The canonical host is also the Fediverse identity host. The actor's
   // identifier remains the stable site subdomain, while a configured custom
   // domain replaces the deployment's default <subdomain>.<BASE_DOMAIN> host.
@@ -1991,8 +1993,7 @@ export function Layout({
             <a href="/archive">{t(site.locale, "archive")}</a>
             {" · "}<a href="/search">{t(site.locale, "search")}</a>
             {hasAbout ? <>{" · "}<a href="/about">{t(site.locale, "about")}</a></> : null}
-            {" · "}<a href="/my-work">My work</a>
-            {" · "}<a href="/contact">Contact</a>
+            {hasWorkPage ? <>{" · "}<a href="/my-work">My work</a>{" · "}<a href="/contact">Contact</a></> : null}
           </footer>
         ) : null}
         {usesCardsInteraction ? <script dangerouslySetInnerHTML={{ __html: cardsScript }} /> : null}

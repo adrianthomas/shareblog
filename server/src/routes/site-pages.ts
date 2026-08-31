@@ -24,6 +24,7 @@ import {
 import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-cache.js";
 import { t, type MessageKey } from "../render/i18n.js";
 import { siteForHost } from "../middleware/tenant.js";
+import { workPageEnabled } from "../lib/work-page.js";
 
 const PAGE_SIZE = 20;
 
@@ -177,7 +178,13 @@ export async function sitePageRoutes(app: FastifyInstance) {
       site.about?.trim() || site.profileImageUrl || site.introduction?.trim() || site.location?.trim() ||
       site.profileLinks?.length || site.contactUrl,
     );
-    const staticPaths = ["/", "/archive", "/my-work", "/contact", ...(hasAbout ? ["/about"] : []), ...paths];
+    const staticPaths = [
+      "/",
+      "/archive",
+      ...(workPageEnabled() ? ["/my-work", "/contact"] : []),
+      ...(hasAbout ? ["/about"] : []),
+      ...paths,
+    ];
     const urls = [...staticPaths, ...objects.map((object) => `/${objectPath(object)}`)];
     const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls
       .map((path) => `<url><loc>${siteOrigin(site)}${path}</loc></url>`)
@@ -277,11 +284,13 @@ export async function sitePageRoutes(app: FastifyInstance) {
   });
 
   app.get("/my-work", { preHandler: resolveTenant }, async (request, reply) => {
+    if (!workPageEnabled()) return reply.code(404).send("Not found");
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => renderWorkPage(site));
   });
 
   app.get("/contact", { preHandler: resolveTenant }, async (request, reply) => {
+    if (!workPageEnabled()) return reply.code(404).send("Not found");
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => renderContactPage(site));
   });
