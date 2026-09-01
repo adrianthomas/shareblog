@@ -1,4 +1,5 @@
 import type { GeneratedBookRetailerLinks } from "../lib/book-links.js";
+import type { MusicLinks } from "../lib/music-links.js";
 
 export type { AmazonRegion } from "../lib/book-links.js";
 
@@ -18,12 +19,7 @@ export interface ResolvedMusic {
   artworkUrl?: string;
   /** The (single) link metadata was resolved from — whichever platform the user shared. */
   sourceUrl?: string;
-  links: {
-    spotify?: string;
-    appleMusic?: string;
-    youtubeMusic?: string;
-    bandcamp?: string;
-  };
+  links: MusicLinks;
 }
 
 export interface ResolvedArticle {

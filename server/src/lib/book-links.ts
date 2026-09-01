@@ -4,7 +4,12 @@ export type AmazonRegion = (typeof AMAZON_REGIONS)[number];
 
 export interface BookRetailerLinks {
   amazon?: Partial<Record<AmazonRegion, string>>;
+  /** Bookshop.org's US storefront; retained under its original wire key. */
   bookshop?: string;
+  bookshopUk?: string;
+  genialokal?: string;
+  standardEbooks?: string;
+  overdrive?: string;
   kobo?: string;
   appleBooks?: string;
   storygraph?: string;
@@ -76,6 +81,7 @@ export function buildBookRetailerLinks(
   const canonicalIsbn = isbn13 ?? isbn10;
   const asin = isbn10 ?? (isbn13 ? isbn13ToIsbn10(isbn13) : undefined);
   const query = encodeURIComponent(canonicalIsbn ?? `${title} ${author}`);
+  const titleAuthorQuery = encodeURIComponent(`${title} ${author}`.trim());
   const amazon: Partial<Record<AmazonRegion, string>> = {};
 
   for (const region of AMAZON_REGIONS) {
@@ -86,6 +92,10 @@ export function buildBookRetailerLinks(
   return {
     amazon,
     bookshop: `https://bookshop.org/search?keywords=${query}`,
+    bookshopUk: `https://uk.bookshop.org/search?keywords=${query}`,
+    genialokal: `https://www.genialokal.de/Suche/?q=${query}`,
+    standardEbooks: `https://standardebooks.org/ebooks?query=${titleAuthorQuery}`,
+    overdrive: `https://www.overdrive.com/search?q=${query}`,
     kobo: `https://www.kobo.com/search?query=${query}`,
     appleBooks: `https://books.apple.com/search?term=${query}`,
     storygraph: `https://app.thestorygraph.com/browse?search_term=${query}`,

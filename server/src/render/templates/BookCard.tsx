@@ -16,7 +16,11 @@ function Note({ body }: { body: string | null }) {
 
 // Retailer brand names — proper nouns, not translated per locale.
 const STORE_LABELS: Record<string, string> = {
-  bookshop: "Bookshop.org",
+  bookshop: "Bookshop.org (US)",
+  bookshopUk: "Bookshop.org (UK)",
+  genialokal: "Genialokal (DE)",
+  standardEbooks: "Read free",
+  overdrive: "Borrow digitally",
   kobo: "Kobo",
   appleBooks: "Apple Books",
   storygraph: "StoryGraph",
@@ -52,24 +56,57 @@ export function flattenLinks(links: NonNullable<BookMetadata["links"]>): BookLin
     const url = links.amazon?.[region];
     if (url) entries.push({ key: `amazon-${region}`, label: AMAZON_REGION_LABELS[region], url, amazonRegion: region });
   }
-  for (const key of ["bookshop", "kobo", "appleBooks", "storygraph"] as const) {
+  for (const key of [
+    "overdrive",
+    "standardEbooks",
+    "genialokal",
+    "bookshop",
+    "bookshopUk",
+    "kobo",
+    "appleBooks",
+    "storygraph",
+  ] as const) {
     const url = links[key];
     if (url) entries.push({ key, label: STORE_LABELS[key], url });
   }
   return entries;
 }
 
-function BookLinks({ links }: { links?: BookMetadata["links"] }) {
+function BookLinkAnchor({ entry, compact = false }: { entry: BookLink; compact?: boolean }) {
+  const { key, label, url, amazonRegion } = entry;
+  return (
+    <a
+      key={key}
+      className={`content-action-button${compact ? " book-action-link" : ""}`}
+      href={url}
+      data-amazon-region={amazonRegion}
+      hidden={amazonRegion ? amazonRegion !== "us" : undefined}
+    >
+      {label} <span aria-hidden="true">↗</span>
+    </a>
+  );
+}
+
+export function BookLinks({ links }: { links?: BookMetadata["links"] }) {
   const entries = links ? flattenLinks(links) : [];
   if (entries.length === 0) return null;
+  const primaryKeys = new Set(["overdrive", "standardEbooks"]);
+  const primaryEntries = entries.filter((entry) => primaryKeys.has(entry.key));
+  const moreEntries = entries.filter((entry) => !primaryKeys.has(entry.key));
   return (
-    <p className="meta book-links">
-      {entries.map(({ key, label, url, amazonRegion }) => (
-        <a key={key} className="content-action-button" href={url} data-amazon-region={amazonRegion}>
-          {label} <span aria-hidden="true">↗</span>
-        </a>
-      ))}
-    </p>
+    <nav className="book-actions" aria-label="Ways to find this book">
+      {primaryEntries.length ? (
+        <div className="book-actions-primary">{primaryEntries.map((entry) => <BookLinkAnchor key={entry.key} entry={entry} />)}</div>
+      ) : null}
+      {moreEntries.length ? (
+        <details className="book-more">
+          <summary>More places to find this book</summary>
+          <div className="book-more-links">
+            {moreEntries.map((entry) => <BookLinkAnchor key={entry.key} entry={entry} compact />)}
+          </div>
+        </details>
+      ) : null}
+    </nav>
   );
 }
 

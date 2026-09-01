@@ -9,7 +9,7 @@ import { LandingPage } from "./templates/LandingPage.js";
 import { ThoughtPost } from "./templates/ThoughtPost.js";
 import { PhotoPost, formatExif } from "./templates/PhotoPost.js";
 import { BookCard, flattenLinks } from "./templates/BookCard.js";
-import { MusicCard, PLATFORM_LABELS } from "./templates/MusicCard.js";
+import { MusicCard, musicLinkLabel } from "./templates/MusicCard.js";
 import { ArticleCard, ArticlePage } from "./templates/ArticlePage.js";
 import { LinkPost } from "./templates/LinkPost.js";
 import { QuotePost } from "./templates/QuotePost.js";
@@ -33,6 +33,7 @@ import { t, resolveLocale, type MessageKey } from "./i18n.js";
 import { formatBasicText, formatRichText, stripBasicFormatting } from "./format.js";
 import { siteOrigin } from "./site-url.js";
 import { bookRetailerLinksFor } from "../lib/book-links.js";
+import { musicLinksFor } from "../lib/music-links.js";
 
 function wrap(
   site: Site,
@@ -497,10 +498,10 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
         ? `<p><img src="${escapeXml(metadata.artworkUrl)}" alt="Artwork for ${escapeXml(metadata.releaseTitle)}" /></p>`
         : "";
       const artist = `<p>${escapeXml(metadata.artist)}</p>`;
-      const linkEntries = Object.entries(metadata.links ?? {})
+      const linkEntries = Object.entries(musicLinksFor(metadata))
         .filter((entry): entry is [string, string] => Boolean(entry[1]))
         .map(([platform, url]) => ({
-          label: t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform }),
+          label: musicLinkLabel(locale, platform, url),
           url,
         }));
       return image + artist + formatBasicText(object.body ?? "") + linkList(linkEntries);

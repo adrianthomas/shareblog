@@ -1,5 +1,6 @@
 import type { contentObjects, sites } from "../../db/schema.js";
 import type { BookRetailerLinks } from "../../lib/book-links.js";
+import type { MusicLinks } from "../../lib/music-links.js";
 
 export type Site = typeof sites.$inferSelect;
 export type ContentObject = typeof contentObjects.$inferSelect;
@@ -29,7 +30,7 @@ export interface MusicMetadata {
   releaseTitle: string;
   artworkUrl?: string;
   sourceUrl?: string;
-  links?: { spotify?: string; appleMusic?: string; youtubeMusic?: string; bandcamp?: string };
+  links?: MusicLinks;
 }
 
 export interface PhotoMetadata {

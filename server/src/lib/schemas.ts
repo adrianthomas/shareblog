@@ -19,6 +19,10 @@ export const bookMetadataSchema = z.object({
   links: z
     .object({
       bookshop: z.string().url().optional(),
+      bookshopUk: z.string().url().optional(),
+      genialokal: z.string().url().optional(),
+      standardEbooks: z.string().url().optional(),
+      overdrive: z.string().url().optional(),
       amazon: z
         .object({
           us: z.string().url().optional(),

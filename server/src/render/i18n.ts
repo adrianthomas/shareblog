@@ -38,6 +38,7 @@ export type MessageKey =
   | "primaryNavigation"
   | "filterCategories"
   | "listenOn"
+  | "findOn"
   | "closePost"
   | "backTo"
   | "exifCamera"
@@ -90,6 +91,7 @@ const MESSAGES: Record<string, Messages> = {
     primaryNavigation: "Primary",
     filterCategories: "Filter categories",
     listenOn: "Listen on {platform}",
+    findOn: "Find on {platform}",
     closePost: "Close",
     backTo: "Back to {section}",
     exifCamera: "Camera",
@@ -139,6 +141,7 @@ const MESSAGES: Record<string, Messages> = {
     primaryNavigation: "Hauptnavigation",
     filterCategories: "Kategorien filtern",
     listenOn: "Hören auf {platform}",
+    findOn: "Auf {platform} suchen",
     closePost: "Schließen",
     backTo: "Zurück zu {section}",
     exifCamera: "Kamera",
@@ -188,6 +191,7 @@ const MESSAGES: Record<string, Messages> = {
     primaryNavigation: "Navigation principale",
     filterCategories: "Filtrer les catégories",
     listenOn: "Écouter sur {platform}",
+    findOn: "Rechercher sur {platform}",
     closePost: "Fermer",
     backTo: "Retour à {section}",
     exifCamera: "Appareil photo",
@@ -237,6 +241,7 @@ const MESSAGES: Record<string, Messages> = {
     primaryNavigation: "Navegación principal",
     filterCategories: "Filtrar categorías",
     listenOn: "Escuchar en {platform}",
+    findOn: "Buscar en {platform}",
     closePost: "Cerrar",
     backTo: "Volver a {section}",
     exifCamera: "Cámara",
@@ -286,6 +291,7 @@ const MESSAGES: Record<string, Messages> = {
     primaryNavigation: "メインナビゲーション",
     filterCategories: "カテゴリーを絞り込む",
     listenOn: "{platform}で聴く",
+    findOn: "{platform}で探す",
     closePost: "閉じる",
     backTo: "{section}に戻る",
     exifCamera: "カメラ",

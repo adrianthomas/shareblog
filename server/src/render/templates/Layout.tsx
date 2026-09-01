@@ -28,7 +28,7 @@ const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }
   cabinet: { light: "#f3f1ea", dark: "#11120f" },
 };
 
-// Promotes the Amazon storefront closest to the visitor's browser-reported
+// Shows the Amazon storefront closest to the visitor's browser-reported
 // language (navigator.language — never sent to the server, never logged),
 // among the region links BookCard renders with a data-amazon-region
 // attribute. No-ops instantly on pages without any. This is a client-only
@@ -47,6 +47,8 @@ const amazonRegionScript = `
   if (!region) return;
   var match = document.querySelector('[data-amazon-region="' + region + '"]');
   if (!match) return;
+  for (var i = 0; i < links.length; i++) links[i].hidden = true;
+  match.hidden = false;
   if (match !== links[0]) match.parentNode.insertBefore(match, links[0]);
   match.textContent += ' — closest to you';
 })();
@@ -456,7 +458,25 @@ export function Layout({
                 border-color: var(--focus); background: color-mix(in srgb, var(--focus) 14%, transparent);
               }
               .article-actions { margin: 1rem 0 0.85rem; }
-              .book-links { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+              .book-actions { display: block; margin: 1rem 0 0.85rem; }
+              .book-actions-primary { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; }
+              .book-more { margin-top: 0.7rem; }
+              .book-more summary {
+                width: fit-content; cursor: pointer; color: var(--muted); font-size: 0.86rem; font-weight: 650;
+              }
+              .book-more summary:hover, .book-more summary:focus-visible { color: var(--focus); }
+              .book-more-links {
+                display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+                gap: 0.15rem 1rem; margin-top: 0.45rem; padding-top: 0.4rem; border-top: 1px solid var(--border);
+              }
+              .book-action-link {
+                justify-content: space-between; min-height: 2rem; padding: 0.3rem 0.15rem;
+                border: 0; border-radius: 0; background: transparent; font-size: 0.84rem; font-weight: 550;
+              }
+              .book-action-link[hidden] { display: none !important; }
+              .book-action-link:hover, .book-action-link:focus-visible {
+                border-color: transparent; background: transparent; text-decoration: underline;
+              }
               .quote-text { margin: 0 0 1rem; padding-left: 1.15rem; border-left: 2px solid var(--border); }
               .quote-text p { margin: 0 0 0.65rem; font-size: 1.22rem; font-style: italic; line-height: 1.48; letter-spacing: -0.014em; }
               .quote-text footer { font-size: 0.9rem; color: var(--muted); }
@@ -916,6 +936,11 @@ export function Layout({
                 html[data-theme="washi"] .content-action-button:hover,
                 html[data-theme="washi"] .content-action-button:focus-visible {
                   background: color-mix(in srgb, var(--focus) 17%, var(--washi-paper));
+                }
+                html[data-theme="washi"] .book-action-link,
+                html[data-theme="washi"] .book-action-link:hover,
+                html[data-theme="washi"] .book-action-link:focus-visible {
+                  border-color: transparent; background: transparent; box-shadow: none;
                 }
                 html[data-theme="washi"] .card img,
                 html[data-theme="washi"] .body-content img,

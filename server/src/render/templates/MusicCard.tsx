@@ -7,6 +7,7 @@ import { CardsFeedItem, CardsDetailHeader, CardsMusicDetailHeader } from "../the
 import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
+import { isSpotifySearchUrl, musicLinksFor } from "../../lib/music-links.js";
 
 function Note({ body }: { body: string | null }) {
   if (!body) return null;
@@ -20,10 +21,15 @@ export const PLATFORM_LABELS: Record<string, string> = {
   bandcamp: "Bandcamp",
 };
 
+export function musicLinkLabel(locale: string, platform: string, url: string): string {
+  const label = PLATFORM_LABELS[platform] ?? platform;
+  return t(locale, platform === "spotify" && isSpotifySearchUrl(url) ? "findOn" : "listenOn", { platform: label });
+}
+
 function MusicLink({ platform, url, locale }: { platform: string; url: string; locale: string }) {
   return (
     <a className="content-action-button" href={url}>
-      <span>{t(locale, "listenOn", { platform: PLATFORM_LABELS[platform] ?? platform })}</span>
+      <span>{musicLinkLabel(locale, platform, url)}</span>
       <span aria-hidden="true">↗</span>
     </a>
   );
@@ -45,7 +51,7 @@ export function MusicCard({
   backLabel?: string;
 }) {
   const metadata = object.metadata as MusicMetadata;
-  const links = Object.entries(metadata.links ?? {}).filter(
+  const links = Object.entries(musicLinksFor(metadata)).filter(
     (entry): entry is [string, string] => Boolean(entry[1]),
   );
   const visibleLinks = variant === "card" ? links.slice(0, 1) : links;
