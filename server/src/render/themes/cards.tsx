@@ -524,7 +524,6 @@ export function CardsCategoryFilter({
     <details className="cards-category-filter">
       <summary className="cards-filter-trigger" aria-label={t(locale, "filterCategories")}>
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" fill="none" />
           <path
             d="M7.5 8.5h9M9.5 12h5M11 15.5h2"
             stroke="currentColor"
@@ -558,7 +557,7 @@ export const cardsStyles = `
   /* Leaves the feed clear of the page edge while the category filter sits
      in the header rather than reserving bottom-anchored toolbar space. */
   body.theme-cards footer.site-footer {
-    max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; border-top: 1px solid var(--border);
+    max-width: 1120px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; border: 0;
   }
   body.theme-cards .about-page { max-width: 640px; margin: 0 auto; }
   /* Cards/prism render their categories as the filter popover below; hide

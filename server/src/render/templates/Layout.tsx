@@ -82,7 +82,6 @@ function CategoryFilter({
     <details className="category-filter">
       <summary className="category-filter-trigger" aria-label={t(site.locale, "filterCategories")}>
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" fill="none" />
           <path
             d="M7.5 8.5h9M9.5 12h5M11 15.5h2"
             stroke="currentColor"
@@ -532,11 +531,11 @@ export function Layout({
               .faq-entry li:last-child { margin-bottom: 0; }
               .site-profile-details { min-width: 0; }
               .site-footer-profile p { margin: 0; }
-              .site-profile-name { font-size: 1rem; font-weight: 720; color: var(--fg); }
-              .site-profile-location { margin-top: 0.15rem !important; color: var(--muted); font-size: 0.82rem; }
-              .site-profile-link-groups { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin-top: 0.85rem; }
-              .site-profile-links { display: flex; flex-wrap: wrap; gap: 0.35rem 0.85rem; font-size: 0.9rem; }
-              .site-profile-links > span { width: 100%; color: var(--muted); font-size: 0.7rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; }
+              .site-profile-name { font-size: 1.08rem; line-height: 1.2; font-weight: 740; letter-spacing: -0.025em; color: var(--fg); }
+              .site-profile-location { margin-top: 0.3rem !important; color: var(--muted); font-size: 0.8rem; }
+              .site-profile-link-groups { display: flex; flex-wrap: wrap; gap: 1rem clamp(2rem, 5vw, 4rem); margin-top: 0.85rem; }
+              .site-profile-links { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0.42rem 1rem; font-size: 0.86rem; }
+              .site-profile-links > span { width: 100%; color: var(--muted); font-size: 0.64rem; font-weight: 720; letter-spacing: 0.11em; text-transform: uppercase; }
               .site-profile-links a { color: inherit; }
               .site-contact-links a { font-weight: 650; }
               .pagination { display: flex; justify-content: space-between; gap: 1rem; margin: 2.5rem 0 0; }
@@ -550,14 +549,30 @@ export function Layout({
               .archive-months { display: flex; flex-wrap: wrap; gap: 0.45rem 1rem; margin: 0; padding: 0; list-style: none; }
               .archive-months a { color: inherit; }
               footer.site-footer {
-                margin-top: 3.5rem; padding-top: 1.5rem; padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-                border-top: 1px solid var(--border); font-size: 0.82rem;
+                margin-top: 4rem; padding: 0 0 max(0.5rem, env(safe-area-inset-bottom));
+                border: 0; font-size: 0.82rem;
               }
-              .site-footer-profile { margin-bottom: 1.5rem; }
-              .site-footer-profile .site-profile-details { display: grid; grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr); gap: 1.5rem; align-items: start; }
+              .site-footer-inner {
+                position: relative; overflow: hidden; padding: clamp(1.3rem, 3vw, 1.75rem);
+                border: 1px solid color-mix(in srgb, var(--border) 72%, transparent); border-radius: 18px;
+                background:
+                  radial-gradient(circle at 0 0, color-mix(in srgb, var(--focus) 7%, transparent), transparent 15rem),
+                  color-mix(in srgb, var(--bg) 96%, var(--fg));
+                box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bg) 80%, white);
+              }
+              .site-footer-inner::before {
+                content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
+                background: color-mix(in srgb, var(--focus) 72%, var(--fg));
+              }
+              .site-footer-profile { margin: 0; }
+              .site-footer-profile .site-profile-details { display: grid; grid-template-columns: minmax(11rem, 0.75fr) minmax(0, 1.25fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: start; }
               .site-footer-profile .site-profile-link-groups { margin-top: 0; justify-content: flex-end; }
               .site-footer-profile .site-profile-links { justify-content: flex-end; }
-              .site-footer-nav { padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
+              .site-footer-nav {
+                display: flex; justify-content: flex-end; gap: 0.3rem 1.05rem; margin: 1.25rem 0 0;
+                padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+                font-size: 0.75rem;
+              }
               footer.site-footer a { color: var(--muted); text-decoration: none; }
               footer.site-footer a:hover, footer.site-footer a:focus-visible { color: var(--fg); }
               body[data-page="/my-work"] { max-width: 1080px; }
@@ -615,6 +630,8 @@ export function Layout({
                 .site-footer-profile .site-profile-details { grid-template-columns: 1fr; }
                 .site-footer-profile .site-profile-link-groups { justify-content: flex-start; }
                 .site-footer-profile .site-profile-links { justify-content: flex-start; }
+                .site-footer-inner { border-radius: 15px; }
+                .site-footer-nav { justify-content: flex-start; }
               }
               @media (prefers-reduced-motion: reduce) {
                 *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
@@ -1083,7 +1100,7 @@ export function Layout({
                   max-width: 1120px;
                   margin: 0 auto;
                   padding: 1.5rem 1.25rem 2rem;
-                  border-top: 1px solid var(--border);
+                  border: 0;
                 }
                 body.theme-prism .cards-feed {
                   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -2008,12 +2025,14 @@ export function Layout({
         <main id="main-content">{children}</main>
         {!(usesInteractiveDetail && cardsDetail) ? (
           <footer className="site-footer">
-            <SiteProfile site={site} />
-            <div className="site-footer-nav">
-              <a href="/archive">{t(site.locale, "archive")}</a>
-              {" · "}<a href="/search">{t(site.locale, "search")}</a>
-              {" · "}<a href="/about">{t(site.locale, "about")}</a>
-              {hasWorkPage ? <>{" · "}<a href="/my-work">My work</a>{" · "}<a href="/contact">Contact</a></> : null}
+            <div className="site-footer-inner">
+              <SiteProfile site={site} />
+              <nav className="site-footer-nav" aria-label={t(site.locale, "primaryNavigation")}>
+                <a href="/archive">{t(site.locale, "archive")}</a>
+                <a href="/search">{t(site.locale, "search")}</a>
+                <a href="/about">{t(site.locale, "about")}</a>
+                {hasWorkPage ? <><a href="/my-work">My work</a><a href="/contact">Contact</a></> : null}
+              </nav>
             </div>
           </footer>
         ) : null}
