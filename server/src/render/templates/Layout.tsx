@@ -193,7 +193,7 @@ export function Layout({
         <meta name="twitter:title" content={pageTitle} />
         {description ? <meta name="twitter:description" content={description} /> : null}
         {metadata.imageUrl ? <meta name="twitter:image" content={metadata.imageUrl} /> : null}
-        {site.profileImageUrl ? <link rel="icon" href={site.profileImageUrl} /> : null}
+        <link rel="icon" type={site.profileImageUrl ? undefined : "image/svg+xml"} href={site.profileImageUrl ?? "/favicon.svg?v=1"} />
         {site.profileImageUrl ? <link rel="apple-touch-icon" href={site.profileImageUrl} /> : null}
         {profileLinks.filter((link) => link.relMe).map((link) => (
           <link key={link.url} rel="me" href={link.url} />

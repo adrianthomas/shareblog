@@ -27,6 +27,7 @@ import { t, type MessageKey } from "../render/i18n.js";
 import { siteForHost } from "../middleware/tenant.js";
 import { workPageEnabled } from "../lib/work-page.js";
 import { impressumPageEnabled } from "../lib/impressum-page.js";
+import { renderFavicon } from "../render/favicon.js";
 
 const PAGE_SIZE = 20;
 
@@ -171,6 +172,13 @@ export async function sitePageRoutes(app: FastifyInstance) {
       .type("text/plain; charset=utf-8")
       .header("cache-control", `public, max-age=${PAGE_CACHE_TTL_MS / 1000}`)
       .send(`User-agent: *\nAllow: /\nSitemap: ${siteOrigin(site)}/sitemap.xml\n`);
+  });
+
+  app.get("/favicon.svg", { preHandler: resolveTenant }, async (request, reply) => {
+    return reply
+      .type("image/svg+xml; charset=utf-8")
+      .header("cache-control", "public, max-age=86400")
+      .send(renderFavicon(request.site!));
   });
 
   app.get("/sitemap.xml", { preHandler: resolveTenant }, async (request, reply) => {
