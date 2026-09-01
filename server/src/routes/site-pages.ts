@@ -13,6 +13,7 @@ import {
   renderAboutPage,
   renderWorkPage,
   renderContactPage,
+  renderImpressumPage,
   renderAboutProductPage,
   renderReleaseHistoryPage,
   renderArchivePage,
@@ -25,6 +26,7 @@ import { getCachedPage, setCachedPage, PAGE_CACHE_TTL_MS } from "../render/page-
 import { t, type MessageKey } from "../render/i18n.js";
 import { siteForHost } from "../middleware/tenant.js";
 import { workPageEnabled } from "../lib/work-page.js";
+import { impressumPageEnabled } from "../lib/impressum-page.js";
 
 const PAGE_SIZE = 20;
 
@@ -178,6 +180,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
       "/",
       "/archive",
       ...(workPageEnabled() ? ["/my-work", "/contact"] : []),
+      ...(impressumPageEnabled() ? ["/impressum"] : []),
       "/about",
       ...paths,
     ];
@@ -282,6 +285,12 @@ export async function sitePageRoutes(app: FastifyInstance) {
     if (!workPageEnabled()) return reply.code(404).send("Not found");
     const site = request.site!;
     return sendCachedHtml(request, reply, site.id, async () => renderContactPage(site));
+  });
+
+  app.get("/impressum", { preHandler: resolveTenant }, async (request, reply) => {
+    if (!impressumPageEnabled()) return reply.code(404).send("Not found");
+    const site = request.site!;
+    return sendCachedHtml(request, reply, site.id, async () => renderImpressumPage(site));
   });
 
   // Unlike /about, always available — these are product info (what

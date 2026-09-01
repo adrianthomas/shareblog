@@ -8,6 +8,7 @@ import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 import { absoluteSiteUrl, siteOrigin } from "../site-url.js";
 import type { ProfileLink } from "./types.js";
 import { workPageEnabled } from "../../lib/work-page.js";
+import { impressumPageEnabled } from "../../lib/impressum-page.js";
 import { SiteProfile } from "./SiteProfile.js";
 
 export interface PageMetadata {
@@ -136,6 +137,7 @@ export function Layout({
   const usesInteractiveDetail = usesCardsInteraction || usesCabinetInteraction;
   const usesCompactCategoryFilter = !usesInteractiveDetail;
   const hasWorkPage = workPageEnabled();
+  const hasImpressumPage = impressumPageEnabled();
   // The canonical host is also the Fediverse identity host. The actor's
   // identifier remains the stable site subdomain, while a configured custom
   // domain replaces the deployment's default <subdomain>.<BASE_DOMAIN> host.
@@ -2062,6 +2064,7 @@ export function Layout({
                 <a href="/search">{t(site.locale, "search")}</a>
                 <a href="/about">{t(site.locale, "about")}</a>
                 {hasWorkPage ? <><a href="/my-work">My work</a><a href="/contact">Contact</a></> : null}
+                {hasImpressumPage ? <a href="/impressum">Impressum</a> : null}
               </nav>
             </div>
           </footer>

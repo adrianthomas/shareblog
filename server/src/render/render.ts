@@ -18,6 +18,7 @@ import { ReleaseHistoryPage } from "./templates/ReleaseHistoryPage.js";
 import { AboutProductPage } from "./templates/AboutProductPage.js";
 import { WorkPage } from "./templates/WorkPage.js";
 import { ContactPage } from "./templates/ContactPage.js";
+import { ImpressumPage } from "./templates/ImpressumPage.js";
 import { currentCommit } from "../lib/version.js";
 import type {
   ContentObject,
@@ -309,6 +310,16 @@ export function renderContactPage(site: Site): string {
       path: "/contact",
       description: `Get in touch with ${site.title}.`,
       type: "profile",
+    },
+  });
+}
+
+export function renderImpressumPage(site: Site): string {
+  return wrap(site, "Impressum", React.createElement(ImpressumPage), {
+    currentPath: "/impressum",
+    metadata: {
+      path: "/impressum",
+      description: `Impressum for ${site.title}.`,
     },
   });
 }
