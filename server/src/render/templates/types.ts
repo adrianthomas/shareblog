@@ -1,4 +1,5 @@
 import type { contentObjects, sites } from "../../db/schema.js";
+import type { BookRetailerLinks } from "../../lib/book-links.js";
 
 export type Site = typeof sites.$inferSelect;
 export type ContentObject = typeof contentObjects.$inferSelect;
@@ -20,13 +21,7 @@ export interface BookMetadata {
   isbn10?: string;
   coverUrl?: string;
   rating?: number;
-  links?: {
-    bookshop?: string;
-    amazon?: Partial<Record<"us" | "uk" | "de" | "fr" | "it" | "es" | "ca" | "jp", string>>;
-    kobo?: string;
-    appleBooks?: string;
-    storygraph?: string;
-  };
+  links?: BookRetailerLinks;
 }
 
 export interface MusicMetadata {

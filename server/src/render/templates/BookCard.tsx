@@ -7,6 +7,7 @@ import { CardsFeedItem, CardsDetailHeader, CardsBookDetailHeader } from "../them
 import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
+import { bookRetailerLinksFor } from "../../lib/book-links.js";
 
 function Note({ body }: { body: string | null }) {
   if (!body) return null;
@@ -88,6 +89,7 @@ export function BookCard({
   backLabel?: string;
 }) {
   const metadata = object.metadata as BookMetadata;
+  const links = bookRetailerLinksFor(object.title ?? "", metadata.author, metadata);
   const stars = metadata.rating ? "★".repeat(metadata.rating) + "☆".repeat(5 - metadata.rating) : null;
 
   if (theme === "cabinet") {
@@ -95,7 +97,7 @@ export function BookCard({
       ? { url: metadata.coverUrl, alt: "" }
       : undefined;
     const ratingLabel = metadata.rating ? t(locale, "ratingLabel", { rating: metadata.rating }) : undefined;
-    const hasDetailBody = Boolean(object.body || (metadata.links && flattenLinks(metadata.links).length));
+    const hasDetailBody = Boolean(object.body || (links && flattenLinks(links).length));
     if (variant === "card") {
       return (
         <CabinetFeedItem
@@ -133,7 +135,7 @@ export function BookCard({
         {hasDetailBody ? (
           <div className="cabinet-detail-body cabinet-detail-body--book">
             <Note body={object.body} />
-            <BookLinks links={metadata.links} />
+            <BookLinks links={links} />
           </div>
         ) : null}
       </>
@@ -178,7 +180,7 @@ export function BookCard({
           />
           <div className="cards-body">
             <Note body={object.body} />
-            <BookLinks links={metadata.links} />
+            <BookLinks links={links} />
           </div>
         </>
       );
@@ -209,7 +211,7 @@ export function BookCard({
             </p>
           ) : null}
           <Note body={object.body} />
-          <BookLinks links={metadata.links} />
+          <BookLinks links={links} />
         </div>
       </>
     );
@@ -238,7 +240,7 @@ export function BookCard({
           </p>
         ) : null}
         <Note body={object.body} />
-        {variant === "page" ? <BookLinks links={metadata.links} /> : null}
+        {variant === "page" ? <BookLinks links={links} /> : null}
         <p className="meta">
           {formatDate(object.publishedAt, locale)}
           {variant === "page" ? <CopyLinkButton locale={locale} /> : null}

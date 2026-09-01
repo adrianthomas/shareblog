@@ -1,4 +1,6 @@
-export type AmazonRegion = "us" | "uk" | "de" | "fr" | "it" | "es" | "ca" | "jp";
+import type { GeneratedBookRetailerLinks } from "../lib/book-links.js";
+
+export type { AmazonRegion } from "../lib/book-links.js";
 
 export interface ResolvedBookCandidate {
   title: string;
@@ -7,13 +9,7 @@ export interface ResolvedBookCandidate {
   isbn10?: string;
   coverUrl?: string;
   source: "open_library" | "google_books";
-  links: {
-    amazon: Partial<Record<AmazonRegion, string>>;
-    bookshop?: string;
-    kobo?: string;
-    appleBooks?: string;
-    storygraph?: string;
-  };
+  links: GeneratedBookRetailerLinks;
 }
 
 export interface ResolvedMusic {

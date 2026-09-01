@@ -12,6 +12,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "bootstrap-owner": "tsx src/db/bootstrap-owner.ts",
     "import:markdown": "tsx src/import/markdown.ts",
+    "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "postinstall": "node scripts/fix-better-sqlite3.cjs"
   },

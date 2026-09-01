@@ -32,6 +32,7 @@ import type {
 import { t, resolveLocale, type MessageKey } from "./i18n.js";
 import { formatBasicText, formatRichText, stripBasicFormatting } from "./format.js";
 import { siteOrigin } from "./site-url.js";
+import { bookRetailerLinksFor } from "../lib/book-links.js";
 
 function wrap(
   site: Site,
@@ -486,7 +487,8 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
       const rating = metadata.rating
         ? `<p>${"★".repeat(metadata.rating)}${"☆".repeat(5 - metadata.rating)}</p>`
         : "";
-      const links = linkList(metadata.links ? flattenLinks(metadata.links) : []);
+      const retailerLinks = bookRetailerLinksFor(object.title ?? "", metadata.author, metadata);
+      const links = linkList(retailerLinks ? flattenLinks(retailerLinks) : []);
       return image + author + rating + formatBasicText(object.body ?? "") + links;
     }
     case "music": {
