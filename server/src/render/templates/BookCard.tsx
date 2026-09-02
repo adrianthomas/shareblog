@@ -19,8 +19,8 @@ const STORE_LABELS: Record<string, string> = {
   bookshop: "Bookshop.org (US)",
   bookshopUk: "Bookshop.org (UK)",
   genialokal: "Genialokal (DE)",
-  standardEbooks: "Read free",
-  overdrive: "Borrow digitally",
+  standardEbooks: "Standard Ebooks",
+  overdrive: "OverDrive",
   kobo: "Kobo",
   appleBooks: "Apple Books",
   storygraph: "StoryGraph",
@@ -72,12 +72,12 @@ export function flattenLinks(links: NonNullable<BookMetadata["links"]>): BookLin
   return entries;
 }
 
-function BookLinkAnchor({ entry, compact = false }: { entry: BookLink; compact?: boolean }) {
+function BookLinkAnchor({ entry }: { entry: BookLink }) {
   const { key, label, url, amazonRegion } = entry;
   return (
     <a
       key={key}
-      className={`content-action-button${compact ? " book-action-link" : ""}`}
+      className="content-action-button book-action-link"
       href={url}
       data-amazon-region={amazonRegion}
       hidden={amazonRegion ? amazonRegion !== "us" : undefined}
@@ -90,22 +90,14 @@ function BookLinkAnchor({ entry, compact = false }: { entry: BookLink; compact?:
 export function BookLinks({ links }: { links?: BookMetadata["links"] }) {
   const entries = links ? flattenLinks(links) : [];
   if (entries.length === 0) return null;
-  const primaryKeys = new Set(["overdrive", "standardEbooks"]);
-  const primaryEntries = entries.filter((entry) => primaryKeys.has(entry.key));
-  const moreEntries = entries.filter((entry) => !primaryKeys.has(entry.key));
   return (
     <nav className="book-actions" aria-label="Ways to find this book">
-      {primaryEntries.length ? (
-        <div className="book-actions-primary">{primaryEntries.map((entry) => <BookLinkAnchor key={entry.key} entry={entry} />)}</div>
-      ) : null}
-      {moreEntries.length ? (
-        <details className="book-more">
-          <summary>More places to find this book</summary>
-          <div className="book-more-links">
-            {moreEntries.map((entry) => <BookLinkAnchor key={entry.key} entry={entry} compact />)}
-          </div>
-        </details>
-      ) : null}
+      <details className="book-more">
+        <summary>Search for this book</summary>
+        <div className="book-more-links">
+          {entries.map((entry) => <BookLinkAnchor key={entry.key} entry={entry} />)}
+        </div>
+      </details>
     </nav>
   );
 }

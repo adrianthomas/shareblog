@@ -461,8 +461,7 @@ export function Layout({
               }
               .article-actions { margin: 1rem 0 0.85rem; }
               .book-actions { display: block; margin: 1rem 0 0.85rem; }
-              .book-actions-primary { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; }
-              .book-more { margin-top: 0.7rem; }
+              .book-more { margin-top: 0; }
               .book-more summary {
                 width: fit-content; cursor: pointer; color: var(--muted); font-size: 0.86rem; font-weight: 650;
               }

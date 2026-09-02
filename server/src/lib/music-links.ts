@@ -32,9 +32,13 @@ export function spotifySearchUrl(source: Pick<MusicLinkSource, "artist" | "relea
 // credential-free Spotify search from the structured title and artist so old
 // posts gain a useful Spotify destination without rewriting their metadata.
 export function musicLinksFor(source: MusicLinkSource): MusicLinks {
-  const { spotify: storedSpotify, ...otherLinks } = source.links ?? {};
+  const { spotify: storedSpotify, appleMusic, ...otherLinks } = source.links ?? {};
   const spotify = storedSpotify ?? exactSpotifySourceUrl(source.sourceUrl) ?? spotifySearchUrl(source);
-  return spotify ? { spotify, ...otherLinks } : otherLinks;
+  return {
+    ...(appleMusic ? { appleMusic } : {}),
+    ...(spotify ? { spotify } : {}),
+    ...otherLinks,
+  };
 }
 
 export function isSpotifySearchUrl(url: string): boolean {

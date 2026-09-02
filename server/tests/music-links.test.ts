@@ -8,14 +8,14 @@ test("generates a Spotify search link from structured metadata", () => {
   assert.equal(isSpotifySearchUrl(url!), true);
 });
 
-test("adds Spotify first while retaining links stored by older posts", () => {
+test("places Apple Music before a derived Spotify link", () => {
   const links = musicLinksFor({
     releaseTitle: "Rolling In",
     artist: "Sam Evian",
     links: { appleMusic: "https://music.apple.com/example" },
   });
 
-  assert.deepEqual(Object.keys(links), ["spotify", "appleMusic"]);
+  assert.deepEqual(Object.keys(links), ["appleMusic", "spotify"]);
   assert.equal(links.spotify, "https://open.spotify.com/search/Rolling%20In%20Sam%20Evian");
 });
 
