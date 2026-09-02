@@ -309,29 +309,35 @@ export function CabinetNavigation({
     item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href),
   );
   const activeIndex = activeItem ? CABINET_PATHS.indexOf(activeItem) : -1;
+  const navigationLinks = (className: string) => (
+    <nav className={className} aria-label={t(locale, "primaryNavigation")}>
+      {paths.map((item) => {
+        const index = CABINET_PATHS.indexOf(item);
+        const active = item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href);
+        return (
+          <a key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
+            <span aria-hidden="true">{String(index).padStart(2, "0")}</span>
+            {t(locale, item.key)}
+          </a>
+        );
+      })}
+    </nav>
+  );
   return (
-    <details className="cabinet-navigation">
-      <summary className="cabinet-nav-trigger" aria-label={t(locale, "filterCategories")}>
-        <span className="cabinet-nav-trigger-kicker" aria-hidden="true">Index</span>
-        <span className="cabinet-nav-trigger-current">
-          <span aria-hidden="true">{activeItem ? String(activeIndex).padStart(2, "0") : "—"}</span>
-          {activeItem ? t(locale, activeItem.key) : t(locale, "filterCategories")}
-        </span>
-        <span className="cabinet-nav-trigger-mark" aria-hidden="true" />
-      </summary>
-      <nav className="cabinet-nav" aria-label={t(locale, "primaryNavigation")}>
-        {paths.map((item) => {
-          const index = CABINET_PATHS.indexOf(item);
-          const active = item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href);
-          return (
-            <a key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
-              <span aria-hidden="true">{String(index).padStart(2, "0")}</span>
-              {t(locale, item.key)}
-            </a>
-          );
-        })}
-      </nav>
-    </details>
+    <>
+      {navigationLinks("cabinet-nav cabinet-nav--desktop")}
+      <details className="cabinet-navigation">
+        <summary className="cabinet-nav-trigger" aria-label={t(locale, "filterCategories")}>
+          <span className="cabinet-nav-trigger-kicker" aria-hidden="true">Index</span>
+          <span className="cabinet-nav-trigger-current">
+            <span aria-hidden="true">{activeItem ? String(activeIndex).padStart(2, "0") : "—"}</span>
+            <span>{activeItem ? t(locale, activeItem.key) : t(locale, "filterCategories")}</span>
+          </span>
+          <span className="cabinet-nav-trigger-mark" aria-hidden="true" />
+        </summary>
+        {navigationLinks("cabinet-nav cabinet-nav--mobile")}
+      </details>
+    </>
   );
 }
 
@@ -449,9 +455,7 @@ export const cabinetStyles = `
     font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
   }
   body.theme-cabinet .header-link-divider { color: var(--cabinet-signal); }
-  body.theme-cabinet .cabinet-navigation { display: contents; }
-  body.theme-cabinet .cabinet-nav-trigger { display: none; }
-  body.theme-cabinet .cabinet-navigation:not([open]) > .cabinet-nav { display: flex; }
+  body.theme-cabinet .cabinet-navigation { display: none; }
   body.theme-cabinet .cabinet-nav {
     grid-column: 1; grid-row: 2; display: flex; flex-wrap: nowrap; gap: 0; min-width: 0; overflow-x: auto;
     scrollbar-width: none; overscroll-behavior-inline: contain;
@@ -869,7 +873,7 @@ export const cabinetStyles = `
   @media (max-width: 1099px) {
     body.theme-cabinet header.site-header { grid-template-columns: 1fr; }
     body.theme-cabinet .site-header-right { grid-column: 1; grid-row: 3; align-items: flex-start; }
-    body.theme-cabinet .cabinet-navigation { grid-row: 2; }
+    body.theme-cabinet .cabinet-nav--desktop { grid-row: 2; }
     .cabinet-artifact--photo,
     .cabinet-artifact--article { grid-template-columns: 1fr; }
     .cabinet-artifact--photo .cabinet-artifact-copy { display: grid; grid-template-columns: auto 1fr; gap: 0 1.5rem; align-items: baseline; }
@@ -900,31 +904,32 @@ export const cabinetStyles = `
       font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
     }
     body.theme-cabinet .cabinet-nav-trigger {
-      position: relative; min-height: 44px; padding: 0 0.75rem;
-      display: grid; grid-template-columns: auto minmax(0, 1fr) 1.25rem; align-items: center; gap: 0.8rem;
+      position: relative; min-height: 44px; padding: 0 0.7rem;
+      display: grid; grid-template-columns: 3rem minmax(0, 1fr) 1rem; align-items: center; column-gap: 0.55rem;
       color: var(--cabinet-graphite); cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent;
     }
     body.theme-cabinet .cabinet-nav-trigger::-webkit-details-marker { display: none; }
     body.theme-cabinet .cabinet-nav-trigger:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-    .cabinet-nav-trigger-kicker { color: var(--cabinet-signal); font-size: 0.54rem; letter-spacing: 0.13em; text-transform: uppercase; }
-    .cabinet-nav-trigger-current { display: inline-flex; align-items: baseline; gap: 0.55rem; color: var(--fg); font-size: 0.7rem; letter-spacing: 0.035em; }
-    .cabinet-nav-trigger-current > span { color: var(--cabinet-signal); font-size: 0.55rem; }
+    .cabinet-nav-trigger-kicker { color: var(--cabinet-signal); font-size: 0.54rem; line-height: 1; letter-spacing: 0.13em; text-transform: uppercase; }
+    .cabinet-nav-trigger-current { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); align-items: center; gap: 0.35rem; color: var(--fg); font-size: 0.7rem; line-height: 1; letter-spacing: 0.035em; }
+    .cabinet-nav-trigger-current > span:first-child { color: var(--cabinet-signal); font-size: 0.55rem; line-height: 1; }
     .cabinet-nav-trigger-mark { position: relative; width: 1rem; height: 1rem; justify-self: end; }
     .cabinet-nav-trigger-mark::before,
     .cabinet-nav-trigger-mark::after { content: ""; position: absolute; left: 0.1rem; right: 0.1rem; top: calc(50% - 0.5px); height: 1px; background: currentColor; transition: transform 180ms ease; }
     .cabinet-nav-trigger-mark::after { transform: rotate(90deg); }
     .cabinet-navigation[open] .cabinet-nav-trigger-mark::after { transform: rotate(0); }
-    body.theme-cabinet .cabinet-navigation:not([open]) > .cabinet-nav { display: none; }
-    body.theme-cabinet .cabinet-nav {
+    body.theme-cabinet .cabinet-navigation:not([open]) > .cabinet-nav--mobile { display: none; }
+    body.theme-cabinet .cabinet-navigation > .cabinet-nav--mobile {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible;
       border: 0; border-top: 1px solid var(--cabinet-rule);
     }
-    body.theme-cabinet .cabinet-nav a {
-      min-width: 0; padding: 0.65rem 0.75rem; border-right: 1px solid var(--cabinet-rule); border-bottom: 1px solid var(--cabinet-rule);
-      font-size: 0.66rem;
+    body.theme-cabinet .cabinet-navigation .cabinet-nav a {
+      min-width: 0; padding: 0.65rem 0.7rem; display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); align-items: center; gap: 0.35rem;
+      border-right: 1px solid var(--cabinet-rule); border-bottom: 1px solid var(--cabinet-rule); font-size: 0.66rem;
     }
-    body.theme-cabinet .cabinet-nav a:nth-child(even) { border-right: 0; }
-    body.theme-cabinet .cabinet-nav a:nth-last-child(-n + 2) { border-bottom: 0; }
+    body.theme-cabinet .cabinet-navigation .cabinet-nav a:nth-child(even) { border-right: 0; }
+    body.theme-cabinet .cabinet-navigation .cabinet-nav a:nth-last-child(-n + 2) { border-bottom: 0; }
+    body.theme-cabinet .cabinet-nav--desktop { display: none; }
     body.theme-cabinet main { padding: 2rem 1rem 5rem; }
     .cabinet-feed { row-gap: 4rem; }
     .cabinet-feed::before { left: 0.35rem; }

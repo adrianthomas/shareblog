@@ -13,9 +13,10 @@ test("Cabinet navigation exposes the current section through its compact index t
     }),
   );
 
-  assert.match(html, /^<details class="cabinet-navigation">/);
+  assert.match(html, /^<nav class="cabinet-nav cabinet-nav--desktop"/);
+  assert.match(html, /<details class="cabinet-navigation">/);
   assert.match(html, /<summary class="cabinet-nav-trigger" aria-label="Filter categories">/);
-  assert.match(html, /<span aria-hidden="true">02<\/span>Articles/);
-  assert.match(html, /href="\/articles" aria-current="page"/);
+  assert.match(html, /<span aria-hidden="true">02<\/span><span>Articles<\/span>/);
+  assert.equal((html.match(/href="\/articles" aria-current="page"/g) ?? []).length, 2);
   assert.doesNotMatch(html, /href="\/posts"/);
 });
