@@ -1,8 +1,8 @@
 // Minimal, safe formatting for user-authored free text. Two tiers:
 //
 // - formatBasicText: paragraphs, **bold**, *italic*/_italic_, [text](url)
-//   links. Used for shorter annotation fields (Site.about, a Book/Music
-//   note, a Quote's comment).
+//   links (including Markdown's optional quoted title). Used for shorter
+//   annotation fields (Site.about, a Book/Music note, a Quote's comment).
 // - formatRichText: everything formatBasicText has, plus block-level
 //   `# ` through `###### ` headings, `- `/`• ` unordered lists, and
 //   `![alt](url)` inline images. Used for the two
@@ -41,6 +41,24 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// `escapeHtml` runs before inline formatting, so quoted Markdown titles are
+// represented by their HTML entities by the time these expressions run. The
+// title is optional and is retained as an escaped HTML title attribute.
+const escapedMarkdownTitle = String.raw`(?:\s+(?:&quot;([^\n)]*)&quot;|&#39;([^\n)]*)&#39;|\(([^\n)]*)\)))?`;
+const escapedMarkdownImage = new RegExp(
+  String.raw`!\[([^\]]*)\]\(([^)\s]+)${escapedMarkdownTitle}\)`,
+  "g",
+);
+const escapedMarkdownLink = new RegExp(
+  String.raw`\[([^\]]+)\]\(([^)\s]+)${escapedMarkdownTitle}\)`,
+  "g",
+);
+
+function titleAttribute(doubleQuoted?: string, singleQuoted?: string, parenthesized?: string): string {
+  const title = doubleQuoted ?? singleQuoted ?? parenthesized;
+  return title === undefined ? "" : ` title="${title}"`;
+}
+
 function formatInline(text: string, { images = false }: { images?: boolean } = {}): string {
   let html = escapeHtml(text);
   // Bold/italic run before links, and links run last: the <a ...> markup
@@ -56,15 +74,21 @@ function formatInline(text: string, { images = false }: { images?: boolean } = {
     // Images before links: both use [...](...), but an image's leading "!"
     // would otherwise make the link pass wrap its "[alt](url)" tail in an
     // <a> too.
-    html = html.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (match, alt: string, url: string) => {
-      if (!isSafeImageUrl(url)) return "";
-      return `<img src="${url}" alt="${alt}" loading="lazy" />`;
-    });
+    html = html.replace(
+      escapedMarkdownImage,
+      (match, alt: string, url: string, doubleQuoted?: string, singleQuoted?: string, parenthesized?: string) => {
+        if (!isSafeImageUrl(url)) return "";
+        return `<img src="${url}" alt="${alt}"${titleAttribute(doubleQuoted, singleQuoted, parenthesized)} loading="lazy" />`;
+      },
+    );
   }
-  return html.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (match, label: string, url: string) => {
-    if (!SAFE_LINK_PROTOCOL.test(url)) return label;
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-  });
+  return html.replace(
+    escapedMarkdownLink,
+    (match, label: string, url: string, doubleQuoted?: string, singleQuoted?: string, parenthesized?: string) => {
+      if (!SAFE_LINK_PROTOCOL.test(url)) return label;
+      return `<a href="${url}"${titleAttribute(doubleQuoted, singleQuoted, parenthesized)} target="_blank" rel="noopener noreferrer">${label}</a>`;
+    },
+  );
 }
 
 export function formatBasicText(text: string): string {
@@ -107,11 +131,15 @@ function formatRichBlock(paragraph: string): string {
   // A paragraph that's nothing but a single image renders as its own block
   // rather than wrapped in a <p> — keeps it visually distinct from body
   // copy the same way an image dropped on its own line reads in Markdown.
-  const imageOnly = paragraph.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/);
+  const imageOnly = paragraph.match(
+    /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+(?:"([^\n)]*)"|'([^\n)]*)'|\(([^\n)]*)\)))?\)$/,
+  );
   if (imageOnly) {
-    const [, alt, url] = imageOnly;
+    const [, alt, url, doubleQuoted, singleQuoted, parenthesized] = imageOnly;
     if (!isSafeImageUrl(url)) return "";
-    return `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" loading="lazy" />`;
+    const title = doubleQuoted ?? singleQuoted ?? parenthesized;
+    const titleHtml = title === undefined ? "" : ` title="${escapeHtml(title)}"`;
+    return `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}"${titleHtml} loading="lazy" />`;
   }
   return `<p>${formatInline(paragraph, { images: true })}</p>`;
 }
@@ -133,8 +161,8 @@ export function formatRichText(text: string): string {
 // for one in a title-length preview.
 export function stripBasicFormatting(text: string): string {
   return text
-    .replace(/!\[([^\]]*)\]\([^)\s]+\)/g, "")
-    .replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)\s]+(?:\s+(?:"[^\n)]*"|'[^\n)]*'|\([^\n)]*\)))?\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)\s]+(?:\s+(?:"[^\n)]*"|'[^\n)]*'|\([^\n)]*\)))?\)/g, "$1")
     .replace(/^[-•]\s+/gm, "")
     .replace(/^\d+\.\s+/gm, "")
     .replace(/^>\s?/gm, "")

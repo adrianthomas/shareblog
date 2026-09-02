@@ -164,7 +164,8 @@ body are separate body images and render below the title/excerpt/date content.
 
 Body formatting (`render/format.ts`) — three tiers, a deliberate per-field
 choice, not a default:
-- `formatBasicText` — paragraphs, `**bold**`, `*italic*`, `[text](url)`.
+- `formatBasicText` — paragraphs, `**bold**`, `*italic*`, `[text](url)`,
+  including Markdown links with optional quoted titles.
 - `formatRichText` — the above plus `#` through `######` headings,
   `-`/`•` unordered lists, and `![alt](url)`.
 - `stripBasicFormatting` — strips back to plain text (RSS `<title>`, a
