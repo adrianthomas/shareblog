@@ -6,7 +6,9 @@ on the owner's own site with optional ActivityPub federation.
 
 Each site also has explicit title/tagline settings and a separate cross-theme
 footer profile, can use an apex or custom canonical domain, and exposes paginated feeds, chronological archives,
-search, social-card metadata, structured data, a sitemap, and robots policy.
+search, social-card metadata, structured data, a generated identity favicon, a
+sitemap, and robots policy. Optional deployment-wide flags expose personal Work,
+Contact, and Impressum pages.
 
 ## Local development
 
@@ -35,6 +37,7 @@ Run these from `server/`:
 ```bash
 npm run dev
 npm run build
+npm test
 npm run db:generate
 npm run db:migrate
 npm run bootstrap-owner

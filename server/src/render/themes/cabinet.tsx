@@ -305,19 +305,33 @@ export function CabinetNavigation({
   const paths = availablePaths
     ? CABINET_PATHS.filter((item) => item.href === "/" || availablePaths.includes(item.href))
     : CABINET_PATHS;
+  const activeItem = paths.find((item) =>
+    item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href),
+  );
+  const activeIndex = activeItem ? CABINET_PATHS.indexOf(activeItem) : -1;
   return (
-    <nav className="cabinet-nav" aria-label={t(locale, "primaryNavigation")}>
-      {paths.map((item) => {
-        const index = CABINET_PATHS.indexOf(item);
-        const active = item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href);
-        return (
-          <a key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
-            <span aria-hidden="true">{String(index).padStart(2, "0")}</span>
-            {t(locale, item.key)}
-          </a>
-        );
-      })}
-    </nav>
+    <details className="cabinet-navigation">
+      <summary className="cabinet-nav-trigger" aria-label={t(locale, "filterCategories")}>
+        <span className="cabinet-nav-trigger-kicker" aria-hidden="true">Index</span>
+        <span className="cabinet-nav-trigger-current">
+          <span aria-hidden="true">{activeItem ? String(activeIndex).padStart(2, "0") : "—"}</span>
+          {activeItem ? t(locale, activeItem.key) : t(locale, "filterCategories")}
+        </span>
+        <span className="cabinet-nav-trigger-mark" aria-hidden="true" />
+      </summary>
+      <nav className="cabinet-nav" aria-label={t(locale, "primaryNavigation")}>
+        {paths.map((item) => {
+          const index = CABINET_PATHS.indexOf(item);
+          const active = item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href);
+          return (
+            <a key={item.href} href={item.href} aria-current={active ? "page" : undefined}>
+              <span aria-hidden="true">{String(index).padStart(2, "0")}</span>
+              {t(locale, item.key)}
+            </a>
+          );
+        })}
+      </nav>
+    </details>
   );
 }
 
@@ -413,7 +427,7 @@ export const cabinetStyles = `
   body.theme-cabinet .site-identity { grid-column: 1 / -1; gap: 0.75rem; padding-top: clamp(1rem, 5vw, 4.5rem); }
   body.theme-cabinet header.site-header h1 {
     margin: 0; max-width: 100%; font-family: "Cabinet Serif", Georgia, serif;
-    font-size: clamp(4.2rem, 12vw, 11rem); font-weight: 600; line-height: 0.78;
+    font-size: clamp(3.8rem, 10vw, 9rem); font-weight: 600; line-height: 0.82;
     letter-spacing: -0.075em; text-wrap: balance; overflow-wrap: anywhere;
   }
   body.theme-cabinet header.site-header h1 a {
@@ -426,7 +440,7 @@ export const cabinetStyles = `
   body.theme-cabinet .site-tagline {
     max-width: 34rem; margin: 0 0 0 clamp(0.2rem, 8vw, 7.5rem); padding-left: 1rem;
     border-left: 2px solid var(--cabinet-signal); color: var(--cabinet-graphite);
-    font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(1rem, 1.6vw, 1.25rem); line-height: 1.5;
+    font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(0.94rem, 1.35vw, 1.12rem); line-height: 1.5;
   }
   body.theme-cabinet .site-header-right { grid-column: 2; grid-row: 2; align-self: end; align-items: flex-end; }
   body.theme-cabinet .header-links { margin: 0; }
@@ -435,6 +449,9 @@ export const cabinetStyles = `
     font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
   }
   body.theme-cabinet .header-link-divider { color: var(--cabinet-signal); }
+  body.theme-cabinet .cabinet-navigation { display: contents; }
+  body.theme-cabinet .cabinet-nav-trigger { display: none; }
+  body.theme-cabinet .cabinet-navigation:not([open]) > .cabinet-nav { display: flex; }
   body.theme-cabinet .cabinet-nav {
     grid-column: 1; grid-row: 2; display: flex; flex-wrap: nowrap; gap: 0; min-width: 0; overflow-x: auto;
     scrollbar-width: none; overscroll-behavior-inline: contain;
@@ -548,7 +565,7 @@ export const cabinetStyles = `
   .cabinet-kind::before { content: "●"; margin-right: 0.55rem; font-size: 0.72em; }
   .cabinet-title {
     margin: 0; color: var(--cabinet-ink); font-family: "Cabinet Serif", Georgia, serif;
-    font-size: clamp(1.8rem, 4.1vw, 4.6rem); font-weight: 600; line-height: 0.98; letter-spacing: -0.048em; text-wrap: balance; overflow-wrap: anywhere;
+    font-size: clamp(1.65rem, 3.5vw, 3.9rem); font-weight: 600; line-height: 1; letter-spacing: -0.045em; text-wrap: balance; overflow-wrap: anywhere;
   }
   .cabinet-subtitle {
     max-width: 54ch; margin: 1.1rem 0 0; color: var(--cabinet-graphite);
@@ -571,7 +588,7 @@ export const cabinetStyles = `
   .cabinet-artifact--thought .cabinet-title,
   .cabinet-thought-body {
     max-width: 28ch; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: clamp(1.65rem, 3.7vw, 3.65rem); font-weight: 650; line-height: 1.08; letter-spacing: -0.045em;
+    font-size: clamp(1.5rem, 3.15vw, 3.1rem); font-weight: 650; line-height: 1.1; letter-spacing: -0.042em;
   }
   .cabinet-thought-body { max-width: 32ch; }
   .cabinet-thought-body p { margin: 0 0 0.7em; }
@@ -607,7 +624,7 @@ export const cabinetStyles = `
     box-shadow: -0.45rem 0 0 color-mix(in srgb, #000 14%, transparent), 0.9rem 1.2rem 2.2rem rgba(24, 24, 20, 0.26);
   }
   .cabinet-artifact--book .cabinet-artifact-copy { align-self: center; }
-  .cabinet-artifact--book .cabinet-title { font-size: clamp(2rem, 4vw, 4rem); }
+  .cabinet-artifact--book .cabinet-title { font-size: clamp(1.75rem, 3.4vw, 3.4rem); }
 
   /* Music is a sleeve and an offset signal halo. Only the halo moves. */
   .cabinet-item--music .cabinet-artifact { width: min(100%, 880px); }
@@ -626,7 +643,7 @@ export const cabinetStyles = `
   .cabinet-item--music:hover .cabinet-groove,
   .cabinet-item--music:focus-within .cabinet-groove { transform: rotate(8deg) translateX(3%); }
   .cabinet-artifact--music .cabinet-artifact-copy { align-self: end; padding-left: clamp(2rem, 4vw, 4rem); }
-  .cabinet-artifact--music .cabinet-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: clamp(2rem, 4vw, 4rem); font-weight: 760; }
+  .cabinet-artifact--music .cabinet-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: clamp(1.75rem, 3.4vw, 3.4rem); font-weight: 760; }
 
   /* Articles are the wide folios in the sequence. */
   .cabinet-item--article .cabinet-artifact { width: min(100%, 1240px); }
@@ -635,7 +652,7 @@ export const cabinetStyles = `
   .cabinet-artifact--article .cabinet-artifact-media { min-height: 29rem; }
   .cabinet-artifact--article .cabinet-artifact-media img { width: 100%; height: 100%; min-height: 29rem; object-fit: cover; }
   .cabinet-artifact--article .cabinet-artifact-copy { align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; }
-  .cabinet-artifact--article .cabinet-title { font-size: clamp(2.3rem, 5vw, 5.6rem); }
+  .cabinet-artifact--article .cabinet-title { font-size: clamp(2rem, 4.25vw, 4.75rem); }
   .cabinet-artifact--article .cabinet-action { margin-top: auto; padding-top: 2.5rem; }
 
   /* Quotes are typographic broadsides, not faux handwritten notes. */
@@ -645,7 +662,7 @@ export const cabinetStyles = `
     content: "“"; position: absolute; left: -0.34em; top: -0.34em; z-index: -1;
     color: var(--cabinet-type); font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(8rem, 18vw, 18rem); line-height: 1; opacity: 0.16;
   }
-  .cabinet-artifact--quote .cabinet-title { max-width: 19ch; font-size: clamp(2.1rem, 5vw, 5.25rem); font-weight: 400; line-height: 1.05; }
+  .cabinet-artifact--quote .cabinet-title { max-width: 19ch; font-size: clamp(1.85rem, 4.25vw, 4.45rem); font-weight: 400; line-height: 1.07; }
   .cabinet-artifact--quote .cabinet-title p,
   .cabinet-detail--quote .cabinet-detail-title p { margin: 0; }
   .cabinet-artifact--quote cite,
@@ -711,11 +728,11 @@ export const cabinetStyles = `
   .cabinet-detail-copy { min-width: 0; }
   .cabinet-detail-title {
     max-width: 18ch; margin: 0; color: var(--cabinet-ink); font-family: "Cabinet Serif", Georgia, serif;
-    font-size: clamp(2.75rem, 6.6vw, 7rem); font-weight: 600; line-height: 0.94; letter-spacing: -0.055em; text-wrap: balance; overflow-wrap: anywhere;
+    font-size: clamp(2.4rem, 5.6vw, 5.9rem); font-weight: 600; line-height: 0.97; letter-spacing: -0.052em; text-wrap: balance; overflow-wrap: anywhere;
   }
   .cabinet-detail-subtitle {
     max-width: 46ch; margin: 1.5rem 0 0; color: var(--cabinet-graphite);
-    font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(1.15rem, 2vw, 1.55rem); line-height: 1.48;
+    font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(1.05rem, 1.7vw, 1.35rem); line-height: 1.5;
   }
   .cabinet-detail-date {
     display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.65rem; margin: 1.5rem 0 0; color: var(--cabinet-graphite);
@@ -736,7 +753,7 @@ export const cabinetStyles = `
   .cabinet-detail-media > img { display: block; width: 100%; height: auto; }
   .cabinet-detail-body {
     width: min(calc(100% - 2.5rem), 68ch); margin: 0 auto; padding: clamp(3rem, 7vw, 7rem) 0 max(5rem, env(safe-area-inset-bottom));
-    font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(1.08rem, 1.7vw, 1.28rem); line-height: 1.68;
+    font-family: "Cabinet Serif", Georgia, serif; font-size: clamp(1rem, 1.45vw, 1.16rem); line-height: 1.7;
   }
   .cabinet-detail-body--book { --cabinet-type: var(--cabinet-book); }
   .cabinet-detail-body--music { --cabinet-type: var(--cabinet-music); }
@@ -758,7 +775,7 @@ export const cabinetStyles = `
   .cabinet-detail--thought .cabinet-kind { margin-bottom: 2.5rem; }
   .cabinet-detail--thought .cabinet-detail-rich {
     max-width: 29ch; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: clamp(2rem, 5.8vw, 6.2rem); font-weight: 640; line-height: 1.03; letter-spacing: -0.055em;
+    font-size: clamp(1.8rem, 4.9vw, 5.25rem); font-weight: 640; line-height: 1.05; letter-spacing: -0.052em;
   }
   .cabinet-detail--thought .cabinet-detail-rich p { margin: 0 0 0.7em; }
 
@@ -785,7 +802,7 @@ export const cabinetStyles = `
   .cabinet-detail--music { min-height: 0; padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
   .cabinet-detail--book .cabinet-detail-media { display: grid; place-items: center; position: sticky; top: 5rem; }
   .cabinet-detail--book .cabinet-detail-media > img { width: auto; max-width: 100%; max-height: min(68vh, 720px); object-fit: contain; box-shadow: -0.7rem 0 0 color-mix(in srgb, #000 14%, transparent), 1.3rem 1.7rem 3.8rem rgba(24,24,20,0.28); }
-  .cabinet-detail--book .cabinet-detail-title { font-size: clamp(2.75rem, 5.8vw, 5.8rem); }
+  .cabinet-detail--book .cabinet-detail-title { font-size: clamp(2.4rem, 4.9vw, 4.9rem); }
   .cabinet-detail--music { background: color-mix(in srgb, var(--cabinet-music) 6%, var(--bg)); }
   .cabinet-detail--music .cabinet-detail-media { aspect-ratio: 1; position: sticky; top: 5rem; isolation: isolate; }
   .cabinet-detail--music .cabinet-detail-media > img { position: relative; z-index: 2; width: 100%; height: 100%; object-fit: cover; box-shadow: 1rem 1.3rem 3.5rem rgba(24,24,20,0.28); }
@@ -801,7 +818,7 @@ export const cabinetStyles = `
   .cabinet-detail--article .cabinet-detail-media > img { width: 100%; height: 62vh; object-fit: cover; }
   .cabinet-detail--article .cabinet-detail-copy { grid-column: 2; padding-bottom: 1.5rem; }
   .cabinet-detail--article:not(:has(.cabinet-detail-media)) .cabinet-detail-header { display: block; width: min(100%, 980px); }
-  .cabinet-detail--article .cabinet-detail-title { font-size: clamp(2.75rem, 6.2vw, 6.5rem); }
+  .cabinet-detail--article .cabinet-detail-title { font-size: clamp(2.4rem, 5.25vw, 5.5rem); }
 
   .cabinet-detail--quote { display: grid; place-items: center; overflow: hidden; background: color-mix(in srgb, var(--cabinet-quote) 6%, var(--bg)); }
   .cabinet-detail--quote::before {
@@ -847,12 +864,12 @@ export const cabinetStyles = `
   .about-content, .release-entry, .about-product { font-family: "Cabinet Serif", Georgia, serif; }
   body.theme-cabinet .about-page { max-width: 66ch; margin: 0 auto; }
   body.theme-cabinet .about-page > h1 { padding-bottom: 1rem; border-bottom: 0.35rem solid var(--cabinet-signal); }
-  body.theme-cabinet .about-content { font-size: 1.18rem; line-height: 1.7; }
+  body.theme-cabinet .about-content { font-size: 1.06rem; line-height: 1.72; }
 
   @media (max-width: 1099px) {
     body.theme-cabinet header.site-header { grid-template-columns: 1fr; }
     body.theme-cabinet .site-header-right { grid-column: 1; grid-row: 3; align-items: flex-start; }
-    body.theme-cabinet .cabinet-nav { grid-row: 2; }
+    body.theme-cabinet .cabinet-navigation { grid-row: 2; }
     .cabinet-artifact--photo,
     .cabinet-artifact--article { grid-template-columns: 1fr; }
     .cabinet-artifact--photo .cabinet-artifact-copy { display: grid; grid-template-columns: auto 1fr; gap: 0 1.5rem; align-items: baseline; }
@@ -873,11 +890,42 @@ export const cabinetStyles = `
 
   @media (max-width: 719px) {
     body.theme-cabinet { background-size: 25vw 100%, auto; }
-    body.theme-cabinet header.site-header { padding-left: 1rem; padding-right: 1rem; padding-bottom: 1.5rem; }
-    body.theme-cabinet header.site-header h1 { font-size: clamp(3.6rem, 21vw, 7rem); line-height: 0.83; }
+    body.theme-cabinet header.site-header { gap: 1rem; padding: max(1.25rem, env(safe-area-inset-top)) 1rem 1.25rem; }
+    body.theme-cabinet .site-identity { gap: 0.55rem; padding-top: 0.75rem; }
+    body.theme-cabinet header.site-header h1 { font-size: clamp(2.9rem, 16vw, 5.25rem); line-height: 0.87; }
     body.theme-cabinet .site-tagline { margin-left: 0; }
-    body.theme-cabinet .cabinet-nav { flex-wrap: wrap; }
-    body.theme-cabinet main { padding: 2.5rem 1rem 5rem; }
+    body.theme-cabinet .cabinet-navigation {
+      display: block; grid-column: 1; grid-row: 2; min-width: 0;
+      border-top: 1px solid var(--cabinet-rule); border-bottom: 1px solid var(--cabinet-rule);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    }
+    body.theme-cabinet .cabinet-nav-trigger {
+      position: relative; min-height: 44px; padding: 0 0.75rem;
+      display: grid; grid-template-columns: auto minmax(0, 1fr) 1.25rem; align-items: center; gap: 0.8rem;
+      color: var(--cabinet-graphite); cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent;
+    }
+    body.theme-cabinet .cabinet-nav-trigger::-webkit-details-marker { display: none; }
+    body.theme-cabinet .cabinet-nav-trigger:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .cabinet-nav-trigger-kicker { color: var(--cabinet-signal); font-size: 0.54rem; letter-spacing: 0.13em; text-transform: uppercase; }
+    .cabinet-nav-trigger-current { display: inline-flex; align-items: baseline; gap: 0.55rem; color: var(--fg); font-size: 0.7rem; letter-spacing: 0.035em; }
+    .cabinet-nav-trigger-current > span { color: var(--cabinet-signal); font-size: 0.55rem; }
+    .cabinet-nav-trigger-mark { position: relative; width: 1rem; height: 1rem; justify-self: end; }
+    .cabinet-nav-trigger-mark::before,
+    .cabinet-nav-trigger-mark::after { content: ""; position: absolute; left: 0.1rem; right: 0.1rem; top: calc(50% - 0.5px); height: 1px; background: currentColor; transition: transform 180ms ease; }
+    .cabinet-nav-trigger-mark::after { transform: rotate(90deg); }
+    .cabinet-navigation[open] .cabinet-nav-trigger-mark::after { transform: rotate(0); }
+    body.theme-cabinet .cabinet-navigation:not([open]) > .cabinet-nav { display: none; }
+    body.theme-cabinet .cabinet-nav {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible;
+      border: 0; border-top: 1px solid var(--cabinet-rule);
+    }
+    body.theme-cabinet .cabinet-nav a {
+      min-width: 0; padding: 0.65rem 0.75rem; border-right: 1px solid var(--cabinet-rule); border-bottom: 1px solid var(--cabinet-rule);
+      font-size: 0.66rem;
+    }
+    body.theme-cabinet .cabinet-nav a:nth-child(even) { border-right: 0; }
+    body.theme-cabinet .cabinet-nav a:nth-last-child(-n + 2) { border-bottom: 0; }
+    body.theme-cabinet main { padding: 2rem 1rem 5rem; }
     .cabinet-feed { row-gap: 4rem; }
     .cabinet-feed::before { left: 0.35rem; }
     .cabinet-item { display: block; padding-left: 0; }
@@ -893,7 +941,7 @@ export const cabinetStyles = `
     .cabinet-item--opening .cabinet-wire { transform: scaleX(1); }
     .cabinet-artifact { width: auto !important; margin-left: 1.25rem; }
     .cabinet-artifact-copy { padding: 1.25rem; }
-    .cabinet-title { font-size: clamp(1.8rem, 10vw, 3.4rem); }
+    .cabinet-title { font-size: clamp(1.55rem, 7.8vw, 2.65rem); }
     .cabinet-artifact--photo { display: block; margin-left: 0; }
     .cabinet-artifact--photo .cabinet-artifact-media,
     .cabinet-artifact--photo .cabinet-artifact-media img { min-height: 0; max-height: none; }
@@ -911,7 +959,7 @@ export const cabinetStyles = `
     .cabinet-artifact--quote .cabinet-artifact-copy { padding: 2.5rem 1.5rem; }
     .cabinet-detail { padding-left: 1.25rem; padding-right: 1.25rem; }
     .cabinet-detail-register { display: none; }
-    .cabinet-detail-title { font-size: clamp(2.4rem, 12vw, 4.4rem); }
+    .cabinet-detail-title { font-size: clamp(2rem, 9vw, 3.5rem); }
     .cabinet-detail--photo { padding-left: 0; padding-right: 0; }
     .cabinet-detail--photo .cabinet-detail-media { min-height: calc(100dvh - 16rem); }
     .cabinet-detail--photo .cabinet-detail-media > img { height: calc(100dvh - 16rem); }

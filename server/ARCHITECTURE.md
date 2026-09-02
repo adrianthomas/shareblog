@@ -46,14 +46,17 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
 | Path | Renders |
 |---|---|
-| `/` | Home — all types mixed, paginated 20 at a time (`renderList`) |
+| `/` | Home — all types mixed, paginated 20 at a time (`renderList`). On a bare `BASE_DOMAIN` with no apex tenant, renders the Shareblog product landing page instead. |
 | `/posts`, `/articles`, `/links`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listings (`LISTING_TYPES`), paginated 20 at a time |
 | `/<listing>/feed.xml`, `/feed.xml` | RSS (`renderFeed`) |
 | `/<prefix>/:slug` (`DETAIL_TYPES`) | Detail page (`renderObjectPage`) — 404s if not published |
 | `/archive`, `/archive/:year/:month` | Chronological month index and paginated month views |
 | `/search?q=...` | Search titles, bodies, source URLs, and structured metadata; marked `noindex` |
-| `/sitemap.xml`, `/robots.txt` | Search-engine discovery using the site's canonical origin |
-| `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` repeats the footer profile before any optional long-form About text |
+| `/favicon.svg` | Generated light/dark SVG favicon using the profile-name or site-title initial; a configured profile image replaces it in page metadata |
+| `/sitemap.xml`, `/robots.txt` | Search-engine discovery using the site's canonical origin; the sitemap includes enabled optional pages |
+| `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` renders optional long-form owner copy, while the shared profile stays in the site-wide footer |
+| `/my-work`, `/contact` | Personal portfolio pages, available only when the deployment-wide `ENABLE_WORK_PAGE=true`; otherwise 404 and omitted from footer/sitemap |
+| `/impressum` | Legal-notice page, available only when `ENABLE_IMPRESSUM_PAGE=true`; otherwise 404 and omitted from footer/sitemap |
 
 After all explicit routes, imported `metadata.import.legacyPath` values provide
 permanent redirects from historical root-level WordPress permalinks to the
@@ -114,7 +117,9 @@ iOS-style right-to-left push detail panel instead of the expanding-card motion.
 Cabinet is a standalone interactive pipeline rather than a Cards skin.
 `themes/cabinet.tsx` owns its chronological rail, numbered navigation,
 type-specific artifact and detail components, typography, and responsive
-styles; every content template has an explicit `theme === "cabinet"` branch.
+styles; its numbered navigation collapses to a native, keyboard-accessible
+index drawer on narrow screens; every content template has an explicit
+`theme === "cabinet"` branch.
 `themes/cabinet-script.ts` progressively enhances the ordinary same-origin
 detail links into fetched in-place panels with shared-media/clip-path motion,
 pull-down dismissal from the top of the detail scroller, history handling,
@@ -131,6 +136,11 @@ change the visual voice without shrinking those controls or replacing that
 accessibility contract. Cards-derived themes may override the shape of a
 control (Ledger's rounded-rectangle back/filter buttons, for example), but not
 its usable hit area.
+
+The shared `<head>` selects a configured profile image as the favicon and
+Apple touch icon, otherwise it uses the locally generated `/favicon.svg?v=1`.
+`render/favicon.ts` is deliberately dependency-free and escapes the chosen
+initial before placing it in SVG.
 
 The cards pipeline has specialized media openers where the feed card and
 detail page have genuinely different geometry: photos fly the photo into the
@@ -163,6 +173,16 @@ choice, not a default:
 Photo metadata deliberately separates visible `caption` from image `altText`;
 renderers and RSS image markup use `altText` for the `<img alt>` value, not the
 caption.
+
+Book and music destination links are render-time policy, not just stored
+metadata snapshots. `lib/book-links.ts` regenerates the current retailer set
+for ISBN-backed books (including regional Amazon destinations) while preserving
+stored links for legacy books without an ISBN. `lib/music-links.ts` preserves
+exact stored Spotify links, then an exact Spotify source URL, and otherwise
+derives a credential-free Spotify search from title and artist. Keep the helper
+tests current when changing destinations or precedence. Amazon-region selection
+is a small browser-locale enhancement in `Layout.tsx`; it stays client-side so
+cached public HTML does not vary per visitor.
 
 i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
 `site.locale` threads through every render call. Add a string here, not as
@@ -217,12 +237,14 @@ write mode. Inline image URLs remain compatible with existing clients while
 
 ## Testing
 
-No lint script. `npx tsc -p tsconfig.json --noEmit` (from `server/`) for
-type safety, plus manual/browser verification for anything a type check
-can't catch — still the primary way to check most changes.
+No lint script. From `server/`, `npm run build` is the canonical TypeScript
+check and `npm test` runs the fast Node test suite in `tests/*.test.ts` (current
+coverage includes book/music destination policy and generated favicon safety).
+Use manual/browser verification for behavior that static and unit checks cannot
+cover.
 
-One real automated suite exists: `tests/e2e/` (Playwright, WebKit —
-matching the cards theme's real target browser, not Chromium), run via
+The browser suite lives in `tests/e2e/` (Playwright, WebKit — matching the
+cards theme's real target browser, not Chromium), run via
 `npm run test:e2e` (`playwright.config.ts` spins up its own throwaway
 SQLite DB and dev server on port 3100, seeded through `bootstrap-owner.ts`
 + the live API — see the spec file for the pattern). Its primary coverage is
