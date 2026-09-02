@@ -575,16 +575,9 @@ export function Layout({
               }
               .site-footer-inner {
                 --footer-column-gap: clamp(1.5rem, 4vw, 3.5rem);
-                position: relative; overflow: hidden; padding: clamp(1.3rem, 3vw, 1.75rem);
-                border: 1px solid color-mix(in srgb, var(--border) 72%, transparent); border-radius: 18px;
-                background:
-                  radial-gradient(circle at 0 0, color-mix(in srgb, var(--focus) 7%, transparent), transparent 15rem),
-                  color-mix(in srgb, var(--bg) 96%, var(--fg));
-                box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bg) 80%, white);
-              }
-              .site-footer-inner::before {
-                content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
-                background: color-mix(in srgb, var(--focus) 72%, var(--fg));
+                padding: clamp(1.3rem, 3vw, 1.75rem);
+                border: 1px solid color-mix(in srgb, var(--border) 52%, transparent); border-radius: 18px;
+                background: color-mix(in srgb, var(--bg) 98.5%, var(--fg));
               }
               .site-footer-profile { margin: 0; }
               .site-footer-profile .site-profile-details {
