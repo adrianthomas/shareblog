@@ -55,7 +55,7 @@ test("book covers remain public when showCover is absent", async () => {
 test("showCover false omits a retained cover from all public outputs", async () => {
   const object = book(false);
 
-  for (const theme of ["classic", "cards", "prism", "ledger", "cabinet"] as const) {
+  for (const theme of ["classic", "cards", "washi", "prism", "ledger", "cabinet"] as const) {
     for (const variant of ["card", "page"] as const) {
       const html = renderToStaticMarkup(
         React.createElement(BookCard, {
