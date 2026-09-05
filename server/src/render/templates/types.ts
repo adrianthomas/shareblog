@@ -21,8 +21,14 @@ export interface BookMetadata {
   isbn13?: string;
   isbn10?: string;
   coverUrl?: string;
+  /** Absent means visible for compatibility with books published by older clients. */
+  showCover?: boolean;
   rating?: number;
   links?: BookRetailerLinks;
+}
+
+export function publicBookCoverUrl(metadata: BookMetadata): string | undefined {
+  return metadata.showCover === false ? undefined : metadata.coverUrl;
 }
 
 export interface MusicMetadata {

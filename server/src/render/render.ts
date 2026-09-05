@@ -30,6 +30,7 @@ import type {
   QuoteMetadata,
   Site,
 } from "./templates/types.js";
+import { publicBookCoverUrl } from "./templates/types.js";
 import { t, resolveLocale, type MessageKey } from "./i18n.js";
 import { formatBasicText, formatRichText, stripBasicFormatting } from "./format.js";
 import { siteOrigin } from "./site-url.js";
@@ -266,7 +267,7 @@ export async function renderObjectPage(
       : object.type === "article"
         ? await articleImageUrl(object)
         : object.type === "book"
-          ? (object.metadata as BookMetadata).coverUrl
+          ? publicBookCoverUrl(object.metadata as BookMetadata)
           : object.type === "music"
             ? (object.metadata as MusicMetadata).artworkUrl
             : undefined;
@@ -492,8 +493,9 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
     }
     case "book": {
       const metadata = object.metadata as BookMetadata;
-      const image = metadata.coverUrl
-        ? `<p><img src="${escapeXml(metadata.coverUrl)}" alt="Cover of ${escapeXml(object.title ?? "")}" /></p>`
+      const coverUrl = publicBookCoverUrl(metadata);
+      const image = coverUrl
+        ? `<p><img src="${escapeXml(coverUrl)}" alt="Cover of ${escapeXml(object.title ?? "")}" /></p>`
         : "";
       const author = `<p>${escapeXml(metadata.author)}</p>`;
       const rating = metadata.rating

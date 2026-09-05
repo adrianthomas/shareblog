@@ -1,5 +1,5 @@
 import React from "react";
-import type { ContentObject, BookMetadata } from "./types.js";
+import { publicBookCoverUrl, type ContentObject, type BookMetadata } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
@@ -118,12 +118,13 @@ export function BookCard({
   backLabel?: string;
 }) {
   const metadata = object.metadata as BookMetadata;
+  const coverUrl = publicBookCoverUrl(metadata);
   const links = bookRetailerLinksFor(object.title ?? "", metadata.author, metadata);
   const stars = metadata.rating ? "★".repeat(metadata.rating) + "☆".repeat(5 - metadata.rating) : null;
 
   if (theme === "cabinet") {
-    const image = metadata.coverUrl
-      ? { url: metadata.coverUrl, alt: "" }
+    const image = coverUrl
+      ? { url: coverUrl, alt: "" }
       : undefined;
     const ratingLabel = metadata.rating ? t(locale, "ratingLabel", { rating: metadata.rating }) : undefined;
     const hasDetailBody = Boolean(object.body || (links && flattenLinks(links).length));
@@ -172,7 +173,7 @@ export function BookCard({
   }
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
-    const hero = { imageUrl: metadata.coverUrl, imageAlt: object.title ? `Cover of ${object.title}` : "", gradientSeed: object.slug };
+    const hero = { imageUrl: coverUrl, imageAlt: object.title ? `Cover of ${object.title}` : "", gradientSeed: object.slug };
     if (variant === "card") {
       return (
         <CardsFeedItem
@@ -187,7 +188,7 @@ export function BookCard({
         />
       );
     }
-    if (metadata.coverUrl) {
+    if (coverUrl) {
       return (
         <>
           <CardsBookDetailHeader
@@ -202,7 +203,7 @@ export function BookCard({
                 <CopyLinkButton locale={locale} />
               </>
             }
-            coverUrl={metadata.coverUrl}
+            coverUrl={coverUrl}
             coverAlt={hero.imageAlt}
             backHref={backHref!}
             backLabel={backLabel!}
@@ -248,8 +249,8 @@ export function BookCard({
 
   return (
     <article className={variant === "card" ? "card book" : "book"}>
-      {metadata.coverUrl ? (
-        <img src={metadata.coverUrl} alt={object.title ? `Cover of ${object.title}` : ""} />
+      {coverUrl ? (
+        <img src={coverUrl} alt={object.title ? `Cover of ${object.title}` : ""} />
       ) : null}
       <div>
         <h2>

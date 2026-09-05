@@ -185,6 +185,12 @@ tests current when changing destinations or precedence. Amazon-region selection
 is a small browser-locale enhancement in `Layout.tsx`; it stays client-side so
 cached public HTML does not vary per visitor.
 
+Book metadata may set `showCover: false` to retain the resolved cover in the
+authenticated editor while omitting it from every public surface. Absence means
+visible for compatibility with older clients. `publicBookCoverUrl()` is the
+shared policy used by theme rendering, page metadata/JSON-LD, RSS, and the
+ActivityPub HTML generated from feed content.
+
 i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
 `site.locale` threads through every render call. Add a string here, not as
 a hardcoded literal in a template.
