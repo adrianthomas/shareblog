@@ -191,6 +191,11 @@ visible for compatibility with older clients. `publicBookCoverUrl()` is the
 shared policy used by theme rendering, page metadata/JSON-LD, RSS, and the
 ActivityPub HTML generated from feed content.
 
+Music metadata follows the same contract with `showArtwork: false` and
+`publicMusicArtworkUrl()`: resolved artwork remains available to the
+authenticated editor but is omitted from themes, metadata, feeds, and
+federation. Absence likewise means visible.
+
 i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
 `site.locale` threads through every render call. Add a string here, not as
 a hardcoded literal in a template.

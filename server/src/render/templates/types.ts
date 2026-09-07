@@ -35,8 +35,14 @@ export interface MusicMetadata {
   artist: string;
   releaseTitle: string;
   artworkUrl?: string;
+  /** Absent means visible for compatibility with music published by older clients. */
+  showArtwork?: boolean;
   sourceUrl?: string;
   links?: MusicLinks;
+}
+
+export function publicMusicArtworkUrl(metadata: MusicMetadata): string | undefined {
+  return metadata.showArtwork === false ? undefined : metadata.artworkUrl;
 }
 
 export interface PhotoMetadata {

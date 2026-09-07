@@ -1,5 +1,5 @@
 import React from "react";
-import type { ContentObject, MusicMetadata } from "./types.js";
+import { publicMusicArtworkUrl, type ContentObject, type MusicMetadata } from "./types.js";
 import type { Theme } from "../../db/schema.js";
 import { formatDate } from "./ThoughtPost.js";
 import { t } from "../i18n.js";
@@ -51,14 +51,15 @@ export function MusicCard({
   backLabel?: string;
 }) {
   const metadata = object.metadata as MusicMetadata;
+  const artworkUrl = publicMusicArtworkUrl(metadata);
   const links = Object.entries(musicLinksFor(metadata)).filter(
     (entry): entry is [string, string] => Boolean(entry[1]),
   );
   const visibleLinks = variant === "card" ? links.slice(0, 1) : links;
 
   if (theme === "cabinet") {
-    const image = metadata.artworkUrl
-      ? { url: metadata.artworkUrl, alt: "" }
+    const image = artworkUrl
+      ? { url: artworkUrl, alt: "" }
       : undefined;
     if (variant === "card") {
       return (
@@ -108,7 +109,7 @@ export function MusicCard({
 
   if (theme === "cards" || theme === "prism" || theme === "ledger") {
     const hero = {
-      imageUrl: metadata.artworkUrl,
+      imageUrl: artworkUrl,
       imageAlt: `Artwork for ${metadata.releaseTitle}`,
       gradientSeed: object.slug,
     };
@@ -124,7 +125,7 @@ export function MusicCard({
         />
       );
     }
-    if (metadata.artworkUrl) {
+    if (artworkUrl) {
       return (
         <>
           <CardsMusicDetailHeader
@@ -137,7 +138,7 @@ export function MusicCard({
                 <CopyLinkButton locale={locale} />
               </>
             }
-            artworkUrl={metadata.artworkUrl}
+            artworkUrl={artworkUrl}
             artworkAlt={hero.imageAlt}
             backHref={backHref!}
             backLabel={backLabel!}
@@ -189,8 +190,8 @@ export function MusicCard({
 
   return (
     <article className={variant === "card" ? "card music" : "music"}>
-      {metadata.artworkUrl ? (
-        <img className="artwork" src={metadata.artworkUrl} alt={`Artwork for ${metadata.releaseTitle}`} />
+      {artworkUrl ? (
+        <img className="artwork" src={artworkUrl} alt={`Artwork for ${metadata.releaseTitle}`} />
       ) : null}
       <div>
         <h2>

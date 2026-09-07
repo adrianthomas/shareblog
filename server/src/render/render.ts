@@ -30,7 +30,7 @@ import type {
   QuoteMetadata,
   Site,
 } from "./templates/types.js";
-import { publicBookCoverUrl } from "./templates/types.js";
+import { publicBookCoverUrl, publicMusicArtworkUrl } from "./templates/types.js";
 import { t, resolveLocale, type MessageKey } from "./i18n.js";
 import { formatBasicText, formatRichText, stripBasicFormatting } from "./format.js";
 import { siteOrigin } from "./site-url.js";
@@ -269,7 +269,7 @@ export async function renderObjectPage(
         : object.type === "book"
           ? publicBookCoverUrl(object.metadata as BookMetadata)
           : object.type === "music"
-            ? (object.metadata as MusicMetadata).artworkUrl
+            ? publicMusicArtworkUrl(object.metadata as MusicMetadata)
             : undefined;
   return wrap(site, detailTitle, detail, {
     currentPath: currentPath ?? `/${PATH_PREFIX[object.type]}/${object.slug}`,
@@ -507,8 +507,9 @@ export async function feedItemContent(object: ContentObject, locale: string): Pr
     }
     case "music": {
       const metadata = object.metadata as MusicMetadata;
-      const image = metadata.artworkUrl
-        ? `<p><img src="${escapeXml(metadata.artworkUrl)}" alt="Artwork for ${escapeXml(metadata.releaseTitle)}" /></p>`
+      const artworkUrl = publicMusicArtworkUrl(metadata);
+      const image = artworkUrl
+        ? `<p><img src="${escapeXml(artworkUrl)}" alt="Artwork for ${escapeXml(metadata.releaseTitle)}" /></p>`
         : "";
       const artist = `<p>${escapeXml(metadata.artist)}</p>`;
       const linkEntries = Object.entries(musicLinksFor(metadata))
