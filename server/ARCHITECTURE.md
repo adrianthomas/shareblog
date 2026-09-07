@@ -38,7 +38,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see the `ownerClaims` table below). Logout revokes *every* token for the account. |
 | `routes/sites.ts` | site CRUD (create; update identity/domain/theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). New identity fields are additive for older clients. |
 | `routes/themes.ts` | `GET /themes` (no auth) | Server-owned catalog of selectable site themes (`id`/`name`/`description`) used by iOS Settings. Keep this additive so newer servers can expose themes without requiring an iOS app update. |
-| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images), cache invalidation, and triggers `deliverCreateActivity` on publish. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
+| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images), cache invalidation, and ActivityPub Create/Delete delivery on publish, unpublish, and deletion. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
 | `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. |
 
@@ -205,8 +205,9 @@ a hardcoded literal in a template.
 Built on Fedify. `adapter.ts` is a hand-rolled bridge (not the official
 `@fedify/fastify` plugin — see its own comment for why) resolving the site
 from the Host header, same as `resolveTenant`. `federation.ts` handles
-WebFinger/actor/inbox dispatch and `deliverCreateActivity` — delivery is
-**synchronous**, called inline from `objects.ts` on publish, no queue
+WebFinger/actor/inbox dispatch and outbound Create/Delete activities — delivery
+is **synchronous**, called inline from `objects.ts`, with retractions sent before
+the local unpublish/delete so failures remain retryable; there is no queue
 worker. `keys.ts` manages the per-site keypair in `siteActorKeys`.
 `sites.federationEnabled` (default on) only gates outbound delivery; the
 actor/WebFinger/inbox stay live regardless, so existing follows never

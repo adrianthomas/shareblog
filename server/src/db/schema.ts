@@ -72,10 +72,10 @@ export const sites = sqliteTable("sites", {
   about: text("about"),
   locale: text("locale").notNull().default("en"),
   theme: text("theme", { enum: themeValues }).notNull().default("classic"),
-  // Whether publishing a post delivers a Create activity to this site's
-  // Fediverse followers. The actor/WebFinger/inbox stay live either way
-  // (so existing follows never silently break) — this only gates outbound
-  // delivery, in src/activitypub/federation.ts's deliverCreateActivity.
+  // Whether publishing or retracting a post delivers Create/Delete activities
+  // to this site's Fediverse followers. The actor/WebFinger/inbox stay live
+  // either way (so existing follows never silently break) — this only gates
+  // outbound delivery in src/activitypub/federation.ts.
   // Defaults on: no separate cross-posting step is the whole point.
   federationEnabled: integer("federation_enabled", { mode: "boolean" }).notNull().default(true),
   createdAt: createdAt(),

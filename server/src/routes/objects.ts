@@ -8,7 +8,7 @@ import { createObjectSchema, updateObjectSchema } from "../lib/schemas.js";
 import { slugify, slugFromBody } from "../lib/slugify.js";
 import { invalidateSitePages } from "../render/page-cache.js";
 import { storage } from "../storage/index.js";
-import { deliverCreateActivity } from "../activitypub/federation.js";
+import { deliverCreateActivity, deliverDeleteActivity } from "../activitypub/federation.js";
 
 // Structured image references live in metadata, while inline Article and
 // Thought images are stored only as rendered /files/... URLs in the body.
@@ -225,6 +225,11 @@ export async function objectRoutes(app: FastifyInstance) {
     if (!existing) return reply.code(404).send({ error: { code: "not_found", message: "Object not found." } });
 
     const becomingPublished = body.status === "published" && existing.status !== "published";
+    const becomingDraft = body.status === "draft" && existing.status === "published";
+
+    if (becomingDraft) {
+      await deliverDeleteActivity(site, existing);
+    }
 
     const [object] = await db
       .update(contentObjects)
@@ -255,6 +260,10 @@ export async function objectRoutes(app: FastifyInstance) {
       .where(and(eq(contentObjects.id, id), eq(contentObjects.siteId, site.id)))
       .limit(1);
     if (!existing) return reply.code(404).send();
+
+    if (existing.status === "published") {
+      await deliverDeleteActivity(site, existing);
+    }
 
     const siteAssets = await db.select().from(assets).where(eq(assets.siteId, site.id));
     const referencedAssets = siteAssets.filter((asset) => objectReferencesAsset(existing, asset));

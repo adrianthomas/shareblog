@@ -5,6 +5,7 @@ import {
   Image,
   Article,
   Create,
+  Delete,
   Follow,
   Accept,
   Undo,
@@ -184,6 +185,22 @@ async function buildCreateActivity(ctx: Context<void>, site: Site, object: Conte
   });
 }
 
+export function buildDeleteActivity(
+  ctx: Context<void>,
+  site: Site,
+  object: ContentObject,
+  deletedAt = new Date(),
+): Delete {
+  const objectUrl = new URL(`${siteOrigin(site)}/${objectPath(object)}`);
+  return new Delete({
+    id: new URL(`${objectUrl.href}#delete-${deletedAt.getTime()}`),
+    actor: ctx.getActorUri(site.subdomain),
+    object: objectUrl,
+    to: PUBLIC_COLLECTION,
+    cc: ctx.getFollowersUri(site.subdomain),
+  });
+}
+
 // Delivers a Create activity to a site's followers when a post is
 // published — called from routes/objects.ts on both the create-published
 // and become-published paths.
@@ -191,5 +208,15 @@ export async function deliverCreateActivity(site: Site, object: ContentObject): 
   if (!site.federationEnabled) return;
   const ctx = federation.createContext(new URL(siteOrigin(site)), undefined);
   const activity = await buildCreateActivity(ctx, site, object);
+  await ctx.sendActivity({ identifier: site.subdomain }, "followers", activity);
+}
+
+// Retractions use the same follower recipients as Create activities. Callers
+// deliver before changing local state so a failed send leaves the operation
+// retryable instead of removing the only local record of what must be undone.
+export async function deliverDeleteActivity(site: Site, object: ContentObject): Promise<void> {
+  if (!site.federationEnabled) return;
+  const ctx = federation.createContext(new URL(siteOrigin(site)), undefined);
+  const activity = buildDeleteActivity(ctx, site, object);
   await ctx.sendActivity({ identifier: site.subdomain }, "followers", activity);
 }
