@@ -261,7 +261,10 @@ export async function objectRoutes(app: FastifyInstance) {
       .limit(1);
     if (!existing) return reply.code(404).send();
 
-    if (existing.status === "published") {
+    // Unpublishing intentionally retains publishedAt. Checking publication
+    // history lets deletion retry a retraction for an already-unpublished
+    // post, including one made draft before Delete delivery was implemented.
+    if (existing.publishedAt !== null) {
       await deliverDeleteActivity(site, existing);
     }
 
