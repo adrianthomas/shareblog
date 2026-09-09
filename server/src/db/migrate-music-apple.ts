@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
+import Database from "better-sqlite3";
 import { db } from "./client.js";
 import { contentObjects } from "./schema.js";
 import { materializeAppleMusicMetadata } from "../lib/apple-music.js";
@@ -11,6 +12,13 @@ if (!commit) {
   console.log(`Would migrate ${music.length} music post(s). Re-run with --commit to store Apple artwork locally and remove other destinations.`);
   process.exit(0);
 }
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+const backup = new Database(databaseUrl, { readonly: true });
+await backup.backup(`${databaseUrl}.before-apple-music-${new Date().toISOString().replace(/[:.]/g, "-")}.bak`);
+backup.close();
+console.log("Created a database backup.");
 
 let migrated = 0;
 for (const object of music) {
