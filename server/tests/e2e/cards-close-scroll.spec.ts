@@ -255,7 +255,31 @@ async function expectMusicCardKeepsDetailAnimation(page: Page) {
   expect(heroBox).not.toBeNull();
   expect(artworkBox!.width).toBeLessThan(heroBox!.width * 0.6);
 
-  await musicCard.click();
+  // The overlay must remain transparent through the first animation frame.
+  // WebKit may run that callback before it has painted the newly-created
+  // artwork layer; revealing the opaque panel there produces a blank flash.
+  const reveal = await page.evaluate(async () => {
+    const card = document.querySelector<HTMLElement>('[data-cards-card][data-cards-type="music"]');
+    card!.click();
+    const panel = document.querySelector<HTMLElement>(".cards-panel")!;
+    const backdrop = document.querySelector<HTMLElement>(".cards-overlay-backdrop")!;
+    const opacity = [panel.style.opacity];
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    opacity.push(panel.style.opacity);
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    opacity.push(panel.style.opacity);
+    const backdropStyle = getComputedStyle(backdrop);
+    return {
+      opacity,
+      backdropFilter: backdropStyle.backdropFilter,
+      webkitBackdropFilter: backdropStyle.webkitBackdropFilter,
+    };
+  });
+  expect(reveal.opacity).toEqual(["0", "0", "1"]);
+  // A filtered fixed layer can be replayed by iOS Safari after it has faded
+  // out, causing the separate dark/blurred flash seen at the end of close.
+  expect(reveal.backdropFilter).toBe("none");
+  expect(reveal.webkitBackdropFilter).toBe("none");
   await page.waitForSelector(".cards-panel", { state: "attached" });
   await expect(page.locator(".cards-music-header")).toBeVisible();
   await expect(page.locator(".cards-music-artwork")).toBeVisible();

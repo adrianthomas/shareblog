@@ -147,7 +147,9 @@ detail page have genuinely different geometry: photos fly the photo into the
 viewer, books fly a portrait cover into `CardsBookDetailHeader`, and music
 flies square album art into `CardsMusicDetailHeader`. Keep square/portrait art
 out of the generic cover-image hero path, which is meant for article-like
-landscape imagery.
+landscape imagery. These shared-image openers preserve one painted preparation
+frame before revealing their panel, and their backdrop uses an opacity-only dim
+layer; both constraints avoid iOS Safari compositor flashes during open/close.
 
 `render/site-url.ts` is the canonical-origin source of truth. A configured
 `sites.customDomain` wins over `<subdomain>.<BASE_DOMAIN>` and threads through

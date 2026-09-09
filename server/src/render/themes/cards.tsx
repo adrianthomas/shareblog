@@ -1339,15 +1339,11 @@ export const cardsStyles = `
 
   html.cards-lock-scroll, html.cards-lock-scroll body { overflow: hidden; }
 
-  /* backdrop-filter itself is NOT transitioned (Safari doesn't interpolate
-     it smoothly — it stays at its start value for most of the transition
-     and then snaps to the end value near the end, instead of gradually
-     blurring/unblurring). Keep the blur amount constant and fade the whole
-     element via opacity instead, which fades the dim + blur together as
-     one unit and animates reliably everywhere. */
+  /* Keep this layer to a compositor-friendly color/opacity fade. A
+     backdrop-filter here makes iOS Safari briefly replay a stale blurred
+     layer after the close animation has already revealed the feed. */
   .cards-overlay-backdrop {
     position: fixed; inset: 0; z-index: 1000; background: rgba(10,10,10,0.32);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     opacity: 0; transition: opacity 0.32s ease;
   }
   .cards-overlay-backdrop--visible { opacity: 1; }
@@ -1492,6 +1488,18 @@ export const cardsScript = `
   var current = null;
   var lockedScrollY = 0;
   function isLedgerTheme() { return document.body.classList.contains('theme-ledger'); }
+
+  // A requestAnimationFrame callback can still run before the DOM written
+  // by the click handler has reached the screen. Shared-image panels start
+  // transparent, so revealing one in that first callback lets WebKit show
+  // the panel background before its image layer has painted — a one-frame
+  // blank card. The nested callback guarantees one real paint of the
+  // prepared image and transparent panel before any reveal styles change.
+  function afterNextPaint(callback) {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(callback);
+    });
+  }
 
   // \`overflow: hidden\` on html (the .cards-lock-scroll class) is the usual
   // way to stop the page scrolling behind a modal, but on iOS Safari
@@ -1725,7 +1733,7 @@ export const cardsScript = `
     var categoryFilter = document.querySelector('.cards-category-filter');
     if (categoryFilter) categoryFilter.inert = true;
 
-    requestAnimationFrame(function () {
+    afterNextPaint(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
       if (reduceMotion) {
         var last = frames[frames.length - 1];
@@ -1929,7 +1937,7 @@ export const cardsScript = `
     var categoryFilter = document.querySelector('.cards-category-filter');
     if (categoryFilter) categoryFilter.inert = true;
 
-    requestAnimationFrame(function () {
+    afterNextPaint(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
       // Laid out with the real detail CSS above, imgClone is already
       // exactly where the fetched page will place it — measure that
@@ -2143,7 +2151,7 @@ export const cardsScript = `
     var categoryFilter = document.querySelector('.cards-category-filter');
     if (categoryFilter) categoryFilter.inert = true;
 
-    requestAnimationFrame(function () {
+    afterNextPaint(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
       // Laid out with the real detail CSS above (including its own
       // responsive column/row switch at 720px), imgClone is already
@@ -2328,7 +2336,7 @@ export const cardsScript = `
     var categoryFilter = document.querySelector('.cards-category-filter');
     if (categoryFilter) categoryFilter.inert = true;
 
-    requestAnimationFrame(function () {
+    afterNextPaint(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
       var toRect = imgClone.getBoundingClientRect();
 
@@ -2524,7 +2532,7 @@ export const cardsScript = `
     var categoryFilter = document.querySelector('.cards-category-filter');
     if (categoryFilter) categoryFilter.inert = true;
 
-    requestAnimationFrame(function () {
+    afterNextPaint(function () {
       backdrop.classList.add('cards-overlay-backdrop--visible');
       // Laid out with the real detail CSS above — including its own
       // responsive switch from a full-bleed mobile header to a smaller
