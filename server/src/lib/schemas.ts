@@ -56,6 +56,7 @@ export const linkMetadataSchema = z.object({
 export const musicMetadataSchema = z.object({
   artist: z.string(),
   releaseTitle: z.string(),
+  artworkAssetId: z.string().uuid().optional(),
   artworkUrl: z.string().url().optional(),
   sourceUrl: z.string().url().optional(),
   links: z

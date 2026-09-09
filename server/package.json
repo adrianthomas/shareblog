@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
+    "migrate:music-apple": "tsx src/db/migrate-music-apple.ts",
     "bootstrap-owner": "tsx src/db/bootstrap-owner.ts",
     "import:markdown": "tsx src/import/markdown.ts",
     "test": "tsx --test tests/*.test.ts",

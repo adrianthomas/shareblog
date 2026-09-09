@@ -1,30 +1,34 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isSpotifySearchUrl, musicLinksFor, spotifySearchUrl } from "../src/lib/music-links.js";
+import { isAppleMusicUrl, musicLinksFor } from "../src/lib/music-links.js";
 
-test("generates a Spotify search link from structured metadata", () => {
-  const url = spotifySearchUrl({ releaseTitle: "Rolling In", artist: "Sam Evian" });
-  assert.equal(url, "https://open.spotify.com/search/Rolling%20In%20Sam%20Evian");
-  assert.equal(isSpotifySearchUrl(url!), true);
+test("publishes only a validated Apple Music destination", () => {
+  const appleMusic = "https://music.apple.com/de/album/example/123?i=456";
+  assert.deepEqual(musicLinksFor({
+    releaseTitle: "Song",
+    artist: "Artist",
+    sourceUrl: "https://open.spotify.com/track/legacy",
+    links: {
+      appleMusic,
+      spotify: "https://open.spotify.com/track/legacy",
+      youtubeMusic: "https://music.youtube.com/watch?v=legacy",
+      bandcamp: "https://artist.bandcamp.com/track/legacy",
+    },
+  }), { appleMusic });
 });
 
-test("places Apple Music before a derived Spotify link", () => {
-  const links = musicLinksFor({
-    releaseTitle: "Rolling In",
-    artist: "Sam Evian",
-    links: { appleMusic: "https://music.apple.com/example" },
+test("recovers an Apple Music source URL when legacy links are missing", () => {
+  const sourceUrl = "https://music.apple.com/gb/album/example/123";
+  assert.deepEqual(musicLinksFor({ releaseTitle: "Album", artist: "Artist", sourceUrl }), {
+    appleMusic: sourceUrl,
   });
-
-  assert.deepEqual(Object.keys(links), ["appleMusic", "spotify"]);
-  assert.equal(links.spotify, "https://open.spotify.com/search/Rolling%20In%20Sam%20Evian");
 });
 
-test("preserves an exact stored Spotify destination", () => {
-  const spotify = "https://open.spotify.com/album/123";
-  assert.equal(musicLinksFor({ releaseTitle: "Album", artist: "Artist", links: { spotify } }).spotify, spotify);
-});
-
-test("recovers an exact Spotify source URL when legacy links are missing", () => {
-  const sourceUrl = "https://open.spotify.com/track/456";
-  assert.equal(musicLinksFor({ releaseTitle: "Track", artist: "Artist", sourceUrl }).spotify, sourceUrl);
+test("rejects lookalike, insecure, and non-Apple destinations", () => {
+  assert.equal(isAppleMusicUrl("https://music.apple.com.example/album/1"), false);
+  assert.equal(isAppleMusicUrl("http://music.apple.com/album/1"), false);
+  assert.deepEqual(musicLinksFor({ releaseTitle: "Song", artist: "Artist", links: {
+    appleMusic: "https://example.com/song",
+    spotify: "https://open.spotify.com/track/1",
+  } }), {});
 });

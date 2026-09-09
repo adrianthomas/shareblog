@@ -70,8 +70,8 @@ export function AboutProductPage() {
         <li>Share something from any app — a photo from your camera roll, a link to a book or album, or just type a quick thought.</li>
         <li>
           Shareblog looks at what you shared and enriches it automatically — a book gets its cover, author, and
-          retailer links; a photo keeps its camera details; a song gets links to Spotify, Apple Music, and YouTube
-          Music.
+          retailer links; a photo keeps its camera details; a song gets locally served Apple artwork and an Apple Music
+          listening link.
         </li>
         <li>Publish it, as a draft or straight away, and it appears on your site immediately.</li>
         <li>Your site serves clean HTML with its own RSS feed, and you can edit or unpublish anything afterward.</li>

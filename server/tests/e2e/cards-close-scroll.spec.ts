@@ -108,15 +108,18 @@ test.beforeAll(async ({ baseURL }) => {
       source: "manual",
     },
   });
+  const musicArtwork = await uploadAsset(apiBaseURL, ownerToken);
   await api(apiBaseURL, ownerToken, "/api/v1/objects", {
     type: "music",
+    sourceUrl: "https://music.apple.com/us/album/test-album/123",
     status: "published",
     body: "A listening note.",
     metadata: {
       artist: "Test Artist",
       releaseTitle: "Test Album",
-      artworkUrl: `data:image/jpeg;base64,${TINY_JPEG_BASE64}`,
-      links: {},
+      artworkAssetId: musicArtwork.id,
+      artworkUrl: musicArtwork.url,
+      links: { appleMusic: "https://music.apple.com/us/album/test-album/123" },
     },
   });
   const { id: assetId } = await uploadAsset(apiBaseURL, ownerToken);

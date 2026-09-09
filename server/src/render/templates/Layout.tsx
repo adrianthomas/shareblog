@@ -422,6 +422,21 @@ export function Layout({
               .music-links a {
                 display: inline-flex; align-items: center; gap: 0.42rem; min-height: 2.75rem;
               }
+              .music-links a.apple-music-badge {
+                min-height: 0 !important; padding: 4px !important; border: 0 !important;
+                border-radius: 4px !important; background: transparent !important;
+              }
+              .music-links a.apple-music-badge:hover { background: transparent !important; }
+              .music-links a.apple-music-badge:focus-visible {
+                outline: 2px solid var(--focus); outline-offset: 2px;
+              }
+              .music-links img.apple-music-badge-image {
+                display: block; width: 135px; max-width: 100%; height: auto;
+                border: 0; border-radius: 0; box-shadow: none;
+              }
+              .apple-music-credit {
+                flex-basis: 100%; color: var(--muted); font-size: 0.58rem; line-height: 1.35;
+              }
               .link-card {
                 position: relative;
                 padding: 1.05rem 1.15rem 1.15rem;

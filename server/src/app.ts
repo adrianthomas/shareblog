@@ -27,6 +27,11 @@ const EXTENSION_CONTENT_TYPES: Record<string, string> = {
 };
 
 const STATIC_EXTENSION_CONTENT_TYPES: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
   ".woff2": "font/woff2",
   ".woff": "font/woff",
 };

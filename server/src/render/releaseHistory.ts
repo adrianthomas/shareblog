@@ -12,6 +12,13 @@ export interface ReleaseEntry {
 // site owner would notice. Keep both of those out of any future entry too.
 export const RELEASE_HISTORY: ReleaseEntry[] = [
   {
+    date: "2026-09-09",
+    changes: [
+      "Music posts can now start with a link from any service and resolve to one Apple Music destination.",
+      "Album artwork is now copied to the site server, so opening a post does not contact a music service.",
+    ],
+  },
+  {
     date: "2026-08-30",
     changes: [
       "Added a cross-theme identity profile with a photo, introduction, location, profile links, and contact action.",

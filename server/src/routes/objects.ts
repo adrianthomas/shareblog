@@ -9,6 +9,7 @@ import { slugify, slugFromBody } from "../lib/slugify.js";
 import { invalidateSitePages } from "../render/page-cache.js";
 import { storage } from "../storage/index.js";
 import { deliverCreateActivity, deliverDeleteActivity } from "../activitypub/federation.js";
+import { materializeAppleMusicMetadata } from "../lib/apple-music.js";
 
 // Structured image references live in metadata, while inline Article and
 // Thought images are stored only as rendered /files/... URLs in the body.
@@ -20,7 +21,7 @@ function metadataAssetIds(metadata: unknown): string[] {
   const inlineAssetIds = Array.isArray(record.inlineAssetIds)
     ? record.inlineAssetIds.filter((value): value is string => typeof value === "string")
     : [];
-  return [record.assetId, record.coverAssetId, ...inlineAssetIds]
+  return [record.assetId, record.coverAssetId, record.artworkAssetId, ...inlineAssetIds]
     .filter((value): value is string => typeof value === "string");
 }
 
@@ -130,7 +131,11 @@ export async function objectRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: { code: "no_site", message: "Create a site before publishing." } });
     }
 
-    const body = normalizeLegacyArticle(createObjectSchema.parse(request.body));
+    let body = normalizeLegacyArticle(createObjectSchema.parse(request.body));
+    if (body.type === "music") {
+      const normalized = await materializeAppleMusicMetadata(site.id, body.metadata, body.sourceUrl, request.log);
+      body = { ...body, metadata: normalized.metadata, sourceUrl: normalized.sourceUrl };
+    }
     await assertOwnedAssets(site.id, body.metadata);
     const slugSource = slugSourceText(body);
     const baseSlug = body.title ? slugify(slugSource) : slugFromBody(slugSource);
@@ -213,16 +218,21 @@ export async function objectRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     if (!site) return reply.code(404).send({ error: { code: "not_found", message: "Object not found." } });
 
-    const body = updateObjectSchema.parse(request.body);
-    if (body.metadata !== undefined) {
-      await assertOwnedAssets(site.id, body.metadata);
-    }
+    let body = updateObjectSchema.parse(request.body);
     const [existing] = await db
       .select()
       .from(contentObjects)
       .where(and(eq(contentObjects.id, id), eq(contentObjects.siteId, site.id)))
       .limit(1);
     if (!existing) return reply.code(404).send({ error: { code: "not_found", message: "Object not found." } });
+
+    if (existing.type === "music" && body.metadata !== undefined) {
+      const normalized = await materializeAppleMusicMetadata(site.id, body.metadata, existing.sourceUrl ?? undefined, request.log);
+      body = { ...body, metadata: normalized.metadata };
+    }
+    if (body.metadata !== undefined) {
+      await assertOwnedAssets(site.id, body.metadata);
+    }
 
     const becomingPublished = body.status === "published" && existing.status !== "published";
     const becomingDraft = body.status === "draft" && existing.status === "published";

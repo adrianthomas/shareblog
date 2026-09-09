@@ -7,7 +7,7 @@ import { CardsFeedItem, CardsDetailHeader, CardsMusicDetailHeader } from "../the
 import { CabinetDetailHeader, CabinetFeedItem } from "../themes/cabinet.js";
 import { formatBasicText } from "../format.js";
 import { CopyLinkButton } from "./CopyButton.js";
-import { isSpotifySearchUrl, musicLinksFor } from "../../lib/music-links.js";
+import { musicLinksFor } from "../../lib/music-links.js";
 
 function Note({ body }: { body: string | null }) {
   if (!body) return null;
@@ -15,18 +15,31 @@ function Note({ body }: { body: string | null }) {
 }
 
 export const PLATFORM_LABELS: Record<string, string> = {
-  spotify: "Spotify",
   appleMusic: "Apple Music",
-  youtubeMusic: "YouTube Music",
-  bandcamp: "Bandcamp",
 };
 
 export function musicLinkLabel(locale: string, platform: string, url: string): string {
   const label = PLATFORM_LABELS[platform] ?? platform;
-  return t(locale, platform === "spotify" && isSpotifySearchUrl(url) ? "findOn" : "listenOn", { platform: label });
+  return t(locale, "listenOn", { platform: label });
 }
 
 function MusicLink({ platform, url, locale }: { platform: string; url: string; locale: string }) {
+  if (platform === "appleMusic") {
+    return (
+      <>
+        <a className="apple-music-badge" href={url} aria-label={musicLinkLabel(locale, platform, url)}>
+          <img
+            className="apple-music-badge-image"
+            src="/static/apple-music/listen-on-apple-music.png"
+            alt="Listen on Apple Music"
+          />
+        </a>
+        <span className="apple-music-credit">
+          Apple and Apple Music are trademarks of Apple Inc., registered in the U.S. and other countries.
+        </span>
+      </>
+    );
+  }
   return (
     <a className="content-action-button" href={url}>
       <span>{musicLinkLabel(locale, platform, url)}</span>

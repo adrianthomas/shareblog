@@ -38,9 +38,9 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `routes/auth.ts` | `POST /auth/request-code`, `POST /auth/verify-code`, `POST /auth/claim-owner`, `GET /auth/magic/:token`, `POST /auth/logout`, `GET /me` | Magic-code email auth (mobile gets a bearer token, web gets a session cookie), plus `claim-owner` — redeems a short-lived pairing code minted by an interactive `npm run bootstrap-owner` run (`db/bootstrap-owner.ts` + `auth/owner-claim.ts`), the QR/manual-code alternative to email for first sign-in (see the `ownerClaims` table below). Logout revokes *every* token for the account. |
 | `routes/sites.ts` | site CRUD (create; update identity/domain/theme/about/federation) | One site per user today (`sites.ownerUserId` is `.unique()`). New identity fields are additive for older clients. |
 | `routes/themes.ts` | `GET /themes` (no auth) | Server-owned catalog of selectable site themes (`id`/`name`/`description`) used by iOS Settings. Keep this additive so newer servers can expose themes without requiring an iOS app update. |
-| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images), cache invalidation, and ActivityPub Create/Delete delivery on publish, unpublish, and deletion. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
+| `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images and cached music artwork), cache invalidation, and ActivityPub Create/Delete delivery on publish, unpublish, and deletion. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
-| `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. |
+| `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. Music accepts any source URL but translates it to a sufficiently strong Apple catalog match; unmatched sources retain editable title/artist only. |
 
 **Public site (auth: `resolveTenant`, Host header)** — `routes/site-pages.ts`
 
@@ -178,10 +178,11 @@ caption.
 Book and music destination links are render-time policy, not just stored
 metadata snapshots. `lib/book-links.ts` regenerates the current retailer set
 for ISBN-backed books (including regional Amazon destinations) while preserving
-stored links for legacy books without an ISBN. `lib/music-links.ts` preserves
-exact stored Spotify links, then an exact Spotify source URL, and otherwise
-derives a credential-free Spotify search from title and artist. Keep the helper
-tests current when changing destinations or precedence. Amazon-region selection
+stored links for legacy books without an ISBN. `lib/music-links.ts` exposes only
+a validated `music.apple.com` destination and ignores legacy Spotify, YouTube,
+and Bandcamp links. Apple links use Apple's official locally bundled “Listen on
+Apple Music” badge. Keep the helper tests current when changing destinations.
+Amazon-region selection
 is a small browser-locale enhancement in `Layout.tsx`; it stays client-side so
 cached public HTML does not vary per visitor.
 
@@ -192,9 +193,13 @@ shared policy used by theme rendering, page metadata/JSON-LD, RSS, and the
 ActivityPub HTML generated from feed content.
 
 Music metadata follows the same contract with `showArtwork: false` and
-`publicMusicArtworkUrl()`: resolved artwork remains available to the
-authenticated editor but is omitted from themes, metadata, feeds, and
-federation. Absence likewise means visible.
+`publicMusicArtworkUrl()`. On object creation, Apple-hosted artwork is copied
+through the ordinary image pipeline and stored as `artworkAssetId` plus a local
+`artworkUrl`; remote or non-Apple artwork is discarded. The asset id participates
+in ownership validation and lifecycle cleanup. This keeps themes, metadata,
+feeds, and federation from making visitor-time artwork requests to Apple or any
+other provider. `showArtwork: false` retains the local artwork for the editor
+while omitting it from every public surface; absence means visible.
 
 i18n (`render/i18n.ts`) — `MessageKey` union + `t(locale, key, params?)`;
 `site.locale` threads through every render call. Add a string here, not as

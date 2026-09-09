@@ -34,6 +34,7 @@ export function publicBookCoverUrl(metadata: BookMetadata): string | undefined {
 export interface MusicMetadata {
   artist: string;
   releaseTitle: string;
+  artworkAssetId?: string;
   artworkUrl?: string;
   /** Absent means visible for compatibility with music published by older clients. */
   showArtwork?: boolean;
