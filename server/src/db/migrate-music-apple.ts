@@ -20,6 +20,10 @@ for (const object of music) {
     object.sourceUrl ?? undefined,
     console,
   );
+  const previous = object.metadata as Record<string, unknown>;
+  if (typeof previous.artworkUrl === "string" && typeof normalized.metadata.artworkAssetId !== "string") {
+    throw new Error(`Could not preserve artwork while migrating music post ${object.id}; no database change was made for it.`);
+  }
   await db
     .update(contentObjects)
     .set({ metadata: normalized.metadata, sourceUrl: normalized.sourceUrl ?? null })
