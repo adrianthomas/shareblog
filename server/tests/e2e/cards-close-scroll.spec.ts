@@ -379,7 +379,40 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
 
   await card.focus();
   await expect(card).toBeFocused();
-  await card.click();
+  const reveal = await page.evaluate(async () => {
+    const card = document.querySelector<HTMLElement>('a[data-cabinet-card][data-cabinet-type="thought"]')!;
+    const panelReady = new Promise<{ opacity: string[]; backdropFilter: string; webkitBackdropFilter: string }>(
+      (resolve) => {
+        const observer = new MutationObserver(() => {
+          const panel = document.querySelector<HTMLElement>(".cabinet-panel");
+          const backdrop = document.querySelector<HTMLElement>(".cabinet-backdrop");
+          if (!panel || !backdrop) return;
+          observer.disconnect();
+          const opacity = [getComputedStyle(panel).opacity];
+          requestAnimationFrame(() => {
+            opacity.push(getComputedStyle(panel).opacity);
+            requestAnimationFrame(() => {
+              opacity.push(getComputedStyle(panel).opacity);
+              const backdropStyle = getComputedStyle(backdrop);
+              resolve({
+                opacity,
+                backdropFilter: backdropStyle.backdropFilter,
+                webkitBackdropFilter: backdropStyle.webkitBackdropFilter,
+              });
+            });
+          });
+        });
+        observer.observe(document.body, { childList: true });
+      },
+    );
+    card.click();
+    return panelReady;
+  });
+  expect(reveal.opacity[0]).toBe("0");
+  expect(reveal.opacity[1]).toBe("0");
+  expect(Number(reveal.opacity[2])).toBeGreaterThan(0);
+  expect(reveal.backdropFilter).toBe("none");
+  expect(reveal.webkitBackdropFilter).toBe("none");
 
   const dialog = page.locator('.cabinet-panel[role="dialog"]');
   await expect(dialog).toBeAttached();

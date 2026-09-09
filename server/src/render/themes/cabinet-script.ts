@@ -51,6 +51,12 @@ export const cabinetScript = `
     if (window.requestAnimationFrame) return window.requestAnimationFrame(callback);
     return window.setTimeout(callback, 16);
   }
+  // Let the transparent, clipped panel reach the screen before its WAAPI
+  // reveal begins. Without that intervening paint, iOS Safari can show the
+  // panel's opaque background for one frame before the scroller/shared image.
+  function afterNextPaint(callback) {
+    animationFrame(function () { animationFrame(callback); });
+  }
   // Reading progress has two possible scroll roots: the window on a normal
   // detail navigation, and the isolated panel scroller after enhancement.
   function wireReadingProgress(root, scrollSource) {
@@ -480,7 +486,7 @@ export const cabinetScript = `
     var cabinetType = request.link.getAttribute('data-cabinet-type') || request.item.getAttribute('data-cabinet-type');
     if (cabinetType) panel.setAttribute('data-cabinet-type', cabinetType);
     backdrop.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;opacity:0';
-    panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;overflow:hidden';
+    panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;overflow:hidden;opacity:0';
     panel.appendChild(scroller);
     lockPageScroll();
     var inertRecords = makeUnderlyingPageInert();
@@ -524,7 +530,7 @@ export const cabinetScript = `
     panel.style.clipPath = canClip ? startClip : fullClip();
     scroller.style.opacity = '0';
     var openDuration = reduceMotion ? 120 : OPEN_MS;
-    animationFrame(function () {
+    afterNextPaint(function () {
       if (current !== owner || owner.closing) return;
       var targetShared = findShared(scroller, sourceShared);
       owner.targetShared = targetShared;

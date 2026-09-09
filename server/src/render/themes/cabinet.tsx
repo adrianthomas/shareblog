@@ -851,9 +851,12 @@ export const cabinetStyles = `
   .cabinet-reading-progress > span { display: block; width: 100%; height: 0; background: var(--cabinet-signal); transition: height 90ms linear; }
 
   html.cabinet-lock-scroll, html.cabinet-lock-scroll body { overflow: hidden; }
+  /* Fixed backdrop filters can be replayed as a stale compositing layer by
+     iOS Safari after the close has already exposed the feed. A plain dimming
+     layer retains the depth cue without that post-animation flash. */
   .cabinet-backdrop {
     position: fixed; inset: 0; z-index: 1000; background: color-mix(in srgb, #090909 42%, transparent);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); opacity: 0; transition: opacity 260ms ease;
+    opacity: 0; transition: opacity 260ms ease;
   }
   .cabinet-backdrop--visible { opacity: 1; }
   .cabinet-panel {
