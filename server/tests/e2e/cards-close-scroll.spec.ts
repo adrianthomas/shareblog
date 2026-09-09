@@ -343,6 +343,36 @@ test("Prism book feed cards keep the book detail animation path", async ({ page 
   await expectBookCardKeepsDetailAnimation(page);
 });
 
+test("Cabinet keeps the Apple Music badge inside the mobile viewport", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(siteBaseURL + "/");
+
+  const card = page.locator('a[data-cabinet-card][data-cabinet-type="music"]').first();
+  const href = await card.getAttribute("href");
+  expect(href).not.toBeNull();
+
+  const expectBadgeInViewport = async () => {
+    const image = page.locator(".apple-music-badge-image");
+    await expect(image).toBeVisible();
+    const box = await image.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    expect(await image.evaluate((element) => getComputedStyle(element).transform)).toBe("none");
+  };
+
+  // The detail markup is used both as a standalone page and after it is
+  // fetched into Cabinet's animated panel, so guard both rendering paths.
+  await page.goto(new URL(href!, siteBaseURL).toString());
+  await expectBadgeInViewport();
+
+  await page.goto(siteBaseURL + "/");
+  await page.locator('a[data-cabinet-card][data-cabinet-type="music"]').first().click();
+  await expect(page.locator('.cabinet-panel[role="dialog"]')).toBeVisible();
+  await expectBadgeInViewport();
+});
+
 test("Cabinet overlay preserves navigation, accessibility, focus, and scroll state", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
   await page.goto(siteBaseURL + "/");

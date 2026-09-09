@@ -772,7 +772,10 @@ export const cabinetStyles = `
   }
   .cabinet-detail-body h2 { margin: 2.6em 0 0.65em; font-size: 1.85em; line-height: 1.08; }
   .cabinet-detail-body h3 { margin: 2em 0 0.55em; font-size: 1.35em; line-height: 1.15; }
-  .cabinet-detail-body img { width: min(92vw, 1080px); max-width: none; height: auto; margin: 2rem 50%; transform: translateX(-50%); }
+  /* Rich-content images break out of the reading column. The Apple Music
+     badge is interface chrome rather than article artwork, so keep it in
+     normal flow; centering it with this transform clips it on narrow screens. */
+  .cabinet-detail-body img:not(.apple-music-badge-image) { width: min(92vw, 1080px); max-width: none; height: auto; margin: 2rem 50%; transform: translateX(-50%); }
 
   .cabinet-detail--thought { display: grid; place-items: center; background: color-mix(in srgb, var(--cabinet-thought) 7%, var(--bg)); }
   .cabinet-detail--thought .cabinet-detail-header { width: min(100%, 1040px); }
