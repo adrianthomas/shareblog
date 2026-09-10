@@ -871,7 +871,7 @@ export const cabinetStyles = `
   }
   .cabinet-panel-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .cabinet-panel-scroll:focus, .cabinet-panel-scroll h1:focus-visible { outline: none; }
-  .cabinet-shared-clone { position: fixed; z-index: 1100; margin: 0; object-fit: cover; pointer-events: none; will-change: top, left, width, height, border-radius; }
+  .cabinet-shared-clone { position: fixed; z-index: 1100; margin: 0; object-fit: cover; pointer-events: none; transform-origin: 0 0; will-change: transform; }
 
   .about-content, .release-entry, .about-product { font-family: "Cabinet Serif", Georgia, serif; }
   body.theme-cabinet .about-page { max-width: 66ch; margin: 0 auto; }

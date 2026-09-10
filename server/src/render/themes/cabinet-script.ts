@@ -306,7 +306,7 @@ export const cabinetScript = `
   }
   // Only pixels fly. The panel's live text remains at its final size and
   // reflows normally underneath this fixed shared-image clone.
-  function flySharedElement(fromElement, toElement, duration) {
+  function flySharedElement(fromElement, toElement, duration, easing) {
     if (!fromElement || !toElement) return null;
     var from = fromElement.getBoundingClientRect();
     var to = toElement.getBoundingClientRect();
@@ -317,7 +317,6 @@ export const cabinetScript = `
     clone.setAttribute('aria-hidden', 'true');
     if (clone.tagName === 'IMG' && fromElement.currentSrc) clone.src = fromElement.currentSrc;
     var fromStyle = window.getComputedStyle(fromElement);
-    var toStyle = window.getComputedStyle(toElement);
     var oldFromVisibility = fromElement.style.visibility;
     var oldToVisibility = toElement.style.visibility;
     fromElement.style.visibility = 'hidden';
@@ -333,22 +332,25 @@ export const cabinetScript = `
     clone.style.objectPosition = fromStyle.objectPosition;
     clone.style.borderRadius = fromStyle.borderRadius;
     clone.style.boxSizing = 'border-box';
+    clone.style.transformOrigin = '0 0';
+    clone.style.backfaceVisibility = 'hidden';
     document.body.appendChild(clone);
+    var translateX = to.left - from.left;
+    var translateY = to.top - from.top;
+    var scaleX = to.width / from.width;
+    var scaleY = to.height / from.height;
     var finished = false;
     var motion = play(clone, [
       {
-        left: from.left + 'px', top: from.top + 'px',
-        width: from.width + 'px', height: from.height + 'px',
-        borderRadius: fromStyle.borderRadius
+        transform: 'translate3d(0px, 0px, 0) scale(1, 1)'
       },
       {
-        left: to.left + 'px', top: to.top + 'px',
-        width: to.width + 'px', height: to.height + 'px',
-        borderRadius: toStyle.borderRadius
+        transform: 'translate3d(' + translateX + 'px, ' + translateY + 'px, 0) scale(' +
+          scaleX + ', ' + scaleY + ')'
       }
     ], {
       duration: duration,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+      easing: easing || 'cubic-bezier(0.22, 1, 0.36, 1)'
     }, cleanup);
     function cleanup() {
       if (finished) return;
@@ -677,21 +679,25 @@ export const cabinetScript = `
     if (isNaN(destinationRadius)) destinationRadius = owner.sourceRadius;
     var destinationClip = clipForRect(destinationRect, destinationRadius);
     var dragDismiss = !!options.dragDismiss;
-    var closeDuration = reduceMotion ? 100 : (dragDismiss ? 300 : CLOSE_MS);
+    var desktopClose = !dragDismiss && !reduceMotion && window.matchMedia &&
+      window.matchMedia('(min-width: 1100px)').matches;
+    var closeDuration = reduceMotion ? 100 : (dragDismiss ? 300 : (desktopClose ? 380 : CLOSE_MS));
+    var closeEasing = desktopClose ? 'cubic-bezier(0.4, 0, 0.2, 1)' :
+      'cubic-bezier(0.32, 0, 0.67, 0)';
     var currentTransform = window.getComputedStyle(owner.panel).transform;
     var currentRadius = window.getComputedStyle(owner.panel).borderRadius;
     var closeHandles = [];
     closeHandles.push(play(owner.backdrop, [
       { opacity: owner.backdrop.style.opacity || '1' }, { opacity: '0' }
     ], {
-      duration: reduceMotion ? 90 : 300,
-      easing: 'ease-in'
+      duration: reduceMotion ? 90 : (desktopClose ? 260 : 300),
+      easing: desktopClose ? 'ease-out' : 'ease-in'
     }));
     closeHandles.push(play(owner.scroller, [
       { opacity: owner.scroller.style.opacity || '1' }, { opacity: '0' }
     ], {
-      duration: reduceMotion ? 80 : 220,
-      easing: 'ease-in'
+      duration: reduceMotion ? 80 : (desktopClose ? 180 : 220),
+      easing: desktopClose ? 'ease-out' : 'ease-in'
     }));
     closeHandles.push(play(owner.panel, dragDismiss && !reduceMotion ? [
       { transform: currentTransform === 'none' ? 'translateY(0px)' : currentTransform,
@@ -700,18 +706,22 @@ export const cabinetScript = `
     ] : reduceMotion ? [
       { clipPath: fullClip(), opacity: owner.panel.style.opacity || '1' },
       { clipPath: fullClip(), opacity: '0' }
+    ] : desktopClose ? [
+      { transform: 'translate3d(0, 0, 0) scale(1)', opacity: '1' },
+      { transform: 'translate3d(0, 6px, 0) scale(0.992)', opacity: '0' }
     ] : [
       { clipPath: currentClip === 'none' ? fullClip() : currentClip, opacity: '1' },
       { clipPath: destinationClip, opacity: '1' }
     ], {
       duration: closeDuration,
-      easing: 'cubic-bezier(0.32, 0, 0.67, 0)'
+      easing: closeEasing
     }));
     var sourceShared = owner.sourceShared && document.documentElement.contains(owner.sourceShared) ?
       owner.sourceShared : findShared(owner.visualCard, null);
     var targetShared = findShared(owner.scroller, sourceShared);
     if (sourceShared && targetShared && !reduceMotion && !dragDismiss) {
-      var sharedClose = flySharedElement(targetShared, sourceShared, CLOSE_MS);
+      var sharedClose = flySharedElement(targetShared, sourceShared, closeDuration,
+        desktopClose ? closeEasing : undefined);
       if (sharedClose) closeHandles.push(sharedClose);
     }
     if (!options.skipHistory && owner.historyPushed) window.history.back();

@@ -530,6 +530,49 @@ test("Cabinet detail panels can be pulled down to close", async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(initialScrollY);
 });
 
+test("Cabinet desktop close stays on compositor-friendly animation properties", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(siteBaseURL + "/");
+
+  const photoCard = page.locator('a[data-cabinet-card][data-cabinet-type="photo"]').first();
+  await photoCard.scrollIntoViewIfNeeded();
+  await photoCard.click();
+
+  const dialog = page.locator('.cabinet-panel[role="dialog"]');
+  await expect(dialog).toBeVisible();
+  await page.waitForTimeout(650);
+  await page.locator(".cabinet-close").click();
+
+  const closeMotion = await page.evaluate(() => {
+    const propertiesFor = (element: Element | null) => {
+      const animation = element?.getAnimations()[0];
+      const effect = animation?.effect;
+      if (!(effect instanceof KeyframeEffect)) return { properties: [] as string[], duration: null };
+      const properties = Array.from(
+        new Set(effect.getKeyframes().flatMap((frame) => Object.keys(frame))),
+      ).sort();
+      return { properties, duration: effect.getTiming().duration };
+    };
+    return {
+      panel: propertiesFor(document.querySelector(".cabinet-panel")),
+      shared: propertiesFor(document.querySelector(".cabinet-shared-clone")),
+    };
+  });
+
+  expect(closeMotion.panel.duration).toBe(380);
+  expect(closeMotion.panel.properties).toEqual(expect.arrayContaining(["opacity", "transform"]));
+  expect(closeMotion.panel.properties).not.toContain("clipPath");
+  expect(closeMotion.shared.duration).toBe(380);
+  expect(closeMotion.shared.properties).toContain("transform");
+  expect(closeMotion.shared.properties).not.toEqual(
+    expect.arrayContaining(["left", "top", "width", "height"]),
+  );
+
+  await dialog.waitFor({ state: "detached" });
+  await expect(photoCard).toBeFocused();
+});
+
 test("Cabinet overlay honors reduced motion for the shared-photo path", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
   await page.emulateMedia({ reducedMotion: "reduce" });
