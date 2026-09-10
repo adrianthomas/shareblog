@@ -854,12 +854,14 @@ export const cabinetStyles = `
   .cabinet-reading-progress > span { display: block; width: 100%; height: 0; background: var(--cabinet-signal); transition: height 90ms linear; }
 
   html.cabinet-lock-scroll, html.cabinet-lock-scroll body { overflow: hidden; }
-  /* Fixed backdrop filters can be replayed as a stale compositing layer by
-     iOS Safari after the close has already exposed the feed. A plain dimming
-     layer retains the depth cue without that post-animation flash. */
+  /* Cabinet's script owns backdrop opacity through WAAPI. Do not also declare
+     a CSS opacity transition here: when WAAPI commits opacity: 0 and cancels,
+     WebKit otherwise starts that second transition from 1 and visibly dims
+     the already-revealed feed again. Drag cancellation installs its own
+     temporary inline transition where needed. */
   .cabinet-backdrop {
     position: fixed; inset: 0; z-index: 1000; background: color-mix(in srgb, #090909 42%, transparent);
-    opacity: 0; transition: opacity 260ms ease;
+    opacity: 0;
   }
   .cabinet-backdrop--visible { opacity: 1; }
   .cabinet-panel {

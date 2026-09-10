@@ -125,10 +125,11 @@ detail links into fetched in-place panels with shared-media/clip-path motion,
 pull-down dismissal from the top of the detail scroller, history handling,
 scroll locking, focus trapping/restoration, an inert underlying page, and
 reading progress. Its clipped panel receives a transparent preparation paint
-before opening, and its backdrop is an opacity-only dim layer so iOS Safari
-cannot replay a stale filtered layer after closing. Direct navigation and
-failed enhancement still use the server-rendered detail URL; reduced-motion
-users receive a short opacity transition instead of spatial motion.
+before opening, and its backdrop is a plain dim layer whose opacity is owned
+only by the script's Web Animation; it has no competing CSS transition or
+filter for iOS Safari to replay after closing. Direct navigation and failed
+enhancement still use the server-rendered detail URL; reduced-motion users
+receive a short opacity transition instead of spatial motion.
 
 `Layout.tsx` also owns the refinement baseline shared by every theme: the
 system reading type scale, visible site title/tagline identity, 44pt-equivalent

@@ -411,7 +411,12 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
   await expect(card).toBeFocused();
   const reveal = await page.evaluate(async () => {
     const card = document.querySelector<HTMLElement>('a[data-cabinet-card][data-cabinet-type="thought"]')!;
-    const panelReady = new Promise<{ opacity: string[]; backdropFilter: string; webkitBackdropFilter: string }>(
+    const panelReady = new Promise<{
+      opacity: string[];
+      backdropFilter: string;
+      webkitBackdropFilter: string;
+      backdropTransitionDuration: string;
+    }>(
       (resolve) => {
         const observer = new MutationObserver(() => {
           const panel = document.querySelector<HTMLElement>(".cabinet-panel");
@@ -428,6 +433,7 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
                 opacity,
                 backdropFilter: backdropStyle.backdropFilter,
                 webkitBackdropFilter: backdropStyle.webkitBackdropFilter,
+                backdropTransitionDuration: backdropStyle.transitionDuration,
               });
             });
           });
@@ -443,6 +449,7 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
   expect(Number(reveal.opacity[2])).toBeGreaterThan(0);
   expect(reveal.backdropFilter).toBe("none");
   expect(reveal.webkitBackdropFilter).toBe("none");
+  expect(reveal.backdropTransitionDuration).toBe("0s");
 
   const dialog = page.locator('.cabinet-panel[role="dialog"]');
   await expect(dialog).toBeAttached();
