@@ -530,7 +530,7 @@ test("Cabinet detail panels can be pulled down to close", async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(initialScrollY);
 });
 
-test("Cabinet desktop close stays on compositor-friendly animation properties", async ({ page }) => {
+test("Cabinet desktop photo close avoids a stretched shared-image transition", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(siteBaseURL + "/");
@@ -563,11 +563,7 @@ test("Cabinet desktop close stays on compositor-friendly animation properties", 
   expect(closeMotion.panel.duration).toBe(380);
   expect(closeMotion.panel.properties).toEqual(expect.arrayContaining(["opacity", "transform"]));
   expect(closeMotion.panel.properties).not.toContain("clipPath");
-  expect(closeMotion.shared.duration).toBe(380);
-  expect(closeMotion.shared.properties).toContain("transform");
-  expect(closeMotion.shared.properties).not.toEqual(
-    expect.arrayContaining(["left", "top", "width", "height"]),
-  );
+  expect(closeMotion.shared).toEqual({ properties: [], duration: null });
 
   await dialog.waitFor({ state: "detached" });
   await expect(photoCard).toBeFocused();

@@ -124,6 +124,7 @@ index drawer on narrow screens; every content template has an explicit
 detail links into fetched in-place panels with shared-media/clip-path motion;
 desktop dismissal uses a compositor-only transform/opacity finish, while
 narrow touch layouts retain the spatial clip-path return to the source card,
+and differently proportioned shared-media boxes crossfade rather than stretch,
 pull-down dismissal from the top of the detail scroller, history handling,
 scroll locking, focus trapping/restoration, an inert underlying page, and
 reading progress. Its clipped panel receives a transparent preparation paint

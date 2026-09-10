@@ -311,6 +311,14 @@ export const cabinetScript = `
     var from = fromElement.getBoundingClientRect();
     var to = toElement.getBoundingClientRect();
     if (!from.width || !from.height || !to.width || !to.height) return null;
+    // A transform can move and uniformly resize media without repainting, but
+    // it cannot reconcile two differently shaped object-fit boxes. Let those
+    // cases crossfade with the panel instead of visibly stretching the pixels
+    // and snapping back to the correctly cropped destination at cleanup.
+    var fromAspect = from.width / from.height;
+    var toAspect = to.width / to.height;
+    var aspectDifference = Math.abs(fromAspect - toAspect) / Math.max(fromAspect, toAspect);
+    if (aspectDifference > 0.02) return null;
     var clone = fromElement.cloneNode(true);
     stripCloneIds(clone);
     clone.classList.add('cabinet-shared-clone');
