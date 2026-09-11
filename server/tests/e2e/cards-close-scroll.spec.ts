@@ -375,6 +375,7 @@ test("Cabinet keeps the Apple Music badge inside the mobile viewport", async ({ 
 
 test("Cabinet overlay preserves navigation, accessibility, focus, and scroll state", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(siteBaseURL + "/");
 
   const authoredLink = page.locator('.cabinet-thought-body a[href="https://example.com/reference"]').first();
@@ -428,12 +429,15 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
             opacity.push(getComputedStyle(panel).opacity);
             requestAnimationFrame(() => {
               opacity.push(getComputedStyle(panel).opacity);
-              const backdropStyle = getComputedStyle(backdrop);
-              resolve({
-                opacity,
-                backdropFilter: backdropStyle.backdropFilter,
-                webkitBackdropFilter: backdropStyle.webkitBackdropFilter,
-                backdropTransitionDuration: backdropStyle.transitionDuration,
+              requestAnimationFrame(() => {
+                opacity.push(getComputedStyle(panel).opacity);
+                const backdropStyle = getComputedStyle(backdrop);
+                resolve({
+                  opacity,
+                  backdropFilter: backdropStyle.backdropFilter,
+                  webkitBackdropFilter: backdropStyle.webkitBackdropFilter,
+                  backdropTransitionDuration: backdropStyle.transitionDuration,
+                });
               });
             });
           });
@@ -446,7 +450,8 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
   });
   expect(reveal.opacity[0]).toBe("0");
   expect(reveal.opacity[1]).toBe("0");
-  expect(Number(reveal.opacity[2])).toBeGreaterThan(0);
+  expect(reveal.opacity[2]).toBe("0");
+  expect(Number(reveal.opacity[3])).toBeGreaterThan(0);
   expect(reveal.backdropFilter).toBe("none");
   expect(reveal.webkitBackdropFilter).toBe("none");
   expect(reveal.backdropTransitionDuration).toBe("0s");
@@ -454,6 +459,19 @@ test("Cabinet overlay preserves navigation, accessibility, focus, and scroll sta
   const dialog = page.locator('.cabinet-panel[role="dialog"]');
   await expect(dialog).toBeAttached();
   await expect(dialog).toHaveAttribute("aria-modal", "true");
+  const openMotion = await dialog.evaluate((element) => {
+    const animation = element.getAnimations()[0];
+    const effect = animation?.effect;
+    if (!(effect instanceof KeyframeEffect)) return { properties: [] as string[], duration: null };
+    const properties = Array.from(
+      new Set(effect.getKeyframes().flatMap((frame) => Object.keys(frame))),
+    ).sort();
+    return { properties, duration: effect.getTiming().duration };
+  });
+  expect(openMotion.duration).toBe(400);
+  expect(openMotion.properties).toEqual(expect.arrayContaining(["opacity", "transform"]));
+  expect(openMotion.properties).not.toContain("clipPath");
+  await expect(dialog.locator(".cabinet-panel-scroll")).toHaveCSS("opacity", "1");
   await expect(page).toHaveURL(detailURL);
   await expect(page).toHaveTitle(/Fourth test post/);
   expect(await page.title()).not.toBe(homeTitle);

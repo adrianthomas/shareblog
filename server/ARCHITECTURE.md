@@ -122,7 +122,7 @@ index drawer on narrow screens; every content template has an explicit
 `theme === "cabinet"` branch.
 `themes/cabinet-script.ts` progressively enhances the ordinary same-origin
 detail links into fetched in-place panels with shared-media/clip-path motion;
-desktop dismissal uses a compositor-only transform/opacity finish, while
+desktop opening and dismissal use compositor-only transform/opacity motion, while
 narrow touch layouts retain the spatial clip-path return to the source card,
 and differently proportioned shared-media boxes crossfade rather than stretch,
 pull-down dismissal from the top of the detail scroller, history handling,

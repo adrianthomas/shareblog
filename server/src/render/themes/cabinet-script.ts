@@ -250,6 +250,7 @@ export const cabinetScript = `
     var backdropStyle = window.getComputedStyle(owner.backdrop);
     var frozen = {
       clipPath: panelStyle.clipPath,
+      panelTransform: panelStyle.transform,
       panelOpacity: panelStyle.opacity,
       scrollOpacity: scrollStyle.opacity,
       backdropOpacity: backdropStyle.opacity
@@ -257,6 +258,7 @@ export const cabinetScript = `
     owner.animations.forEach(function (handle) { handle.cancel(); });
     owner.animations = [];
     owner.panel.style.clipPath = frozen.clipPath;
+    owner.panel.style.transform = frozen.panelTransform;
     owner.panel.style.opacity = frozen.panelOpacity;
     owner.scroller.style.opacity = frozen.scrollOpacity;
     owner.backdrop.style.opacity = frozen.backdropOpacity;
@@ -537,9 +539,11 @@ export const cabinetScript = `
     wireDismissGesture(owner);
     var canClip = supportsClipPath();
     var startClip = clipForRect(sourceRect, sourceRadius);
-    panel.style.clipPath = canClip ? startClip : fullClip();
+    var desktopOpen = !reduceMotion && window.matchMedia &&
+      window.matchMedia('(min-width: 1100px)').matches;
+    panel.style.clipPath = canClip && !desktopOpen ? startClip : fullClip();
     scroller.style.opacity = '0';
-    var openDuration = reduceMotion ? 120 : OPEN_MS;
+    var openDuration = reduceMotion ? 120 : (desktopOpen ? 400 : OPEN_MS);
     afterNextPaint(function () {
       if (current !== owner || owner.closing) return;
       var targetShared = findShared(scroller, sourceShared);
@@ -550,8 +554,11 @@ export const cabinetScript = `
         duration: reduceMotion ? 100 : 320,
         easing: 'ease-out'
       }));
-      trackAnimation(owner, play(panel, canClip && !reduceMotion ? [
-        { clipPath: startClip, opacity: '1' },
+      trackAnimation(owner, play(panel, desktopOpen ? [
+        { transform: 'translate3d(0, 6px, 0) scale(0.992)', opacity: '0' },
+        { transform: 'translate3d(0, 0, 0) scale(1)', opacity: '1' }
+      ] : canClip && !reduceMotion ? [
+        { clipPath: startClip, opacity: '0' },
         { clipPath: fullClip(), opacity: '1' }
       ] : [
         { clipPath: fullClip(), opacity: '0' },
@@ -561,20 +568,23 @@ export const cabinetScript = `
         easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
       }, function () {
         panel.style.clipPath = 'none';
+        panel.style.transform = '';
       }));
-      trackAnimation(owner, play(scroller, reduceMotion ? [
-        { opacity: '0' }, { opacity: '1' }
-      ] : [
-        { opacity: '0', offset: 0 },
-        { opacity: '0.08', offset: 0.18 },
-        { opacity: '1', offset: 1 }
-      ], {
-        duration: reduceMotion ? 100 : 440,
-        delay: reduceMotion ? 0 : 70,
-        easing: 'ease-out'
-      }));
+      if (reduceMotion) {
+        trackAnimation(owner, play(scroller, [
+          { opacity: '0' }, { opacity: '1' }
+        ], {
+          duration: 100,
+          easing: 'ease-out'
+        }));
+      } else {
+        // The panel itself now owns the reveal. Showing its content from the
+        // first animated frame avoids the blank-paper flash caused by the old
+        // delayed scroller fade.
+        scroller.style.opacity = '1';
+      }
       if (sourceShared && targetShared && !reduceMotion) {
-        trackAnimation(owner, flySharedElement(sourceShared, targetShared, OPEN_MS));
+        trackAnimation(owner, flySharedElement(sourceShared, targetShared, openDuration));
       }
     });
     owner.focusTimer = window.setTimeout(function () {
@@ -715,7 +725,8 @@ export const cabinetScript = `
       { clipPath: fullClip(), opacity: owner.panel.style.opacity || '1' },
       { clipPath: fullClip(), opacity: '0' }
     ] : desktopClose ? [
-      { transform: 'translate3d(0, 0, 0) scale(1)', opacity: '1' },
+      { transform: currentTransform === 'none' ? 'translate3d(0, 0, 0) scale(1)' : currentTransform,
+        opacity: owner.panel.style.opacity || '1' },
       { transform: 'translate3d(0, 6px, 0) scale(0.992)', opacity: '0' }
     ] : [
       { clipPath: currentClip === 'none' ? fullClip() : currentClip, opacity: '1' },
