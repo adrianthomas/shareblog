@@ -4,6 +4,7 @@ import { resolveLocale, t } from "../i18n.js";
 import { cardsStyles, cardsScript, CardsCategoryFilter } from "../themes/cards.js";
 import { cabinetStyles, CabinetNavigation } from "../themes/cabinet.js";
 import { cabinetScript } from "../themes/cabinet-script.js";
+import { aquaStyles } from "../themes/aqua.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 import { absoluteSiteUrl, siteOrigin } from "../site-url.js";
 import type { ProfileLink } from "./types.js";
@@ -27,6 +28,7 @@ const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }
   prism: { light: "#f7f8ff", dark: "#101321" },
   ledger: { light: "#f8fafc", dark: "#0f1115" },
   cabinet: { light: "#f3f1ea", dark: "#11120f" },
+  aqua: { light: "#dfe3e8", dark: "#20252b" },
 };
 
 // Shows the Amazon storefront closest to the visitor's browser-reported
@@ -675,6 +677,7 @@ export function Layout({
         />
         {usesCardsInteraction ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
         {usesCabinetInteraction ? <style dangerouslySetInnerHTML={{ __html: cabinetStyles }} /> : null}
+        {theme === "aqua" ? <style dangerouslySetInnerHTML={{ __html: aquaStyles }} /> : null}
         {theme === "washi" ? (
           // Washi keeps the classic templates but gives list pages their own
           // feed wrapper in render.ts, so it can be more composed than classic
@@ -2001,7 +2004,9 @@ export function Layout({
                   ? "theme-cards theme-ledger"
                   : theme === "cabinet"
                     ? "theme-cabinet"
-                  : undefined
+                    : theme === "aqua"
+                      ? "theme-aqua"
+                      : undefined
         }
         data-theme={theme}
         data-cards-detail={usesCardsInteraction && cardsDetail ? "true" : undefined}

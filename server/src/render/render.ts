@@ -202,6 +202,8 @@ export async function renderList(
       ? React.createElement("div", { className: "cabinet-feed" }, ...cards)
       : site.theme === "cards" || site.theme === "prism" || site.theme === "ledger"
         ? React.createElement("div", { className: "cards-feed" }, ...cards)
+        : site.theme === "aqua"
+          ? React.createElement("div", { className: "aqua-feed" }, ...cards)
         : site.theme === "washi"
           ? React.createElement(
               "div",

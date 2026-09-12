@@ -113,6 +113,9 @@ high-contrast surfaces, and saturated blue/pink accents. Ledger is also
 cards-derived, but presents the feed as a single-column professional index with
 separators and compact type labels; its branch in `cardsScript` uses an
 iOS-style right-to-left push detail panel instead of the expanding-card motion.
+Aqua keeps the classic semantic templates and adds a responsive two-column feed,
+pinstriped desktop chrome, translucent blue controls, and polished content
+panels with no additional script or third-party runtime assets.
 
 Cabinet is a standalone interactive pipeline rather than a Cards skin.
 `themes/cabinet.tsx` owns its chronological rail, numbered navigation,

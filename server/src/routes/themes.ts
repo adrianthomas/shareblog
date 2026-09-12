@@ -38,6 +38,11 @@ const themeOptions = [
     name: "Cabinet",
     description: "An editorial cabinet of photos, notes, books, music, and essays, wired together as one living personal index.",
   },
+  {
+    id: "aqua",
+    name: "Aqua",
+    description: "A bright turn-of-the-century desktop look with pinstripes, polished chrome, and candy-blue controls.",
+  },
 ] satisfies ThemeOption[];
 
 const missingThemeMetadata = themeValues.filter((theme) => !themeOptions.some((option) => option.id === theme));
