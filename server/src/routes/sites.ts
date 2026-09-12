@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { sites, themeValues } from "../db/schema.js";
+import { dailyVisitCounts, sites, themeValues } from "../db/schema.js";
 import { authGuard } from "../middleware/auth-guard.js";
 import { slugify } from "../lib/slugify.js";
 import { invalidateSitePages } from "../render/page-cache.js";
@@ -64,6 +64,7 @@ const updateSiteSchema = z
     customDomain: customDomainSchema.optional(),
     about: z.string().max(20_000).optional(),
     federationEnabled: z.boolean().optional(),
+    statsEnabled: z.boolean().optional(),
   })
   .refine((body) => Object.values(body).some((value) => value !== undefined), {
     message: "Provide at least one field to update.",
@@ -119,9 +120,7 @@ export async function siteRoutes(app: FastifyInstance) {
       }
     }
 
-    const [updated] = await db
-      .update(sites)
-      .set({
+    const values = {
         ...(body.theme !== undefined ? { theme: body.theme } : {}),
         ...(body.title !== undefined ? { title: body.title } : {}),
         ...(body.profileName === undefined && body.title !== undefined && site.profileName === site.title
@@ -153,10 +152,19 @@ export async function siteRoutes(app: FastifyInstance) {
         ...(body.customDomain !== undefined ? { customDomain: body.customDomain || null } : {}),
         ...(body.about !== undefined ? { about: body.about || null } : {}),
         ...(body.federationEnabled !== undefined ? { federationEnabled: body.federationEnabled } : {}),
+        ...(body.statsEnabled !== undefined ? { statsEnabled: body.statsEnabled } : {}),
         updatedAt: new Date(),
-      })
-      .where(eq(sites.id, site.id))
-      .returning();
+      };
+
+    // Disabling stats and erasing their history is one atomic operation: a
+    // failed update can never leave the UI off while retaining old counts.
+    const updated = body.statsEnabled === false
+      ? db.transaction((tx) => {
+          const row = tx.update(sites).set(values).where(eq(sites.id, site.id)).returning().get();
+          tx.delete(dailyVisitCounts).where(eq(dailyVisitCounts.siteId, site.id)).run();
+          return row;
+        })
+      : db.update(sites).set(values).where(eq(sites.id, site.id)).returning().get();
 
     invalidateSitePages(site.id);
     invalidateTenantCache();

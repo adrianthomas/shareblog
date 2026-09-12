@@ -71,6 +71,13 @@
       "when": 1789199882537,
       "tag": "0009_unknown_quasar",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789212045796,
+      "tag": "0010_dizzy_grey_gargoyle",
+      "breakpoints": true
     }
   ]
 }

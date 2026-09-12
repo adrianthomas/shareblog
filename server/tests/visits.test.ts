@@ -78,6 +78,26 @@ test("public HTML visits flow into the authenticated aggregate stats response", 
       body.sources.map((row: { source: string; visits: number }) => [row.source, row.visits]).sort(),
       [["bluesky", 1], ["direct", 1], ["search", 1]],
     );
+
+    const disabled = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/sites",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      payload: { statsEnabled: false },
+    });
+    assert.equal(disabled.statusCode, 200);
+    assert.equal(disabled.json().site.statsEnabled, false);
+    const rowsAfterDisable = await db.select().from(dailyVisitCounts).where(eq(dailyVisitCounts.siteId, siteId));
+    assert.deepEqual(rowsAfterDisable, []);
+
+    const disabledStats = await app.inject({ method: "GET", url: "/api/v1/stats", headers: { authorization: `Bearer ${token}` } });
+    assert.equal(disabledStats.statusCode, 403);
+    assert.equal(disabledStats.json().error.code, "stats_disabled");
+
+    const ignoredVisit = await app.inject({ method: "GET", url: "/", headers: { host, "user-agent": "Safari" } });
+    assert.equal(ignoredVisit.statusCode, 200);
+    const rowsAfterIgnoredVisit = await db.select().from(dailyVisitCounts).where(eq(dailyVisitCounts.siteId, siteId));
+    assert.deepEqual(rowsAfterIgnoredVisit, []);
   } finally {
     await app.close();
     await db.delete(dailyVisitCounts).where(eq(dailyVisitCounts.siteId, siteId));

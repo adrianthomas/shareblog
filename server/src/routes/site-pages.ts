@@ -138,7 +138,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
   // Count successful public HTML responses after they have been sent. The
   // counter stores only daily aggregates, never a request or visitor record.
   app.addHook("onResponse", async (request, reply) => {
-    if (!request.site || reply.statusCode < 200 || reply.statusCode >= 300) return;
+    if (!request.site?.statsEnabled || reply.statusCode < 200 || reply.statusCode >= 300) return;
     const contentType = String(reply.getHeader("content-type") ?? "");
     if (!contentType.startsWith("text/html")) return;
     try {

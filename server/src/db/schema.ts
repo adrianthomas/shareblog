@@ -78,6 +78,9 @@ export const sites = sqliteTable("sites", {
   // outbound delivery in src/activitypub/federation.ts.
   // Defaults on: no separate cross-posting step is the whole point.
   federationEnabled: integer("federation_enabled", { mode: "boolean" }).notNull().default(true),
+  // Master switch for the built-in aggregate page-view counters. Disabling
+  // this through PATCH /sites also permanently deletes the site's counts.
+  statsEnabled: integer("stats_enabled", { mode: "boolean" }).notNull().default(true),
   createdAt: createdAt(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .notNull()

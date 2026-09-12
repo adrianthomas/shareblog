@@ -76,7 +76,7 @@ called on every object/site mutation.
 | Table | Purpose |
 |---|---|
 | `users` | One row per email. |
-| `sites` | One per user (today). Site identity (`title`, `tagline`) is distinct from the footer profile (`profileName`, `location`, `profileLinks`, `contactLinks`); legacy introduction/single-contact fields remain compatible. Also stores `theme`, `about`, `federationEnabled`, and `subdomain`/canonical `customDomain`. |
+| `sites` | One per user (today). Site identity (`title`, `tagline`) is distinct from the footer profile (`profileName`, `location`, `profileLinks`, `contactLinks`); legacy introduction/single-contact fields remain compatible. Also stores `theme`, `about`, `federationEnabled`, `statsEnabled`, and `subdomain`/canonical `customDomain`. |
 | `siteActorKeys` | ActivityPub keypair, deliberately its own table (never returned in a site API response — see the comment in schema.ts). |
 | `apFollowers` | Remote Fediverse followers per site; backs both the followers collection and outbound delivery recipient list. |
 | `apiTokens` | Bearer tokens, hashed; `revokedAt` for logout. |
@@ -100,6 +100,10 @@ omitted from the referring-sources list. Fastify request logging redacts the
 remote address and port; the request IP is used transiently only by rate
 limiting. Operators remain responsible for the retention settings of any
 reverse-proxy or hosting-provider access logs outside Shareblog.
+`sites.statsEnabled` is the per-site master switch and defaults on. Setting it
+to false through `PATCH /sites` atomically deletes every aggregate row for the
+site and stops new counting; `GET /stats` then returns `stats_disabled` until
+the switch is enabled again. Deleted history is intentionally unrecoverable.
 
 ## Render pipeline
 

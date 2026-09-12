@@ -15,6 +15,8 @@ Public pages set no analytics cookie and load no analytics script: the server
 stores only UTC-day counts, per-article counts, and broad referral categories,
 with no IP address, user agent, visitor/session identifier, full referrer URL,
 or individual request row in the analytics table.
+Stats can be disabled from the iOS app; doing so deletes all stored aggregate
+history and stops collection until it is enabled again.
 
 ## Local development
 

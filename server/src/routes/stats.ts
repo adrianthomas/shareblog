@@ -22,6 +22,9 @@ export async function statsRoutes(app: FastifyInstance) {
   app.get("/stats", { preHandler: authGuard }, async (request, reply) => {
     const site = request.authSite;
     if (!site) return reply.code(404).send({ error: { code: "not_found", message: "Site not found." } });
+    if (!site.statsEnabled) {
+      return reply.code(403).send({ error: { code: "stats_disabled", message: "Statistics are disabled for this site." } });
+    }
 
     const starts = utcPeriodStarts();
     const totalFrom = async (start?: string) => {
