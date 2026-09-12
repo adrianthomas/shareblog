@@ -116,6 +116,9 @@ iOS-style right-to-left push detail panel instead of the expanding-card motion.
 Aqua keeps the classic semantic templates and adds a responsive two-column feed,
 pinstriped desktop chrome, translucent blue controls, and polished content
 panels with no additional script or third-party runtime assets.
+Think also keeps the classic semantic templates but follows Apple's early-2000s
+web language rather than its desktop UI: graphite global navigation, a dominant
+lead story, and compact three-up promotional modules on an airy white canvas.
 
 Cabinet is a standalone interactive pipeline rather than a Cards skin.
 `themes/cabinet.tsx` owns its chronological rail, numbered navigation,

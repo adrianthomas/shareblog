@@ -204,6 +204,8 @@ export async function renderList(
         ? React.createElement("div", { className: "cards-feed" }, ...cards)
         : site.theme === "aqua"
           ? React.createElement("div", { className: "aqua-feed" }, ...cards)
+        : site.theme === "think"
+          ? React.createElement("div", { className: "think-feed" }, ...cards)
         : site.theme === "washi"
           ? React.createElement(
               "div",

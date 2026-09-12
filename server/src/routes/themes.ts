@@ -43,6 +43,11 @@ const themeOptions = [
     name: "Aqua",
     description: "A bright turn-of-the-century desktop look with pinstripes, polished chrome, and candy-blue controls.",
   },
+  {
+    id: "think",
+    name: "Think",
+    description: "An airy early-2000s product homepage with graphite navigation, a bold lead story, and crisp promo tiles.",
+  },
 ] satisfies ThemeOption[];
 
 const missingThemeMetadata = themeValues.filter((theme) => !themeOptions.some((option) => option.id === theme));

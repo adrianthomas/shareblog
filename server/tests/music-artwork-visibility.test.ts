@@ -56,7 +56,7 @@ test("song artwork remains public when showArtwork is absent", async () => {
 test("showArtwork false omits retained artwork from all public outputs", async () => {
   const object = song(false);
 
-  for (const theme of ["classic", "cards", "washi", "prism", "ledger", "cabinet", "aqua"] as const) {
+  for (const theme of ["classic", "cards", "washi", "prism", "ledger", "cabinet", "aqua", "think"] as const) {
     for (const variant of ["card", "page"] as const) {
       const html = renderToStaticMarkup(
         React.createElement(MusicCard, {

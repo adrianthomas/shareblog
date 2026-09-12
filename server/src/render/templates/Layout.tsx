@@ -5,6 +5,7 @@ import { cardsStyles, cardsScript, CardsCategoryFilter } from "../themes/cards.j
 import { cabinetStyles, CabinetNavigation } from "../themes/cabinet.js";
 import { cabinetScript } from "../themes/cabinet-script.js";
 import { aquaStyles } from "../themes/aqua.js";
+import { thinkStyles } from "../themes/think.js";
 import { copyButtonScript, CopyHandleButton } from "./CopyButton.js";
 import { absoluteSiteUrl, siteOrigin } from "../site-url.js";
 import type { ProfileLink } from "./types.js";
@@ -29,6 +30,7 @@ const THEME_CHROME_COLORS: Record<Site["theme"], { light: string; dark: string }
   ledger: { light: "#f8fafc", dark: "#0f1115" },
   cabinet: { light: "#f3f1ea", dark: "#11120f" },
   aqua: { light: "#dfe3e8", dark: "#20252b" },
+  think: { light: "#ffffff", dark: "#111111" },
 };
 
 // Shows the Amazon storefront closest to the visitor's browser-reported
@@ -137,7 +139,8 @@ export function Layout({
   const usesCardsInteraction = theme === "cards" || theme === "prism" || theme === "ledger";
   const usesCabinetInteraction = theme === "cabinet";
   const usesInteractiveDetail = usesCardsInteraction || usesCabinetInteraction;
-  const usesCompactCategoryFilter = !usesInteractiveDetail;
+  const usesFullNavigation = theme === "think";
+  const usesCompactCategoryFilter = !usesInteractiveDetail && !usesFullNavigation;
   const hasWorkPage = workPageEnabled();
   const hasImpressumPage = impressumPageEnabled();
   // The canonical host is also the Fediverse identity host. The actor's
@@ -678,6 +681,7 @@ export function Layout({
         {usesCardsInteraction ? <style dangerouslySetInnerHTML={{ __html: cardsStyles }} /> : null}
         {usesCabinetInteraction ? <style dangerouslySetInnerHTML={{ __html: cabinetStyles }} /> : null}
         {theme === "aqua" ? <style dangerouslySetInnerHTML={{ __html: aquaStyles }} /> : null}
+        {theme === "think" ? <style dangerouslySetInnerHTML={{ __html: thinkStyles }} /> : null}
         {theme === "washi" ? (
           // Washi keeps the classic templates but gives list pages their own
           // feed wrapper in render.ts, so it can be more composed than classic
@@ -2006,6 +2010,8 @@ export function Layout({
                     ? "theme-cabinet"
                     : theme === "aqua"
                       ? "theme-aqua"
+                      : theme === "think"
+                        ? "theme-think"
                       : undefined
         }
         data-theme={theme}
@@ -2051,9 +2057,13 @@ export function Layout({
               ) : null}
             </p>
             {usesInteractiveDetail && !cardsDetail ? null : usesCompactCategoryFilter ? null : (
-              <nav aria-label={t(site.locale, "primaryNavigation")}>
+              <nav className={usesFullNavigation ? "think-navigation" : undefined} aria-label={t(site.locale, "primaryNavigation")}>
                 {navItems(site, availablePaths).map((item) => (
-                  <a key={item.href} href={item.href}>
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    aria-current={usesFullNavigation && (item.href === "/" ? currentPath === "/" : currentPath.startsWith(item.href)) ? "page" : undefined}
+                  >
                     {item.label}
                   </a>
                 ))}
