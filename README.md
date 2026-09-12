@@ -10,6 +10,12 @@ search, social-card metadata, structured data, a generated identity favicon, a
 sitemap, and robots policy. Optional deployment-wide flags expose personal Work,
 Contact, and Impressum pages.
 
+The owner-only iOS statistics view uses built-in, aggregate page-view counters.
+Public pages set no analytics cookie and load no analytics script: the server
+stores only UTC-day counts, per-article counts, and broad referral categories,
+with no IP address, user agent, visitor/session identifier, full referrer URL,
+or individual request row in the analytics table.
+
 ## Local development
 
 ```bash

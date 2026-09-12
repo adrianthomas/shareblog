@@ -200,6 +200,33 @@ export const contentObjects = sqliteTable(
   ],
 );
 
+// Privacy-preserving public traffic counters. Each row is already aggregated
+// by UTC day, article (or the empty string for non-article pages), and a small
+// source category. No request, visitor, session, IP address, user agent, or
+// full referrer is retained.
+export const dailyVisitCounts = sqliteTable(
+  "daily_visit_counts",
+  {
+    id: id(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id),
+    day: text("day").notNull(),
+    contentObjectId: text("content_object_id").notNull().default(""),
+    source: text("source").notNull(),
+    visits: integer("visits").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("daily_visit_counts_dimensions_idx").on(
+      table.siteId,
+      table.day,
+      table.contentObjectId,
+      table.source,
+    ),
+    index("daily_visit_counts_site_day_idx").on(table.siteId, table.day),
+  ],
+);
+
 export const assets = sqliteTable(
   "assets",
   {

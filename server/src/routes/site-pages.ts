@@ -28,6 +28,13 @@ import { siteForHost } from "../middleware/tenant.js";
 import { workPageEnabled } from "../lib/work-page.js";
 import { impressumPageEnabled } from "../lib/impressum-page.js";
 import { renderFavicon } from "../render/favicon.js";
+import { recordVisit } from "../analytics/visits.js";
+
+declare module "fastify" {
+  interface FastifyRequest {
+    analyticsContentObjectId?: string;
+  }
+}
 
 const PAGE_SIZE = 20;
 
@@ -128,6 +135,18 @@ const DETAIL_TYPES: Array<{ prefix: string; type: ContentType }> = [
 ];
 
 export async function sitePageRoutes(app: FastifyInstance) {
+  // Count successful public HTML responses after they have been sent. The
+  // counter stores only daily aggregates, never a request or visitor record.
+  app.addHook("onResponse", async (request, reply) => {
+    if (!request.site || reply.statusCode < 200 || reply.statusCode >= 300) return;
+    const contentType = String(reply.getHeader("content-type") ?? "");
+    if (!contentType.startsWith("text/html")) return;
+    try {
+      await recordVisit(request, request.site.id, request.analyticsContentObjectId);
+    } catch (error) {
+      request.log.warn(error, "could not update aggregate visit count");
+    }
+  });
   // Once a site claims a canonical custom domain, keep the deployment
   // subdomain as a working alias but redirect ordinary public page requests
   // so readers, crawlers, and copied links converge on one origin. ActivityPub
@@ -356,7 +375,16 @@ export async function sitePageRoutes(app: FastifyInstance) {
       const { slug } = request.params as { slug: string };
 
       const cached = getCachedPage(site.id, request.raw.url ?? request.url);
-      if (cached) return sendHtml(reply, cached.body);
+      if (cached) {
+        const [cachedObject] = await db
+          .select({ id: contentObjects.id })
+          .from(contentObjects)
+          .where(and(eq(contentObjects.siteId, site.id), eq(contentObjects.type, detail.type), eq(contentObjects.slug, slug), eq(contentObjects.status, "published")))
+          .limit(1);
+        if (!cachedObject) return reply.code(404).send("Not found");
+        if (detail.type === "article") request.analyticsContentObjectId = cachedObject.id;
+        return sendHtml(reply, cached.body);
+      }
 
       const [object] = await db
         .select()
@@ -374,6 +402,7 @@ export async function sitePageRoutes(app: FastifyInstance) {
       if (!object) {
         return reply.code(404).send("Not found");
       }
+      if (detail.type === "article") request.analyticsContentObjectId = object.id;
       const availablePaths = await publishedNavPaths(site.id);
       const html = await renderObjectPage(site, object, `${detail.prefix}/${slug}`, availablePaths);
       setCachedPage(site.id, request.raw.url ?? request.url, html, "text/html; charset=utf-8");

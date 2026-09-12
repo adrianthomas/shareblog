@@ -12,7 +12,7 @@ many files at once. Keep it in sync with the implementation.
    `@fastify/cookie`, `@fastify/multipart`, `@fastify/rate-limit` (200/min
    baseline; auth routes set their own tighter limits).
 2. `/api/v1/*` — `authRoutes`, `siteRoutes`, `themeRoutes`,
-   `objectRoutes`, `assetRoutes`, `resolveRoutes`.
+   `objectRoutes`, `assetRoutes`, `resolveRoutes`, `statsRoutes`.
 3. `/files/*` (local storage driver only) and `/static/*` — plain
    filesystem serving with path-traversal guards.
 4. `activityPubRoutes` — WebFinger/actor/inbox, resolved by Host header,
@@ -41,6 +41,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `routes/objects.ts` | `POST/GET/PATCH/DELETE /objects`, `GET /objects/:id` | Owns slug generation (`uniqueSlug`, `slugSourceText`), asset-ownership checks and deletion (including URL-only inline Article/Thought images and cached music artwork), cache invalidation, and ActivityPub Create/Delete delivery on publish, unpublish, and deletion. It also normalizes legacy iOS article posts that arrived as `thought` with a leading Markdown H1 into real `article` rows. `GET /objects` hides `link` rows unless the client sends `X-Shareblog-Features: link-content-type`, because old iOS apps decode `ContentType` as a closed enum. |
 | `routes/assets.ts` | asset upload | Feeds `image/worker.ts` for variants + EXIF extraction. |
 | `routes/resolve.ts` | book/music/article metadata lookup | Thin wrapper over `resolvers/*.ts`; used by the iOS compose screens before publish, not stored server-side until the object is created. Music accepts any source URL but translates it to a sufficiently strong Apple catalog match; unmatched sources retain editable title/artist only. |
+| `routes/stats.ts` | `GET /stats` | Authenticated aggregate-only public page-view totals for today/week/month/year/all time, per-article totals, and coarse referring-source categories. Period boundaries use UTC. |
 
 **Public site (auth: `resolveTenant`, Host header)** — `routes/site-pages.ts`
 
@@ -82,7 +83,23 @@ called on every object/site mutation.
 | `magicTokens` | Email auth codes/links, hashed, purpose-tagged (`web_session`/`mobile_code`). |
 | `ownerClaims` | Short-lived (20 min), single-use pairing codes minted by an interactive `bootstrap-owner` run; redeemed via `POST /auth/claim-owner`. |
 | `contentObjects` | The core table — `type` (`contentTypeValues`), `slug` (unique per site), `title`/`body`/`status`/`sourceUrl`, freeform JSON `metadata` (shape varies by type, not modeled in SQL). |
+| `dailyVisitCounts` | Privacy-preserving UTC-day page-view aggregates keyed by site, article (empty for non-article pages), and coarse source category. It deliberately contains no IP, user agent, visitor/session id, full referrer, or individual request row. |
 | `assets` | Uploaded files — `variants` (JSON, e.g. `medium`/`original` URLs), `exif` (JSON, photos only). Linked from a `contentObjects.metadata.assetId`/`coverAssetId` field, **not** a DB foreign key — `objects.ts`'s `referencedAssetIds`/`assertOwnedAssets` walk those metadata fields by hand. |
+
+## Privacy-preserving statistics
+
+Successful public HTML `GET` responses increment `dailyVisitCounts` in
+`analytics/visits.ts`; feeds, static assets, redirects, errors, `HEAD`, known
+bots/previews, prefetches, and requests carrying DNT or Global Privacy Control
+are not counted. Referrers are reduced in memory to `direct`, `internal`, a
+small set of recognizable search/social services, or `other`; the URL and host
+are never written to the database. These are page views, not unique visitors:
+Shareblog intentionally does not mint a cookie or retain an identifier merely
+to deduplicate people. Internal navigation contributes to visit totals but is
+omitted from the referring-sources list. Fastify request logging redacts the
+remote address and port; the request IP is used transiently only by rate
+limiting. Operators remain responsible for the retention settings of any
+reverse-proxy or hosting-provider access logs outside Shareblog.
 
 ## Render pipeline
 

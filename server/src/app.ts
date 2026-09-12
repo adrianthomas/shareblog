@@ -15,6 +15,7 @@ import { themeRoutes } from "./routes/themes.js";
 import { objectRoutes } from "./routes/objects.js";
 import { assetRoutes } from "./routes/assets.js";
 import { resolveRoutes } from "./routes/resolve.js";
+import { statsRoutes } from "./routes/stats.js";
 import { sitePageRoutes } from "./routes/site-pages.js";
 import { activityPubRoutes } from "./activitypub/adapter.js";
 
@@ -42,7 +43,15 @@ export function buildApp() {
   // resolves to the proxy's own address for every request, which collapses
   // the per-IP rate limits below (and the auth email rate limit in
   // routes/auth.ts) into one shared bucket instead of one per real visitor.
-  const app = Fastify({ logger: true, trustProxy: true });
+  const app = Fastify({
+    logger: {
+      // The rate limiter still uses request.ip transiently, but public traffic
+      // IP addresses and ports must not become a second, accidental analytics
+      // store in the application log.
+      redact: ["req.remoteAddress", "req.remotePort"],
+    },
+    trustProxy: true,
+  });
 
   // Routes generally catch their own risky calls and reply with this
   // {error: {code, message}} envelope directly (see resolve.ts) — this is
@@ -93,6 +102,7 @@ export function buildApp() {
       api.register(objectRoutes);
       api.register(assetRoutes);
       api.register(resolveRoutes);
+      api.register(statsRoutes);
     },
     { prefix: "/api/v1" },
   );
