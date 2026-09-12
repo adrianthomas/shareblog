@@ -46,6 +46,13 @@ async function siteForIdentifier(host: string, identifier: string): Promise<Site
   return site;
 }
 
+// The image configured by the iOS site editor is also the site's browser
+// favicon. Exposing that same image as the actor icon keeps the public-site
+// and Fediverse identities in sync without introducing a second setting.
+export function siteActorIcon(site: Site): Image | undefined {
+  return site.profileImageUrl ? new Image({ url: new URL(site.profileImageUrl) }) : undefined;
+}
+
 federation
   .setActorDispatcher("/users/{identifier}", async (ctx, identifier) => {
     const site = await siteForIdentifier(ctx.host, identifier);
@@ -61,6 +68,7 @@ federation
       preferredUsername: identifier,
       name: site.title,
       summary: site.about ?? site.tagline ?? undefined,
+      icon: siteActorIcon(site),
       url: new URL(siteOrigin(site)),
       inbox: ctx.getInboxUri(identifier),
       outbox: ctx.getOutboxUri(identifier),

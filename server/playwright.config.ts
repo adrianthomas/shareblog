@@ -5,9 +5,10 @@ import path from "node:path";
 
 // A dedicated, throwaway SQLite file — never the one `npm run dev` uses —
 // so running the suite can't clobber real local dev data, and each run
-// starts from a clean, predictable DB. tests/e2e/global-setup.ts deletes
+// starts from a clean, predictable DB. The webServer command below deletes
 // any file left over from a previous run before migrations apply.
 const TEST_DB = path.resolve(import.meta.dirname, "data/e2e-test.db");
+const TEST_OWNER_TOKEN = path.resolve(import.meta.dirname, "data/e2e-test-owner-token");
 const PORT = 3100;
 const BASE_DOMAIN = `localhost:${PORT}`;
 
@@ -43,9 +44,12 @@ export default defineConfig({
     // previous run (a stale file would make bootstrap-owner in the test's
     // own setup a silent no-op instead of minting a fresh owner), migrate
     // it fresh, then start the server proper.
-    command: `sh -c 'rm -f "${TEST_DB}"* && npm run db:migrate && npm run dev'`,
+    command: `sh -c 'rm -f "${TEST_DB}"* "${TEST_OWNER_TOKEN}" && npm run db:migrate && npm run dev'`,
     url: `http://${BASE_DOMAIN}/`,
-    reuseExistingServer: !process.env.CI,
+    // Reusing an arbitrary process on this port also reuses its database and
+    // defeats the clean-state guarantee above. Fail clearly on a port clash
+    // instead of silently running against stale E2E state.
+    reuseExistingServer: false,
     timeout: 30_000,
     env: serverEnv,
   },

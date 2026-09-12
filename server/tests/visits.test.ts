@@ -28,6 +28,7 @@ test("privacy signals, prefetches, bots, and non-GET requests are not counted", 
 
 test("public HTML visits flow into the authenticated aggregate stats response", async () => {
   process.env.BASE_DOMAIN = "stats.test";
+  process.env.ENABLE_IMPRESSUM_PAGE = "true";
   const suffix = randomUUID().slice(0, 8);
   const userId = randomUUID();
   const siteId = randomUUID();
@@ -79,6 +80,10 @@ test("public HTML visits flow into the authenticated aggregate stats response", 
       [["bluesky", 1], ["direct", 1], ["search", 1]],
     );
 
+    const enabledLegal = await app.inject({ method: "GET", url: "/impressum", headers: { host, "user-agent": "Safari" } });
+    assert.equal(enabledLegal.statusCode, 200);
+    assert.match(enabledLegal.body, /Status: Reichweitenmessung aktiviert\./);
+
     const disabled = await app.inject({
       method: "PATCH",
       url: "/api/v1/sites",
@@ -89,6 +94,11 @@ test("public HTML visits flow into the authenticated aggregate stats response", 
     assert.equal(disabled.json().site.statsEnabled, false);
     const rowsAfterDisable = await db.select().from(dailyVisitCounts).where(eq(dailyVisitCounts.siteId, siteId));
     assert.deepEqual(rowsAfterDisable, []);
+
+    const disabledLegal = await app.inject({ method: "GET", url: "/impressum", headers: { host, "user-agent": "Safari" } });
+    assert.equal(disabledLegal.statusCode, 200);
+    assert.match(disabledLegal.body, /Status: Reichweitenmessung deaktiviert\./);
+    assert.doesNotMatch(disabledLegal.body, /Status: Reichweitenmessung aktiviert\./);
 
     const disabledStats = await app.inject({ method: "GET", url: "/api/v1/stats", headers: { authorization: `Bearer ${token}` } });
     assert.equal(disabledStats.statusCode, 403);

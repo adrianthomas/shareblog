@@ -2086,7 +2086,7 @@ export function Layout({
                 <a href="/search">{t(site.locale, "search")}</a>
                 <a href="/about">{t(site.locale, "about")}</a>
                 {hasWorkPage ? <><a href="/my-work">My work</a><a href="/contact">Contact</a></> : null}
-                {hasImpressumPage ? <a href="/impressum">Impressum</a> : null}
+                {hasImpressumPage ? <a href="/impressum">Legal</a> : null}
               </nav>
             </div>
           </footer>

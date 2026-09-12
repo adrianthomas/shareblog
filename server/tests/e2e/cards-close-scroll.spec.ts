@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 // Mints a fresh owner account + API token directly in the test DB, reusing
@@ -12,6 +13,13 @@ import path from "node:path";
 // test DB file before every run.
 function bootstrapOwnerToken(): string {
   const serverRoot = path.resolve(import.meta.dirname, "../..");
+  const tokenPath = path.resolve(serverRoot, "data/e2e-test-owner-token");
+  // Playwright starts a replacement worker after a test failure. beforeAll
+  // then runs again against the same live throwaway server/database, where
+  // bootstrap-owner correctly refuses to mint a second owner token. Keep the
+  // first token in an equally throwaway file so the replacement worker can
+  // authenticate and continue running the remaining tests.
+  if (existsSync(tokenPath)) return readFileSync(tokenPath, "utf8").trim();
   const output = execFileSync("npx", ["tsx", "src/db/bootstrap-owner.ts", "--email", "e2e@test.local"], {
     cwd: serverRoot,
     env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL ?? path.resolve(serverRoot, "data/e2e-test.db") },
@@ -19,6 +27,7 @@ function bootstrapOwnerToken(): string {
   });
   const match = output.match(/SHAREBLOG_BOOTSTRAP_TOKEN=(\S+)/);
   if (!match) throw new Error(`bootstrap-owner.ts didn't print a token — was the DB already seeded?\n${output}`);
+  writeFileSync(tokenPath, match[1], { encoding: "utf8", mode: 0o600 });
   return match[1];
 }
 
@@ -202,6 +211,83 @@ test("closing a photo card (openPhotoCard) restores the exact pre-open scroll po
   // generic one above that calls the same lockPageScroll, worth its own
   // coverage rather than assuming the generic path's correctness transfers.
   await expectCloseRestoresScroll(page, 0);
+});
+
+test("Cards close controls do not re-arm the pull gesture or restore the dim backdrop", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
+  await page.goto(siteBaseURL + "/");
+
+  await page.locator('[data-cards-card][data-cards-type="thought"]').first().click();
+  const dialog = page.locator('.cards-panel[role="dialog"]');
+  const close = dialog.locator(".cards-close").first();
+  await expect(close).toBeVisible();
+
+  // Reproduce the real pointerdown -> pointerup -> click sequence explicitly.
+  // The panel scroller also owns pull-to-dismiss; it must ignore controls or
+  // its cancelled-drag branch writes opacity:1 immediately before close.
+  const pointerState = await close.evaluate((element) => {
+    const backdrop = document.querySelector<HTMLElement>(".cards-overlay-backdrop")!;
+    const eventInit: PointerEventInit = {
+      bubbles: true,
+      button: 0,
+      buttons: 1,
+      isPrimary: true,
+      pointerId: 1,
+      pointerType: "touch",
+    };
+    element.dispatchEvent(new PointerEvent("pointerdown", eventInit));
+    element.dispatchEvent(new PointerEvent("pointerup", { ...eventInit, buttons: 0 }));
+    const opacityAfterPointerUp = backdrop.style.opacity;
+    element.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
+    return {
+      opacityAfterPointerUp,
+      opacityAfterClick: backdrop.style.opacity,
+      stillVisible: backdrop.classList.contains("cards-overlay-backdrop--visible"),
+    };
+  });
+
+  expect(pointerState).toEqual({
+    opacityAfterPointerUp: "",
+    opacityAfterClick: "0",
+    stillVisible: false,
+  });
+  await dialog.waitFor({ state: "detached" });
+  await expect(page.locator(".cards-overlay-backdrop")).toHaveCount(0);
+});
+
+test("Cards pull-to-dismiss hands backdrop opacity to the close fade", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cards" }, "PATCH");
+  await page.goto(siteBaseURL + "/");
+
+  const card = page.locator('[data-cards-card][data-cards-type="thought"]').first();
+  await card.click();
+  const dialog = page.locator('.cards-panel[role="dialog"]');
+  const scroller = dialog.locator(".cards-panel-scroll");
+  await expect(dialog).toBeVisible();
+  await scroller.evaluate((element) => { element.scrollTop = 0; });
+  const box = await scroller.boundingBox();
+  expect(box).not.toBeNull();
+
+  const startX = box!.x + box!.width * 0.7;
+  const startY = box!.y + box!.height * 0.55;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY + 170, { steps: 6 });
+  await page.mouse.up();
+
+  // Dragging writes an intermediate inline opacity. Once dismissal commits,
+  // closeOverlay must replace it with zero; otherwise that higher-specificity
+  // inline value freezes the dim layer until abrupt DOM removal.
+  const backdrop = page.locator(".cards-overlay-backdrop");
+  const backdropCloseState = await backdrop.evaluate((element) => ({
+    inlineOpacity: (element as HTMLElement).style.opacity,
+    stillVisible: element.classList.contains("cards-overlay-backdrop--visible"),
+  }));
+  expect(backdropCloseState).toEqual({ inlineOpacity: "0", stillVisible: false });
+
+  await dialog.waitFor({ state: "detached" });
+  await expect(card).toBeFocused();
+  await expect(backdrop).toHaveCount(0);
 });
 
 test("deleting article and photo drafts removes their uploaded assets", async () => {
@@ -548,6 +634,49 @@ test("Cabinet detail panels can be pulled down to close", async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(initialScrollY);
 });
 
+test("Cabinet can close during its preparation frames without revealing unfinished content", async ({ page }) => {
+  await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(siteBaseURL + "/");
+
+  const result = await page.evaluate(async () => {
+    const card = document.querySelector<HTMLElement>('a[data-cabinet-card][data-cabinet-type="thought"]')!;
+    const homeURL = location.href;
+    const samples: number[] = [];
+    const observed = new Promise<void>((resolve) => {
+      const observer = new MutationObserver(() => {
+        const panel = document.querySelector<HTMLElement>(".cabinet-panel");
+        const close = panel?.querySelector<HTMLElement>(".cabinet-close");
+        if (!panel || !close) return;
+        observer.disconnect();
+        close.click();
+        const sample = () => {
+          if (panel.isConnected) samples.push(Number(getComputedStyle(panel).opacity));
+          if (panel.isConnected) requestAnimationFrame(sample);
+          else resolve();
+        };
+        requestAnimationFrame(sample);
+      });
+      observer.observe(document.body, { childList: true });
+    });
+    card.click();
+    await observed;
+    return {
+      samples,
+      homeURL,
+      finalURL: location.href,
+      locked: document.documentElement.classList.contains("cabinet-lock-scroll"),
+      overlays: document.querySelectorAll(".cabinet-panel, .cabinet-backdrop").length,
+    };
+  });
+
+  expect(result.samples.length).toBeGreaterThan(0);
+  expect(Math.max(...result.samples)).toBeLessThanOrEqual(0.01);
+  expect(result.finalURL).toBe(result.homeURL);
+  expect(result.locked).toBe(false);
+  expect(result.overlays).toBe(0);
+});
+
 test("Cabinet desktop photo close avoids a stretched shared-image transition", async ({ page }) => {
   await api(apiBaseURL, ownerToken, "/api/v1/sites", { theme: "cabinet" }, "PATCH");
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -574,6 +703,8 @@ test("Cabinet desktop photo close avoids a stretched shared-image transition", a
     };
     return {
       panel: propertiesFor(document.querySelector(".cabinet-panel")),
+      backdrop: propertiesFor(document.querySelector(".cabinet-backdrop")),
+      backdropTransitionDuration: getComputedStyle(document.querySelector(".cabinet-backdrop")!).transitionDuration,
       shared: propertiesFor(document.querySelector(".cabinet-shared-clone")),
     };
   });
@@ -581,6 +712,12 @@ test("Cabinet desktop photo close avoids a stretched shared-image transition", a
   expect(closeMotion.panel.duration).toBe(380);
   expect(closeMotion.panel.properties).toEqual(expect.arrayContaining(["opacity", "transform"]));
   expect(closeMotion.panel.properties).not.toContain("clipPath");
+  expect(closeMotion.backdrop.duration).toBe(260);
+  expect(closeMotion.backdrop.properties).toEqual(expect.arrayContaining(["opacity"]));
+  expect(closeMotion.backdrop.properties).not.toEqual(
+    expect.arrayContaining(["backdropFilter", "webkitBackdropFilter"]),
+  );
+  expect(closeMotion.backdropTransitionDuration).toBe("0s");
   expect(closeMotion.shared).toEqual({ properties: [], duration: null });
 
   await dialog.waitFor({ state: "detached" });

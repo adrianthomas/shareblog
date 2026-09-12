@@ -18,7 +18,7 @@ import { ReleaseHistoryPage } from "./templates/ReleaseHistoryPage.js";
 import { AboutProductPage } from "./templates/AboutProductPage.js";
 import { WorkPage } from "./templates/WorkPage.js";
 import { ContactPage } from "./templates/ContactPage.js";
-import { ImpressumPage } from "./templates/ImpressumPage.js";
+import { LegalPage } from "./templates/LegalPage.js";
 import { currentCommit } from "../lib/version.js";
 import type {
   ContentObject,
@@ -320,11 +320,11 @@ export function renderContactPage(site: Site): string {
 }
 
 export function renderImpressumPage(site: Site): string {
-  return wrap(site, "Impressum", React.createElement(ImpressumPage), {
+  return wrap(site, "Legal", React.createElement(LegalPage, { statsEnabled: site.statsEnabled }), {
     currentPath: "/impressum",
     metadata: {
       path: "/impressum",
-      description: `Impressum for ${site.title}.`,
+      description: `Legal notice and privacy policy for ${site.title}.`,
     },
   });
 }

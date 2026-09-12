@@ -8,7 +8,7 @@ Each site also has explicit title/tagline settings and a separate cross-theme
 footer profile, can use an apex or custom canonical domain, and exposes paginated feeds, chronological archives,
 search, social-card metadata, structured data, a generated identity favicon, a
 sitemap, and robots policy. Optional deployment-wide flags expose personal Work,
-Contact, and Impressum pages.
+Contact, and Legal pages.
 
 The owner-only iOS statistics view uses built-in, aggregate page-view counters.
 Public pages set no analytics cookie and load no analytics script: the server

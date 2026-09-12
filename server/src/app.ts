@@ -130,9 +130,9 @@ export function buildApp() {
     });
   }
 
-  // Bundled static assets (currently just the self-hosted webfont used by
-  // the cards theme) — served straight from the repo rather than a CDN so
-  // rendering a site never depends on a third-party request.
+  // Bundled static assets (self-hosted webfonts and product-site images) —
+  // served straight from the repo rather than a CDN so rendering never
+  // depends on a third-party request.
   const publicDir = resolve(import.meta.dirname, "../public");
   app.get("/static/*", async (request, reply) => {
     const wildcard = (request.params as { "*": string })["*"];

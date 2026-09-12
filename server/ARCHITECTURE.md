@@ -47,7 +47,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 
 | Path | Renders |
 |---|---|
-| `/` | Home — all types mixed, paginated 20 at a time (`renderList`). On a bare `BASE_DOMAIN` with no apex tenant, renders the Shareblog product landing page instead. |
+| `/` | Home — all types mixed, paginated 20 at a time (`renderList`). On a bare `BASE_DOMAIN` with no apex tenant, renders the static Notehangar product landing page instead; its bundled imagery and fonts are served locally through `/static/*`. |
 | `/posts`, `/articles`, `/links`, `/books`, `/music`, `/photos`, `/quotes` | Per-type listings (`LISTING_TYPES`), paginated 20 at a time |
 | `/<listing>/feed.xml`, `/feed.xml` | RSS (`renderFeed`) |
 | `/<prefix>/:slug` (`DETAIL_TYPES`) | Detail page (`renderObjectPage`) — 404s if not published |
@@ -57,7 +57,7 @@ token, not the Host header, and sets `request.authUser`/`request.authSite`.
 | `/sitemap.xml`, `/robots.txt` | Search-engine discovery using the site's canonical origin; the sitemap includes enabled optional pages |
 | `/about`, `/about-shareblog`, `/changelog` | Static-ish pages; `/about` renders optional long-form owner copy, while the shared profile stays in the site-wide footer |
 | `/my-work`, `/contact` | Personal portfolio pages, available only when the deployment-wide `ENABLE_WORK_PAGE=true`; otherwise 404 and omitted from footer/sitemap |
-| `/impressum` | Legal-notice page, available only when `ENABLE_IMPRESSUM_PAGE=true`; otherwise 404 and omitted from footer/sitemap |
+| `/impressum` | Legal and privacy page, including a statistics disclosure that reflects the site's current `statsEnabled` setting. Available only when `ENABLE_IMPRESSUM_PAGE=true`; otherwise 404 and omitted from footer/sitemap. |
 
 After all explicit routes, imported `metadata.import.legacyPath` values provide
 permanent redirects from historical root-level WordPress permalinks to the
@@ -251,7 +251,9 @@ the local unpublish/delete so failures remain retryable; there is no queue
 worker. `keys.ts` manages the per-site keypair in `siteActorKeys`.
 `sites.federationEnabled` (default on) only gates outbound delivery; the
 actor/WebFinger/inbox stay live regardless, so existing follows never
-silently break.
+silently break. The actor's `icon` uses the same configured profile image as
+the public site's favicon and Apple touch icon; with no configured image the
+actor simply omits `icon`.
 
 ## Storage (`storage/`)
 
@@ -300,11 +302,19 @@ The browser suite lives in `tests/e2e/` (Playwright, WebKit — matching the
 cards theme's real target browser, not Chromium), run via
 `npm run test:e2e` (`playwright.config.ts` spins up its own throwaway
 SQLite DB and dev server on port 3100, seeded through `bootstrap-owner.ts`
-+ the live API — see the spec file for the pattern). Its primary coverage is
++ the live API — see the spec file for the pattern). The run never reuses an
+existing server on that port, and its ignored throwaway owner-token file lets
+a replacement Playwright worker continue against the same test database after
+a failed test. Its primary coverage is
 `themes/cards.tsx`'s scroll-lock/restore mechanism
 around opening and closing a card (`lockPageScroll`/`unlockPageScroll`) —
-a bug class subtle enough to have regressed silently once already — and it
-also exercises uploaded-asset cleanup through the live API. It does
+a bug class subtle enough to have regressed silently once already. It also
+guards the animation contracts behind earlier WebKit flicker fixes: prepared
+panels remain transparent through their required paint frames, backdrop
+layers stay filter-free with one opacity owner, close controls do not arm
+pull-to-dismiss, drag dismissal hands its inline opacity to the close fade,
+and interrupted opens clean up without revealing unfinished content. The
+suite also exercises uploaded-asset cleanup through the live API. It does
 **not** catch every variant of that bug: the iOS Safari toolbar-reveal
 case (see `unlockPageScroll`'s own comment) is driven by the browser's own
 chrome animation, which a synthetic tap doesn't reliably provoke, so that

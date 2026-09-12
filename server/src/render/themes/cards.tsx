@@ -2854,6 +2854,12 @@ export const cardsScript = `
       startTime = Date.now();
       dragging = true;
       delta = 0;
+      // The panel follows the pointer during a drag and can therefore move
+      // out from underneath a mouse or stylus before pointerup. Capture the
+      // pointer so the scroller still receives the finishing event. Touch
+      // browsers commonly provide implicit capture, but doing it explicitly
+      // keeps every pointer type and Playwright's mouse path consistent.
+      scroller.setPointerCapture(e.pointerId);
     });
 
     scroller.addEventListener('pointermove', function (e) {
@@ -2875,9 +2881,10 @@ export const cardsScript = `
       backdrop.style.opacity = String(Math.max(0.15, 1 - delta / 360));
     });
 
-    function endDrag() {
+    function endDrag(e) {
       if (!dragging) return;
       dragging = false;
+      if (scroller.hasPointerCapture(e.pointerId)) scroller.releasePointerCapture(e.pointerId);
       var elapsed = Math.max(1, Date.now() - startTime);
       var velocity = delta / elapsed;
       if (delta > 120 || velocity > 0.5) {
